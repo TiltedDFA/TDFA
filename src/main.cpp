@@ -1,7 +1,9 @@
 #include <iostream>
 
+#include "core/headers/MagicConstants.hpp"
+
 constexpr unsigned long long b = 0xFF;
-typedef unsigned long long BitBoard;
+
 void PrintBB(BitBoard board, bool mirrored=true)
 {
     std::string output{},current_line{};
@@ -28,6 +30,8 @@ void PrintBB(BitBoard board, bool mirrored=true)
 }
 int main(void)
 {
-    PrintBB(BitBoard(b));
+    PrintBB(0xFF);
+    std::cout << Magics::LSBIndex<unsigned>(0xFF) << std::endl;
+    std::cout << Magics::MSBIndex<unsigned>(0xFF) << std::endl;
     return 0;
 }
