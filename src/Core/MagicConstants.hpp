@@ -34,19 +34,35 @@ namespace Magics
     template<typename T>
     constexpr BitBoard IndexToBB(T index){return 1ull << index;}
 
-    template<MoveDirections D>
+    template<MD D>
     constexpr BitBoard Shift(BitBoard b)
     {
         return 
-            D == MoveDirections::NORTH      ? b                 << 8 :
-            D == MoveDirections::SOUTH      ? b                 >> 8 :
-            D == MoveDirections::NORTH_EAST ? (b & ~FILE_HBB)   << 9 :
-            D == MoveDirections::EAST       ? (b & ~FILE_HBB)   << 1 :
-            D == MoveDirections::SOUTH_EAST ? (b & ~FILE_HBB)   >> 7 :
-            D == MoveDirections::SOUTH_WEST ? (b & ~FILE_ABB)   >> 9 :
-            D == MoveDirections::WEST       ? (b & ~FILE_ABB)   >> 1 :
-            D == MoveDirections::NORTH_WEST ? (b & ~FILE_ABB)   << 9 :
+            D == MD::NORTH      ? b                 << 8 :
+            D == MD::SOUTH      ? b                 >> 8 :
+            D == MD::NORTH_EAST ? (b & ~FILE_HBB)   << 9 :
+            D == MD::EAST       ? (b & ~FILE_HBB)   << 1 :
+            D == MD::SOUTH_EAST ? (b & ~FILE_HBB)   >> 7 :
+            D == MD::SOUTH_WEST ? (b & ~FILE_ABB)   >> 9 :
+            D == MD::WEST       ? (b & ~FILE_ABB)   >> 1 :
+            D == MD::NORTH_WEST ? (b & ~FILE_ABB)   << 7 :
+            D == MD::NORTHNORTH ? b                 << 16:
+            D == MD::SOUTHSOUTH ? b                 >> 16:
             0;
     }
+
+    constexpr PieceType KING         = 0x01u;
+    constexpr PieceType QUEEN        = 0x02u;
+    constexpr PieceType BISHOP       = 0x03u;
+    constexpr PieceType KNIGHT       = 0x04u;
+    constexpr PieceType ROOK         = 0x05u;
+    constexpr PieceType PAWN         = 0x06u;
+    constexpr uint32_t START_SQ_MASK    = 0x0000003F;
+    constexpr uint32_t END_SQ_MASK      = 0x00000FC0;
+    constexpr uint32_t PIECE_TYPE_MASK  = 0x00007000;
+    constexpr uint32_t COLOUR_MASK     = 0x00008000;
+    constexpr uint16_t END_SQ_SHIFT     = 6;
+    constexpr uint16_t PIECE_TYPE_SHIFT = 12;
+    constexpr uint16_t COLOUR_SHIFT   = 15;
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

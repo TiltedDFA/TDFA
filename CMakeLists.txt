@@ -12,9 +12,9 @@ set(CMAKE_CXX_COMPILER "g++")
 file(GLOB_RECURSE MY_SOURCES "src/**.cpp")
 
 if(CMAKE_CXX_FLAGS_DEBUG)
-    add_compile_options(-g -O0 -Wall -Wextra -Wpedantic -save-temps)
+    add_compile_options(-std=c++20 -g -O0 -Wall -Wextra -Wpedantic -save-temps)
 else()
-    add_compile_options(-O3 -march=native -save-temps)
+    add_compile_options(-std=c++20 -O3 -march=native -save-temps)
 endif()
 
 

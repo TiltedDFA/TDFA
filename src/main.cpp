@@ -1,6 +1,8 @@
 #include <iostream>
 
-#include "core/headers/MagicConstants.hpp"
+#include "core/MagicConstants.hpp"
+#include "MoveGen/MoveList.hpp"
+#include "MoveGen/MoveGen.hpp"
 
 constexpr unsigned long long b = 0xFF;
 
@@ -31,7 +33,10 @@ void PrintBB(BitBoard board, bool mirrored=true)
 int main(void)
 {
     PrintBB(0xFF);
+    MoveGen inst;
+    MoveList instance;
     std::cout << Magics::LSBIndex<unsigned>(0xFF) << std::endl;
     std::cout << Magics::MSBIndex<unsigned>(0xFF) << std::endl;
+    inst.WhitePawnMoves(instance.Current(),1ull,0ull);
     return 0;
 }

@@ -4,8 +4,11 @@
 #include <cstdint>
 
 typedef uint64_t BitBoard;
+typedef uint32_t PieceType;
 
-enum class MoveDirections : uint8_t
+constexpr std::size_t MAX_MOVES = 256;
+
+enum class MD : uint8_t
 {
     NORTH,
     NORTH_EAST,
@@ -14,7 +17,9 @@ enum class MoveDirections : uint8_t
     SOUTH,
     SOUTH_WEST,
     WEST,
-    NORTH_WEST
+    NORTH_WEST,
+    NORTHNORTH,
+    SOUTHSOUTH
 };
 
 
