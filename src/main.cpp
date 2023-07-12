@@ -5,7 +5,9 @@
 #include "MoveGen/MoveGen.hpp"
 
 constexpr unsigned long long b = 0xFF;
-
+#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define TEST_FEN_LONG "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8"
+#define TEST_FEN_WHITE_SPACE "                            8/8/8/8/4Pp2/8/8/8 w - e3 0 1                              "
 void PrintBB(BitBoard board, bool mirrored=true)
 {
     std::string output{},current_line{};
@@ -32,11 +34,7 @@ void PrintBB(BitBoard board, bool mirrored=true)
 }
 int main(void)
 {
-    PrintBB(0xFF);
-    MoveGen inst;
-    MoveList instance;
-    std::cout << Magics::LSBIndex<unsigned>(0xFF) << std::endl;
-    std::cout << Magics::MSBIndex<unsigned>(0xFF) << std::endl;
-    inst.WhitePawnMoves(instance.Current(),1ull,0ull);
+    BB::Position pos{};
+    pos.ImportFen(START_FEN);
     return 0;
 }
