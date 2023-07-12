@@ -93,3 +93,23 @@ void MoveGen::BlackKnightMoves(Move** move_list, BitBoard knights) noexcept
         knights = Magics::PopLSB(knights);
     }
 }
+void MoveGen::WhiteKingMoves(Move** move_list, BitBoard king) noexcept
+{
+    const uint8_t king_index = __builtin_ctzll(king);
+    BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (empty_squares_ | (black_pieces_ & ~white_pieces_));
+    while(king_attacks)
+    {
+        *(*move_list)++ = Moves::EncodeMove(king_index,__builtin_ctzll(king_attacks),Magics::KING,1);
+        king_attacks = Magics::PopLSB(king_attacks);
+    }
+}
+void MoveGen::BlackKingMoves(Move** move_list, BitBoard king) noexcept
+{
+    const uint8_t king_index = __builtin_ctzll(king);
+    BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (empty_squares_ | (~black_pieces_ & white_pieces_));
+    while(king_attacks)
+    {
+        *(*move_list)++ = Moves::EncodeMove(king_index,__builtin_ctzll(king_attacks),Magics::KING,0);
+        king_attacks = Magics::PopLSB(king_attacks);
+    }
+}

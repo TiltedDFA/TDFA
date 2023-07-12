@@ -86,5 +86,23 @@ namespace Magics
     }
 
     constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
+
+    consteval std::array<BitBoard, 64> KingAttackingMask()
+    {
+        std::array<BitBoard, 64> temp_array{};
+        constexpr BitBoard king_attack_template =   IndexToBB<0>() | IndexToBB<1>() | IndexToBB<2>() |
+                                                    IndexToBB<8>() | IndexToBB<10>()|
+                                                    IndexToBB<16>()| IndexToBB<17>()| IndexToBB<18>();
+        for(uint8_t i{0}; i < 64;++i)
+        {
+            if(i%8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+                                            & ~FILE_HBB;
+            else if(i%8 > 6)temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+                                            & ~FILE_ABB;
+            else temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)));
+        }
+        return temp_array;
+    }
+    constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP
