@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "core/MagicConstants.hpp"
+#include "Core/MagicConstants.hpp"
 #include "MoveGen/MoveList.hpp"
 #include "MoveGen/MoveGen.hpp"
 

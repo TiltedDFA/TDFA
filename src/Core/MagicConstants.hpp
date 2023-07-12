@@ -2,7 +2,7 @@
 #define MAGICCONSTANTS_HPP
 
 #include "Types.hpp"
-
+#include <array>
 namespace Magics
 {
     constexpr BitBoard FILE_ABB = 0x0101010101010101;
@@ -34,6 +34,9 @@ namespace Magics
     template<typename T>
     constexpr BitBoard IndexToBB(T index){return 1ull << index;}
 
+    template<uint8_t N>
+    consteval BitBoard IndexToBB(){return 1ull << N;}
+
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
     {
@@ -51,18 +54,37 @@ namespace Magics
             0;
     }
 
-    constexpr PieceType KING         = 0x01u;
-    constexpr PieceType QUEEN        = 0x02u;
-    constexpr PieceType BISHOP       = 0x03u;
-    constexpr PieceType KNIGHT       = 0x04u;
-    constexpr PieceType ROOK         = 0x05u;
-    constexpr PieceType PAWN         = 0x06u;
+    constexpr PieceType KING            = 0x01u;
+    constexpr PieceType QUEEN           = 0x02u;
+    constexpr PieceType BISHOP          = 0x03u;
+    constexpr PieceType KNIGHT          = 0x04u;
+    constexpr PieceType ROOK            = 0x05u;
+    constexpr PieceType PAWN            = 0x06u;
     constexpr uint32_t START_SQ_MASK    = 0x0000003F;
     constexpr uint32_t END_SQ_MASK      = 0x00000FC0;
     constexpr uint32_t PIECE_TYPE_MASK  = 0x00007000;
-    constexpr uint32_t COLOUR_MASK     = 0x00008000;
+    constexpr uint32_t COLOUR_MASK      = 0x00008000;
     constexpr uint16_t END_SQ_SHIFT     = 6;
     constexpr uint16_t PIECE_TYPE_SHIFT = 12;
-    constexpr uint16_t COLOUR_SHIFT   = 15;
+    constexpr uint16_t COLOUR_SHIFT     = 15;
+
+
+    consteval std::array<BitBoard, 64> KnightAttackingMask()
+    {
+        std::array<BitBoard, 64> temp_array{};
+        constexpr BitBoard knight_attack_template = IndexToBB<0>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
+                                                    IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
+        for(uint8_t i{0}; i < 64;++i)
+        {
+            if(i%8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)))
+                                            & (~Magics::FILE_GBB & ~FILE_HBB);
+            else if(i%8 > 5)temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)))
+                                            & (~Magics::FILE_ABB & ~Magics::FILE_BBB);
+            else temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)));
+        }
+        return temp_array;
+    }
+
+    constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

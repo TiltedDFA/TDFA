@@ -59,3 +59,37 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = __builtin_ctzll(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+9,index,Magics::PAWN,1);
 }
+void MoveGen::WhiteKnightMoves(Move** move_list, BitBoard knights) noexcept
+{
+    if(!knights) return;
+    while(knights)
+    {
+        const uint8_t knight_index = __builtin_ctzll(knights);
+        BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & (empty_squares_ 
+                                 | (black_pieces_ & ~white_pieces_));
+        while(possible_move)
+        {
+            const uint8_t attack_index = __builtin_ctzll(possible_move);
+            *(*move_list)++ = Moves::EncodeMove(knight_index,attack_index,Magics::KNIGHT,1);
+            possible_move = Magics::PopLSB(possible_move);
+        }
+        knights = Magics::PopLSB(knights);
+    }
+}
+void MoveGen::BlackKnightMoves(Move** move_list, BitBoard knights) noexcept
+{
+    if(!knights) return;
+    while(knights)
+    {
+        const uint8_t knight_index = __builtin_ctzll(knights);
+        BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & (empty_squares_ 
+                                 | (~black_pieces_ & white_pieces_));
+        while(possible_move)
+        {
+            const uint8_t attack_index = __builtin_ctzll(possible_move);
+            *(*move_list)++ = Moves::EncodeMove(knight_index,attack_index,Magics::KNIGHT,0);
+            possible_move = Magics::PopLSB(possible_move);
+        }
+        knights = Magics::PopLSB(knights);
+    }
+}

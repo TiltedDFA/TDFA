@@ -16,6 +16,8 @@ public:
 
     void WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
     void BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
+    void WhiteKnightMoves(Move** move_list, BitBoard knights) noexcept;
+    void BlackKnightMoves(Move** move_list, BitBoard knights) noexcept;
 private:
     static MoveGen* instance_;
     BitBoard white_pieces_;
