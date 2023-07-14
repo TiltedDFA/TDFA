@@ -23,19 +23,28 @@ namespace Magics
     constexpr BitBoard RANK_7BB = RANK_1BB << 48;
     constexpr BitBoard RANK_8BB = RANK_1BB << 56;
 
-    template<typename T>
-    constexpr T LSBIndex(BitBoard board){return static_cast<T>(__builtin_ctzll(board));}
+    constexpr BitBoard GetLS1B(BitBoard bb){return bb & -bb;}
+#ifdef __GNUG__
+    constexpr int FindLS1B(BitBoard bb){return __builtin_ctzll(bb);}
+#else
+    constexpr int FindLS1B(BitBoard bb)
+    {
+        bb = GetLS1B(bb);
+        int pos = 0;
+        while (bb >>= 1) ++pos;
+        return pos;
+    }
+#endif
 
-    template<typename T>
-    constexpr T MSBIndex(BitBoard board){return static_cast<T>(__builtin_clzll(board) ^ 0x3F);}
+    constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
 
     constexpr BitBoard PopLSB(BitBoard board) {return (board& (board-1));}
     
-    template<typename T>
-    constexpr BitBoard IndexToBB(T index){return 1ull << index;}
+    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
 
     template<uint8_t N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
+
 
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
