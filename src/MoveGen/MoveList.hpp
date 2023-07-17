@@ -5,6 +5,7 @@
 #include "../Core/Move.hpp"
 #include <algorithm>
 #include <limits>
+#include <ranges>
 
 template<typename T>
 constexpr void __FILL(T* begin, std::size_t size, T value)
@@ -17,11 +18,13 @@ class MoveList
 {
 public:
     explicit constexpr MoveList() :head(), tail(&head[0]) { __FILL<Move>(head, MAX_MOVES, std::numeric_limits<Move>::max()); }
-    constexpr Move* First()     {return &head[0];}
-    constexpr Move* Last()      {return tail;}
+    constexpr Move* First() {return std::begin(head);}
+    constexpr Move* Last() {return std::end(head);}
     constexpr Move** Current()  {return &tail;}
     constexpr std::size_t Size()const {return tail - head;}
-    constexpr bool Contains(Move move){return std::find(First(),Last(),move) != Last();}
+    constexpr bool Contains(Move move)const{return std::ranges::find(head, move) != std::end(head);}
+    constexpr MoveList(const MoveList&other)=delete;
+    constexpr MoveList& operator=(const MoveList& other)=delete;
 private:
     Move head[MAX_MOVES], *tail;
 };

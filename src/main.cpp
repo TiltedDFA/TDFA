@@ -3,6 +3,8 @@
 #include "Core/MagicConstants.hpp"
 #include "MoveGen/MoveList.hpp"
 #include "MoveGen/MoveGen.hpp"
+#include "Core/Testing.hpp"
+
 
 constexpr unsigned long long b = 0xFF;
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -36,5 +38,16 @@ int main(void)
 {
     BB::Position pos{};
     pos.ImportFen(START_FEN);
+    MoveList instance;
+    std::cout << instance.First() << "\n";
+    std::cout << instance.Last() << "\n";
+    for(uint16_t i = 0; i < MAX_MOVES;++i)
+    {
+        if(i == 198) *(*instance.Current())++ = std::numeric_limits<Move>::max()-1; 
+        else *(*instance.Current())++ = i;
+    }
+    std::cout << instance.Last() << "\n";
+    std::cout << instance.Contains(Move(std::numeric_limits<Move>::max())) << '\t' << std::numeric_limits<Move>::max();
+    CmpMoveLists(instance,std::vector<Move>());
     return 0;
 }

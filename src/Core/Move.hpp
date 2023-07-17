@@ -1,9 +1,11 @@
 #ifndef MOVE_HPP
 #define MOVE_HPP
 #include <cstdint>
-#include "MagicConstants.hpp"
 #include <algorithm>
-typedef uint16_t Move;
+
+#include "Types.hpp"
+#include "MagicConstants.hpp"
+
 /*
 Move storage: 
 from right to left:

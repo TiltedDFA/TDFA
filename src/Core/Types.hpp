@@ -5,6 +5,7 @@
 
 typedef uint64_t BitBoard;
 typedef uint32_t PieceType;
+typedef uint16_t Move;
 
 constexpr std::size_t MAX_MOVES = 256;
 
