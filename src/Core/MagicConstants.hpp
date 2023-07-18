@@ -102,7 +102,31 @@ namespace Magics
         }
         return temp_array;
     }
+    static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
+    {
+        std::array<std::array<BitBoard,4>,64> r_val;
+        for(uint8_t i = 0; i < 64;++i)
+        {
+            uint8_t rank = Magics::rank_of(i);
+            uint8_t file = Magics::file_of(i);
+            BitBoard cross_attacks{0ull};
+            BitBoard anti_cross_attacks{0ull};
 
+            for(int8_t r = rank + 1, f = file + 1; r < 8 && f < 8;++r,++f)     cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 + f));
+            for(int8_t r = rank - 1, f = file - 1; r >= 0 && f >= 0;--r,--f)   cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 + f));
+            for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0;++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 +f));
+            for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8;--r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 +f));
+            
+            r_val[i][0] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
+            r_val[i][1] = (Magics::RANK_1BB << (8*rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
+            r_val[i][2] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
+            r_val[i][3] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
+        }
+        return r_val;
+    }
+
+    static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
+    
     constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 
     consteval std::array<BitBoard, 64> KingAttackingMask()
