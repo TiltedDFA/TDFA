@@ -60,40 +60,40 @@ namespace BB
             switch (i)
             {
             case('p'):
-                boards_.black_pawns_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::PAWN]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('n'):
-                boards_.black_knights_  |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::KNIGHT]  |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('b'):
-                boards_.black_bishops_  |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::BISHOP]  |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('r'):
-                boards_.black_rooks_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::ROOK]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('q'):
-                boards_.black_queens_   |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::QUEEN]   |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('k'):
-                boards_.black_kings_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::BLACK][loc::KING]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('P'):
-                boards_.white_pawns_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::PAWN]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('N'):
-                boards_.white_knights_  |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::KNIGHT]  |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('B'):
-                boards_.white_bishops_  |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::BISHOP]  |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('R'):
-                boards_.white_rooks_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::ROOK]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('Q'):
-                boards_.white_queens_   |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::QUEEN]   |= 1ull << ((current_row * 8) + current_col);
                 break;
             case('K'):
-                boards_.white_kings_    |= 1ull << ((current_row * 8) + current_col);
+                pieces_[loc::WHITE][loc::KING]    |= 1ull << ((current_row * 8) + current_col);
                 break;
             default:
                 return false;

@@ -37,7 +37,7 @@ bool RunWhitePawnGenTests()
 {
     SET_UP_TESTS;
     pos.ImportFen(TESTFEN1);
-    move_generator.WhitePawnMoves(move_list.Current(),pos.boards_.white_pawns_,Magics::IndexToBB(pos.en_passant_target_sq_));
+    move_generator.WhitePawnMoves(move_list.Current(),pos.pieces_[BB::loc::WHITE][BB::loc::PAWN],Magics::IndexToBB(pos.en_passant_target_sq_));
     return true;
 }
 

@@ -3,9 +3,9 @@
 
 #include <cstdint>
 
-typedef uint64_t BitBoard;
-typedef uint32_t PieceType;
-typedef uint16_t Move;
+using Move      = uint16_t;
+using BitBoard  = uint64_t;
+using PieceType = uint32_t;
 
 constexpr std::size_t MAX_MOVES = 256;
 

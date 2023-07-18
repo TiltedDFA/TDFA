@@ -64,49 +64,49 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
-    void PrintEntireBoard(const BB::Boards& board)
+    void PrintEntireBoard(const BitBoard (&board)[2][6])
     {
         std::cout << "wk" << std::endl;
-        PrintBB(board.white_kings_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::KING],true);
         std::cout << "wq" << std::endl;
-        PrintBB(board.white_queens_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::QUEEN],true);
         std::cout << "wb" << std::endl;
-        PrintBB(board.white_bishops_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::BISHOP],true);
         std::cout << "wn" << std::endl;
-        PrintBB(board.white_knights_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::KNIGHT],true);
         std::cout << "wr" << std::endl;
-        PrintBB(board.white_rooks_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::ROOK],true);
         std::cout << "wp" << std::endl;
-        PrintBB(board.white_pawns_,true);
+        PrintBB(board[BB::loc::WHITE][BB::loc::PAWN],true);
 
         std::cout << "bk" << std::endl;
-        PrintBB(board.black_kings_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::KING],true);
         std::cout << "bq" << std::endl;
-        PrintBB(board.black_queens_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::QUEEN],true);
         std::cout << "bb" << std::endl;
-        PrintBB(board.black_bishops_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::BISHOP],true);
         std::cout << "bn" << std::endl;
-        PrintBB(board.black_knights_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::KNIGHT],true);
         std::cout << "br" << std::endl;
-        PrintBB(board.black_rooks_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::ROOK],true);
         std::cout << "bp" << std::endl;
-        PrintBB(board.black_pawns_,true);
+        PrintBB(board[BB::loc::BLACK][BB::loc::PAWN],true);
     }
     std::string PieceTypeToStr(PieceType piece)
     {
         switch (piece)
         {
-        case Magics::KING:
+        case Moves::KING:
             return "King";
-        case Magics::QUEEN:
+        case Moves::QUEEN:
             return "Queen";
-        case Magics::BISHOP:
+        case Moves::BISHOP:
             return "Bishop";
-        case Magics::KNIGHT:
+        case Moves::KNIGHT:
             return "Knight";
-        case Magics::ROOK:
+        case Moves::ROOK:
             return "Rook";
-        case Magics::PAWN:
+        case Moves::PAWN:
             return "Pawn";
         default:
             return "Error with piece type to string";
@@ -115,19 +115,19 @@ namespace Debug
     void PrintEncodedMoveStr(Move move)
     {
         std::string move_str{""};
-        move_str += "The start index is: " + std::to_string(move & Magics::START_SQ_MASK) + "\n";
-        move_str += "The end index is: " + std::to_string((move & Magics::END_SQ_MASK) >> Magics::END_SQ_SHIFT) + "\n";
-        move_str += "THe piece moved was: " + PieceTypeToStr((move & Magics::PIECE_TYPE_MASK) >> Magics::PIECE_TYPE_SHIFT) + "\n";
-        move_str += (((move & Magics::COLOUR_MASK) >> Magics::COLOUR_SHIFT) == 1) ? "The piece was white" : "The piece was black";
+        move_str += "The start index is: " + std::to_string(move & Moves::START_SQ_MASK) + "\n";
+        move_str += "The end index is: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + "\n";
+        move_str += "THe piece moved was: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + "\n";
+        move_str += (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "The piece was white" : "The piece was black";
         std::cout << move_str;
     }
     void ShortPrintEncodedMoveStr(Move move)
     {
         std::string move_str{""};
-        move_str += "S: " + std::to_string(move & Magics::START_SQ_MASK) + ", ";
-        move_str += "E: " + std::to_string((move & Magics::END_SQ_MASK) >> Magics::END_SQ_SHIFT) + ", ";
-        move_str += "T: " + PieceTypeToStr((move & Magics::PIECE_TYPE_MASK) >> Magics::PIECE_TYPE_SHIFT) + ", ";
-        move_str += "C: " + (((move & Magics::COLOUR_MASK) >> Magics::COLOUR_SHIFT) == 1) ? "W" : "B";
+        move_str += "S: " + std::to_string(move & Moves::START_SQ_MASK) + ", ";
+        move_str += "E: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + ", ";
+        move_str += "T: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + ", ";
+        move_str += "C: " + (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "W" : "B";
         std::cout << move_str;
     }
     void PrintEncodedMoveBin(Move move)

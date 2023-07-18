@@ -6,40 +6,35 @@
 #include <string_view>
 namespace BB
 {
-    struct Boards
+    namespace loc
     {
-    public:
-        consteval Boards():
-        white_kings_(0ull), white_queens_(0ull), white_rooks_(0ull), white_bishops_(0ull), white_knights_(0ull), white_pawns_(0ull),
-        black_kings_(0ull), black_queens_(0ull), black_rooks_(0ull), black_bishops_(0ull), black_knights_(0ull), black_pawns_(0ull){}
-    public:
-        BitBoard white_kings_;
-        BitBoard white_queens_;
-        BitBoard white_rooks_;
-        BitBoard white_bishops_;
-        BitBoard white_knights_;
-        BitBoard white_pawns_;
-
-        BitBoard black_kings_;
-        BitBoard black_queens_;
-        BitBoard black_rooks_;
-        BitBoard black_bishops_;
-        BitBoard black_knights_;
-        BitBoard black_pawns_;
-    };
+        constexpr uint8_t WHITE = 0;
+        constexpr uint8_t BLACK = 1;
+        constexpr uint8_t KING  = 0;
+        constexpr uint8_t QUEEN = 1;
+        constexpr uint8_t BISHOP= 2;
+        constexpr uint8_t KNIGHT= 3;
+        constexpr uint8_t ROOK  = 4;
+        constexpr uint8_t PAWN  = 5; 
+    }
     struct Position
     {
     public:
         consteval Position():
-            boards_(),
+            pieces_(),
             castling_rights_(0xF),
             whites_turn_(true),
             en_passant_target_sq_(65),
             half_moves_(0),
-            full_moves_(0){}
+            full_moves_(0)
+            {
+                for(uint8_t i = 0; i < 2; ++i)
+                    for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
+            }
         consteval void ResetBoard()
         {
-            boards_ = Boards();
+            for(uint8_t i = 0; i < 2; ++i)
+                    for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
             castling_rights_ = 0x0F;
             whites_turn_ = true;
             en_passant_target_sq_ = 65;
@@ -48,8 +43,16 @@ namespace BB
         }    
         //returns true/false depending on success of fen importing
         bool ImportFen(std::string_view fen);
+
+        template<bool is_white>
+        constexpr BitBoard GetPieces()
+        {
+            BitBoard combined_board{0ull};
+            for(uint8_t i = 0; i < 6;++i) combined_board |= is_white ? pieces_[loc::WHITE][i] : pieces_[loc::BLACK][i];
+            return combined_board;
+        }
     public:
-        Boards boards_;
+        BitBoard pieces_[2][6];
         // top 4 bits are ignored XXXX WkWqBkBq where Wx and Bx represents sides and colours
         // 1 = can castle 0 = can't castle
         uint8_t castling_rights_;
