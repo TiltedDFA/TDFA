@@ -254,4 +254,84 @@ while((file_copy > -1) and (file_copy < 8) and a[file_copy] == 0 ){
     file_copy += 1;
 }
 cout<< "First piece to the right is at file " << file_copy << endl;
-*/
+
+
+#include <iostream>
+#include <array>
+#include <vector>
+#include <bitset>
+
+constexpr int NUM_SQUARES = 64;
+constexpr int NUM_DIRECTIONS = 4;
+constexpr int NUM_TERNARY_DIGITS = 7;
+constexpr int NUM_TERNARY_COMBINATIONS = 2187; // 3^NUM_TERNARY_DIGITS
+
+// Bitboard type (64-bit unsigned integer) to represent the chessboard
+using BitBoard = uint64_t;
+
+// Move representation (simplified)
+struct Move {
+    int from_square;
+    int to_square;
+    // Other move details...
+};
+
+// Function to generate all possible bishop moves from a given square
+std::vector<Move> generate_bishop_moves(int square) {
+    std::vector<Move> moves;
+
+    // Implement the logic to generate all possible moves for a bishop from the given square
+    // (This would involve checking all diagonal directions from the square and adding valid moves to the 'moves' vector.)
+
+    return moves;
+}
+
+// Function to compute the ternary index for a given 8-bit number
+int compute_ternary_index(uint8_t num) {
+    int index = 0;
+    for (int j = 0; j < NUM_TERNARY_DIGITS; ++j) {
+        index += ((num >> j) % 2) * pow(3, j);
+    }
+    return index;
+}
+
+// Function to precompute and store bishop moves for each square
+void precompute_bishop_moves() {
+    // 3-dimensional array to store precomputed bishop moves for each square, direction, and ternary combination
+    std::array<std::array<std::vector<Move>, NUM_DIRECTIONS>, NUM_SQUARES> move_lookup;
+
+    // Loop through all squares on the board
+    for (int square = 0; square < NUM_SQUARES; ++square) {
+        // Loop through all diagonal directions (NE, NW, SE, SW)
+        for (int direction = 0; direction < NUM_DIRECTIONS; ++direction) {
+            // 2-dimensional array to store bishop moves for each ternary combination
+            std::array<std::vector<Move>, NUM_TERNARY_COMBINATIONS> moves_per_combination;
+
+            // Loop through all possible combinations of occupied squares in ternary representation
+            for (int combination = 0; combination < NUM_TERNARY_COMBINATIONS; ++combination) {
+                // Generate and store bishop moves for the current square, direction, and combination
+                moves_per_combination[combination] = generate_bishop_moves(square);
+                // The 'generate_bishop_moves' function would handle move generation for the bishop.
+
+                // Increment 'combination' to get the next combination for the bishop moves
+            }
+
+            // Store the precomputed move data for the current square and direction
+            move_lookup[square][direction] = std::move(moves_per_combination);
+        }
+    }
+
+    // Now you have precomputed move data for bishops in the 'move_lookup' array.
+    // The 'move_lookup' array will allow you to efficiently access possible moves for each square,
+    // direction, and occupied combination during move generation.
+}
+
+int main() {
+    // Call the precompute function to generate and store bishop moves
+    precompute_bishop_moves();
+
+    // Your chess engine can now access the precomputed data in the 'move_lookup' array when generating moves for bishops.
+    // ...
+
+    return 0;
+}

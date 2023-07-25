@@ -2,6 +2,7 @@
 #define TYPES_HPP
 
 #include <cstdint>
+#include <array>
 
 using Move      = uint16_t;
 using BitBoard  = uint64_t;
@@ -23,5 +24,9 @@ enum class MD : uint8_t
     SOUTHSOUTH
 };
 
-
+struct move_info
+{
+    std::array<Move, 7> encoded_move;
+    uint16_t count;
+};
 #endif //#ifndef TYPES_HPP

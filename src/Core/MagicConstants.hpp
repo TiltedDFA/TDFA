@@ -5,6 +5,8 @@
 #include <array>
 #include <bitset>
 #include <cmath>
+#include <cassert>
+
 namespace Magics
 {
     constexpr BitBoard FILE_ABB = 0x01'01'01'01'01'01'01'01;
@@ -30,14 +32,16 @@ namespace Magics
 
     constexpr BitBoard GetLS1B(BitBoard bb){return bb & -bb;}
 //#ifdef __GNUG__
-#if 0
+#ifdef __GNUG__
     constexpr int FindLS1B(BitBoard bb){return __builtin_ctzll(bb);}
+    //constexpr double pow(double x, double y){return __builtin_pow(x,y);}
 #else
     constexpr int FindLS1B(BitBoard bb)
     {
         return std::countr_zero(bb);
     }
 #endif
+    constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
     constexpr BitBoard CollapsedFilesIndex(BitBoard b) 
     {
         b |= b >> 32;
@@ -46,16 +50,25 @@ namespace Magics
         return b & 0xFF;
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3
-    static consteval std::array<uint16_t,256> compute_base_2_to_3()
+    static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
     {
-        std::array<uint16_t,256> result{};
-        for(uint16_t i = 0; i < 256;++i)
-            for(int j = 0; j < 8;++j)
-                result.at(i) += ((i>>j)%2) * std::pow(3,j);
+        std::array<std::array<uint16_t,256>,8> result{};
+        for(uint8_t missed_file = 0; missed_file < 8;++missed_file)
+        {
+            for(uint16_t i = 0; i < 256;++i)
+            {
+                for(int j = 0; j < 8;++j)
+                {
+                    if(j == missed_file) continue;
+                    result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
+                }
+                    assert(result.at(missed_file).at(i) < 1094);
+            }
+        }
         return result;
     }
 
-    static constexpr std::array<uint16_t,256> base_2_to_3 = compute_base_2_to_3();
+    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3 = compute_base_2_to_3();
 
     constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
 
@@ -87,7 +100,7 @@ namespace Magics
             0;
     }
     
-    consteval std::array<BitBoard, 64> KnightAttackingMask()
+    static consteval std::array<BitBoard, 64> KnightAttackingMask()
     {
         std::array<BitBoard, 64> temp_array{};
         constexpr BitBoard knight_attack_template = IndexToBB<0>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
@@ -104,7 +117,7 @@ namespace Magics
     }
     static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
     {
-        std::array<std::array<BitBoard,4>,64> r_val;
+        std::array<std::array<BitBoard,4>,64> r_val{};
         for(uint8_t i = 0; i < 64;++i)
         {
             uint8_t rank = Magics::rank_of(i);
@@ -127,9 +140,9 @@ namespace Magics
 
     static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
     
-    constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
+    static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 
-    consteval std::array<BitBoard, 64> KingAttackingMask()
+    static consteval std::array<BitBoard, 64> KingAttackingMask()
     {
         std::array<BitBoard, 64> temp_array{};
         constexpr BitBoard king_attack_template =   IndexToBB<0>() | IndexToBB<1>() | IndexToBB<2>() |
@@ -145,6 +158,6 @@ namespace Magics
         }
         return temp_array;
     }
-    constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
+    static constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

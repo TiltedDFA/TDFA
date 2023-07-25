@@ -10,6 +10,10 @@ constexpr unsigned long long b = 0xFF;
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define TEST_FEN_LONG "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8"
 #define TEST_FEN_WHITE_SPACE "                            8/8/8/8/4Pp2/8/8/8 w - e3 0 1                              "
+#define TEST_FEN_TIT_ONE "8/8/8/8/1r1R2N1/8/8/8 w - - 0 1"
+#define TEST_FEN_TIT_TWO "8/8/8/8/8/8/1r2q1N1/8 w - - 0 1"
+#define TEST_FEN_TIT_THREE "1R3rp1/8/8/8/8/8/8/8 w - - 0 1"
+
 void PrintBB(BitBoard board, bool mirrored=true)
 {
     std::string output{},current_line{};
@@ -69,11 +73,62 @@ void PrintBB(BitBoard board, bool mirrored=true)
     */
 int main(void)
 {
+    /*
     BB::Position pos{};
     pos.ImportFen(TESTFEN9);
     BitBoard pieces = 0x448800;//pos.GetPieces<true>();
     Debug::PrintBB(pieces);
     Debug::PrintBB(Magics::CollapsedFilesIndex(pieces));
     std::cout << Magics::CollapsedFilesIndex(pieces);
+    */
+    BB::Position pos;
+    pos.ImportFen(TEST_FEN_TIT_ONE);
+    MoveGen generator;
+
+    uint8_t sq = 27;
+    uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    uint16_t index = p1+p2;
+    std::cout << "index = " << index << std::endl;
+    auto info = generator.SLIDING_ATTACK_CONFIG.at(sq).at(0).at(p1+p2);
+    Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    Debug::PrintEncodedMovesMoveInfo(info);
+    for(int i = 0; i < info.count;++i)
+    {
+        Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
+    }
+
+    pos.ImportFen(TEST_FEN_TIT_TWO);
+
+    sq = 9;
+    p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    index = p1+p2;
+    std::cout << "index = " << index << std::endl;
+    info = generator.SLIDING_ATTACK_CONFIG.at(sq).at(0).at(p1+p2);
+    Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    Debug::PrintEncodedMovesMoveInfo(info);
+    for(int i = 0; i < info.count;++i)
+    {
+        Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
+    }
+
+    pos.ImportFen(TEST_FEN_TIT_THREE);
+
+    sq = 61;
+    p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+    index = p1+p2;
+    std::cout << "index = " << index << std::endl;
+    info = generator.SLIDING_ATTACK_CONFIG.at(sq).at(0).at(p1+p2);
+    Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    Debug::PrintEncodedMovesMoveInfo(info);
+    for(int i = 0; i < info.count;++i)
+    {
+        Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
+    }
+    /*
+    std::cout << Magics::base_2_to_3[0][0x7F] << std::endl;
+    */
     return 0;
 }

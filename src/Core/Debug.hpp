@@ -119,6 +119,7 @@ namespace Debug
         move_str += "The end index is: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + "\n";
         move_str += "THe piece moved was: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + "\n";
         move_str += (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "The piece was white" : "The piece was black";
+        move_str += "\n";
         std::cout << move_str;
     }
     void ShortPrintEncodedMoveStr(Move move)
@@ -128,6 +129,7 @@ namespace Debug
         move_str += "E: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + ", ";
         move_str += "T: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + ", ";
         move_str += "C: " + (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "W" : "B";
+        move_str += "\n";
         std::cout << move_str;
     }
     void PrintEncodedMoveBin(Move move)
@@ -140,6 +142,17 @@ namespace Debug
         for(const Move i : moves)
         {
             combined_board |= 1ull << Moves::GetTargetIndex(i);
+        }
+        PrintBB(combined_board,mirrored);
+    }
+    void PrintEncodedMovesMoveInfo(const move_info& move,bool mirrored=true)
+    {
+        if(move.count == 0) std::cout << "No moves found\n";
+        BitBoard combined_board{0ull};
+        for(uint8_t i = 0; i < move.count;++i)
+        {
+           // combined_board |= 1ull << Moves::GetStartIndex(move.encoded_move[i]);
+            combined_board |= 1ull << Moves::GetTargetIndex(move.encoded_move[i]);
         }
         PrintBB(combined_board,mirrored);
     }

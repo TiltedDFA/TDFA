@@ -9,71 +9,68 @@
 #include "../Core/BitBoard.hpp"
 #include "../Core/Move.hpp"
 #include "MoveList.hpp"
-struct move_info
-{
-    Move encoded_move[7];
-    uint16_t count;
-};
-
 /**
  * Dir[0] = file atks
  * Dir[1] = rank atks
  * Dir[2] = cross atks
  * Dir[3] = anti-cross atks
  */
+
 static consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
     {
-        for(uint16_t us = 0; us < 256;++us)
+        for(uint64_t us = 0; us < 256;++us)
         {
-            for(uint16_t them = 0; them < 256;++them)
+            for(uint64_t them = 0; them < 256;++them)
             {
-                if((us & them) != 0) continue;
+                if((us & them)) continue;
                 move_info move{};
                 uint8_t combined = (us | them) & ~Magics::file_of(sq);
                 for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8;++current_file)
                 {
-                    if(!((combined >> current_file)&1)) 
+                    if(!((combined >> current_file)&1)) //empty
                     {
-                        move.encoded_move[move.count] = Moves::EncodeMove(sq,sq+current_file,Moves::ROOK,1);
+                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq+(current_file - Magics::file_of(sq)),Moves::ROOK,1);
                         ++move.count;
                         continue;
                     }
-                    if((us >> current_file)&1) break;
-                    move.encoded_move[move.count] = Moves::EncodeMove(sq,sq+current_file,Moves::ROOK,1);
-                    break;
+                    if((us >> current_file)&1) break; //our piece
+                    if((them >> current_file) & 1)
+                    {
+                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq+(current_file - Magics::file_of(sq)),Moves::ROOK,1); //their piece
+                        ++move.count;
+                        break;
+                    }
                 }
-                for(int8_t current_file = Magics::file_of(sq) - 1; current_file > -1;--current_file)
+                for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ;--current_file)
                 {
                     if(!((combined >> current_file)&1)) 
                     {
-                        move.encoded_move[move.count] = Moves::EncodeMove(sq,sq-current_file,Moves::ROOK,1);
+                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq-(Magics::file_of(sq) - current_file),Moves::ROOK,1);
                         ++move.count;
                         continue;
                     }
                     if((us >> current_file)&1) break;
-                    move.encoded_move[move.count] = Moves::EncodeMove(sq,sq-current_file,Moves::ROOK,1);
-                    break;
+                    if((them >> current_file) &1)
+                    {
+                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq-(Magics::file_of(sq) - current_file),Moves::ROOK,1);
+                        ++move.count;
+                        break;
+                    }
                 }
-                const int index = Magics::base_2_to_3[Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[sq][0])] + 2 * Magics::base_2_to_3[Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[sq][0])];
+                uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((us << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+                uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((them << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+                uint16_t index = p1 + p2;
                 result.at(sq).at(0).at(index) = move;
             }
         }
-        /*
-        for(int dir = 0; dir < 4;++dir)
-        {
-            for(int atk_config = 0; atk_config < 2187;++atk_config)
-            {
-                move_info move{};
-                result.at(sq).at(dir).at(atk_config) = move;
-            }
-        }
-        */
+
     }
     return result;
 }
+
 class MoveGen
 {
 public:
@@ -115,7 +112,7 @@ public:
     void BlackKingMoves(Move** move_list, BitBoard king) noexcept;
     
 public:    
-    static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:
     BitBoard white_pieces_;
     BitBoard black_pieces_;

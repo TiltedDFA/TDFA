@@ -36,6 +36,7 @@ namespace BB
 {
     bool Position::ImportFen(std::string_view fen)
     {
+        ResetBoard();
         fen = RemoveWhiteSpace(fen);
         //if(fen.length() < 27 || fen.length() > 87) return false;    
         std::array<std::string_view,6> fen_sections;

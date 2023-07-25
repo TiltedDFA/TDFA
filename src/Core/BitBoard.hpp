@@ -31,7 +31,7 @@ namespace BB
                 for(uint8_t i = 0; i < 2; ++i)
                     for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
             }
-        consteval void ResetBoard()
+        constexpr void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)
                     for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
