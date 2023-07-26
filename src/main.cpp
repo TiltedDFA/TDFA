@@ -78,15 +78,21 @@ int main(void)
     Debug::PrintBB(Magics::CollapsedFilesIndex(pieces));
     std::cout << Magics::CollapsedFilesIndex(pieces);
     */
-    SET_UP_TITBOARD_TESTS;
+    move_info info{};
 
-    TEST_TITBOARD_GEN(2,"8/8/8/8/8/8/8/p1R2p1N w - - 0 1",info);
+    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/p1R2p1N w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
 
-    TEST_TITBOARD_GEN(59,"8/8/8/8/8/8/8/4r3 w - - 0 1",info);
+    RunTitBoardTest<D::RANK>(59,"8/8/8/8/8/8/8/4r3 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
 
-    TEST_TITBOARD_GEN(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
+    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
+    PRINT_TIT_TEST_RESULTS;
+
+    RunTitBoardTest<D::FILE>(29,"8/8/8/8/5R2/8/8/8 w - - 0 1",info);
+    PRINT_TIT_TEST_RESULTS;
+
+    RunTitBoardTest<D::FILE>(29,"8/8/8/5p2/5R2/8/5P2/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
     return 0;
 }

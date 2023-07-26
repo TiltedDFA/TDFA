@@ -21,13 +21,15 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define SET_UP_TITBOARD_TESTS   BB::Position pos; \
                                 MoveGen generator; \
                                 move_info info{};
-#define TEST_TITBOARD_GEN(piece_to_move_sq, fen, move_info_store) { uint8_t sq = (piece_to_move_sq);\
-                                                                    pos.ImportFen((fen));\
-                                                                    uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
-                                                                    uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
-                                                                    uint16_t index = p1+p2;\
-                                                                    std::cout << "sq= "<< (piece_to_move_sq) << " index = " << index << std::endl;\
-                                                                    info = generator.SLIDING_ATTACK_CONFIG.at(sq).at(1).at(p1+p2);}
+#define TEST_TITBOARD_GEN(piece_to_move_sq, fen, move_info_store,direction) {\
+            uint8_t sq = (piece_to_move_sq);\
+            pos.ImportFen((fen));\
+            uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+            uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+            uint16_t index = p1+p2;\
+            std::cout << "sq= "<< (piece_to_move_sq) << " index = " << index << std::endl;\
+            info = generator.SLIDING_ATTACK_CONFIG.at(sq).at((direction)).at(p1+p2);}
+
 #define PRINT_TIT_TEST_RESULTS for(int i = 0; i < info.count;++i) Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
 
 //white pawn move gen tests
@@ -42,6 +44,47 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define TESTFEN9 "R7/P5k1/8/8/8/6P1/6K1/r7 w - - 0 1" //another pawn endgame with 1 possible pawn moves for white
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
 
+// This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
+enum class D : uint8_t
+{
+    FILE,
+    RANK,
+    DIAG,
+    ADIAG
+};
+
+template<D direction>
+constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
+{
+    BB::Position pos;
+    
+    uint16_t p1{0};
+    uint16_t p2{0};
+    
+    pos.ImportFen(fen);
+    if(Magics::IndexToBB(sq) & pos.GetPieces<true>())
+    {
+        p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
+                                    [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                                            : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
+
+        p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
+                                        [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                                                : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
+    }
+    else
+    {
+        p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
+                                    [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                                            : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
+
+        p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
+                                        [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                                                : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
+    }
+    std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", fen='" << fen << "'" << std::endl;
+    info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
+}
 bool RunWhitePawnGenTests()
 {
     SET_UP_TESTS;

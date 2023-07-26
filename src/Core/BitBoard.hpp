@@ -20,17 +20,17 @@ namespace BB
     struct Position
     {
     public:
-        consteval Position():
-            pieces_(),
-            castling_rights_(0xF),
-            whites_turn_(true),
-            en_passant_target_sq_(65),
-            half_moves_(0),
-            full_moves_(0)
-            {
-                for(uint8_t i = 0; i < 2; ++i)
-                    for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
-            }
+        constexpr Position():
+        pieces_(),
+        castling_rights_(0xF),
+        whites_turn_(true),
+        en_passant_target_sq_(65),
+        half_moves_(0),
+        full_moves_(0)
+        {
+            for(uint8_t i = 0; i < 2; ++i)
+                for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
+        }
         constexpr void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)

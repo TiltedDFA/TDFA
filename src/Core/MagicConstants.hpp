@@ -41,12 +41,23 @@ namespace Magics
         return std::countr_zero(bb);
     }
 #endif
-    constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
-    constexpr BitBoard CollapsedFilesIndex(BitBoard b) 
+    static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
+    static constexpr BitBoard CollapsedFilesIndex(BitBoard b) 
     {
         b |= b >> 32;
         b |= b >> 16;
         b |= b >>  8;
+        return b & 0xFF;
+    }
+    static constexpr BitBoard CollapsedRanksIndex(BitBoard b) 
+    {
+        b |= b >>  4;
+        b |= b >>  2;
+        b |= b >>  1;
+        b &= FILE_ABB;
+        b |= b >>  7;
+        b |= b >> 14;
+        b |= b >> 28;
         return b & 0xFF;
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3
