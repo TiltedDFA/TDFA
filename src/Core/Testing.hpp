@@ -65,21 +65,21 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
     if(Magics::IndexToBB(sq) & pos.GetPieces<true>())
     {
         p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
-                                    [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                    [(direction == D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
         p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
-                                        [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                        [(direction == D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                                 : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
     else
     {
         p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
-                                    [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                    [(direction == D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
         p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
-                                        [(direction != D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
+                                        [(direction == D::FILE) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                                 : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
     std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", fen='" << fen << "'" << std::endl;
