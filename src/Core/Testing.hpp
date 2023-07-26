@@ -18,7 +18,17 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define SET_UP_TESTS BB::Position pos{}; MoveGen move_generator{}; MoveList move_list{}
 #define CMP_MOVE_LISTS(generated_move_list,expected_move_vector) if(CmpMoveLists((generated_move_list),(expected_move_vector))) std::cout << "Test passed"; \
                                                                 else {}
-
+#define SET_UP_TITBOARD_TESTS   BB::Position pos; \
+                                MoveGen generator; \
+                                move_info info{};
+#define TEST_TITBOARD_GEN(piece_to_move_sq, fen, move_info_store) { uint8_t sq = (piece_to_move_sq);\
+                                                                    pos.ImportFen((fen));\
+                                                                    uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+                                                                    uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+                                                                    uint16_t index = p1+p2;\
+                                                                    std::cout << "sq= "<< (piece_to_move_sq) << " index = " << index << std::endl;\
+                                                                    info = generator.SLIDING_ATTACK_CONFIG.at(sq).at(1).at(p1+p2);}
+#define PRINT_TIT_TEST_RESULTS for(int i = 0; i < info.count;++i) Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
 
 //white pawn move gen tests
 #define TESTFEN1 "8/8/8/4pP2/8/8/8/8 w - e6 0 1"     //checks left capturing en passant
@@ -31,7 +41,6 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define TESTFEN8 "8/8/2p1kPp1/6P1/4K3/8/8/8 w - - 0 1" //pawn endgame with 1 possible pawn move for white 
 #define TESTFEN9 "R7/P5k1/8/8/8/6P1/6K1/r7 w - - 0 1" //another pawn endgame with 1 possible pawn moves for white
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
-
 
 bool RunWhitePawnGenTests()
 {

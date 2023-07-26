@@ -83,6 +83,8 @@ namespace Magics
 
     constexpr uint8_t rank_of(uint8_t index){return index >> 3;}
 
+    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
+
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
     {

@@ -156,6 +156,27 @@ namespace Debug
         }
         PrintBB(combined_board,mirrored);
     }
+    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored=true)
+    {
+        std::string output{},current_line{};
+
+        for(int col{0}; col < 8;++col)
+        {
+            if(col == board_center)
+                current_line = mirrored ?   current_line + "X " : "X " + current_line;
+            else if((bb >> col)&1ull)
+                current_line = mirrored ?   current_line + "1 " : "1 " + current_line ;
+            else
+                current_line = mirrored ?   current_line + "0 " : "0 " + current_line;
+
+        }
+        output = current_line + output;
+        current_line = "";
+                            
+        output += "----------------\n";
+        output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
+        std::cout << output << std::endl;
+    }
 }
 
 #endif // #ifndef DEBUG_HPP

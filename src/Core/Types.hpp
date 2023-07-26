@@ -26,6 +26,8 @@ enum class MD : uint8_t
 
 struct move_info
 {
+    constexpr move_info():encoded_move(),count(0){}
+    constexpr void add_move(Move m){encoded_move.at(count) = m;++count;}
     std::array<Move, 7> encoded_move;
     uint16_t count;
 };

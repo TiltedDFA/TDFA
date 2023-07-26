@@ -11,7 +11,9 @@ set(CMAKE_CXX_COMPILER "g++")
 
 file(GLOB_RECURSE MY_SOURCES "src/**.cpp")
 
-if(CMAKE_CXX_FLAGS_DEBUG)
+set(CACHE CMAKE_VERBOSE_MAKEFILE ON)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-std=c++20 -g -gdwarf-5 -ggdb -C -O0 -Wall -Wextra -Wpedantic -save-temps -s -fconstexpr-ops-limit=1000000000)
 else()
     add_compile_options(-std=c++20 -O3 -march=native -mtune=native -save-temps -fconstexpr-ops-limit=1000000000)

@@ -15,7 +15,12 @@
  * Dir[2] = cross atks
  * Dir[3] = anti-cross atks
  */
-
+/**
+ * The reason that we'd need an array of [64][4][2187] despite the blocker configurations being the same in any direction
+ * would be due to the target indexs recorded being different based on the diretions.
+ * As of writing this (26/7/23 03:09) the only things that I think would differe between the directions in terms of how
+ * we precompute the moves would be how the moves are recorded(target indexes vairing) 
+*/
 static consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
@@ -26,47 +31,191 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
             for(uint64_t them = 0; them < 256;++them)
             {
                 if((us & them)) continue;
-                move_info move{};
+
+                move_info file_attack_moves{};
+                move_info rank_attack_moves{};
+                move_info diagonal_attack_moves{};
+                move_info anti_diagonal_attack_moves{};
+
                 uint8_t combined = (us | them) & ~Magics::file_of(sq);
-                for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8;++current_file)
+
+                for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8; ++current_file)
                 {
-                    if(!((combined >> current_file)&1)) //empty
+                    if(!((combined >> current_file) & 1)) //empty
                     {
-                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq+(current_file - Magics::file_of(sq)),Moves::ROOK,1);
-                        ++move.count;
+                        if(Magics::IndexInBounds(sq + 8 * (current_file - Magics::file_of(sq))))
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+
+                        if(Magics::IndexInBounds(sq + 9 * (current_file - Magics::file_of(sq)))) 
+                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - Magics::file_of(sq)), Moves::BISHOP, 1));
+                        
+                        if(Magics::IndexInBounds(sq + 7 * (current_file - Magics::file_of(sq)))) 
+                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - Magics::file_of(sq)), Moves::BISHOP, 1));
+
                         continue;
                     }
-                    if((us >> current_file)&1) break; //our piece
+
+                    if((us >> current_file) & 1) break; //our piece
+
+                    if((them >> current_file) & 1) //their piece
+                    {
+                        if(Magics::IndexInBounds(sq + 8 * (current_file - Magics::file_of(sq))))
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+
+                        if(Magics::IndexInBounds(sq + 9 * (current_file - Magics::file_of(sq))))
+                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - Magics::file_of(sq)), Moves::BISHOP, 1)); 
+                        
+                        if(Magics::IndexInBounds(sq + 7 * (current_file - Magics::file_of(sq)))) 
+                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - Magics::file_of(sq)), Moves::BISHOP, 1));
+
+                        break;
+                    }
+
+                }
+                for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ; --current_file)
+                {
+                    if(!((combined >> current_file) & 1)) 
+                    {
+                        if(Magics::IndexInBounds(sq - 8 * (Magics::file_of(sq) - current_file)))
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+
+                        if(Magics::IndexInBounds(sq - 9 * (current_file - Magics::file_of(sq)))) 
+                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (Magics::file_of(sq) - current_file), Moves::BISHOP, 1));
+
+                        if(Magics::IndexInBounds(sq - 7 * (current_file - Magics::file_of(sq)))) 
+                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (Magics::file_of(sq) - current_file), Moves::BISHOP, 1));
+
+                        continue;
+                    }
+
+                    if((us >> current_file) & 1) break;
+
                     if((them >> current_file) & 1)
                     {
-                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq+(current_file - Magics::file_of(sq)),Moves::ROOK,1); //their piece
-                        ++move.count;
+                        if(Magics::IndexInBounds(sq - 8 * (Magics::file_of(sq) - current_file)))
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+
+                        if(Magics::IndexInBounds(sq - 9 * (current_file - Magics::file_of(sq)))) 
+                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (Magics::file_of(sq) - current_file), Moves::BISHOP, 1));
+
+                        if(Magics::IndexInBounds(sq - 7 * (current_file - Magics::file_of(sq)))) 
+                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (Magics::file_of(sq) - current_file), Moves::BISHOP, 1));
+
                         break;
                     }
+
                 }
-                for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ;--current_file)
-                {
-                    if(!((combined >> current_file)&1)) 
-                    {
-                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq-(Magics::file_of(sq) - current_file),Moves::ROOK,1);
-                        ++move.count;
-                        continue;
-                    }
-                    if((us >> current_file)&1) break;
-                    if((them >> current_file) &1)
-                    {
-                        move.encoded_move.at(move.count) = Moves::EncodeMove(sq,sq-(Magics::file_of(sq) - current_file),Moves::ROOK,1);
-                        ++move.count;
-                        break;
-                    }
-                }
-                uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((us << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
-                uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((them << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+
+                uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][us & Magics::SLIDING_ATTACKS_MASK[Magics::file_of(sq)][1]];
+                uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][them & Magics::SLIDING_ATTACKS_MASK[Magics::file_of(sq)][1]];
                 uint16_t index = p1 + p2;
-                result.at(sq).at(0).at(index) = move;
+
+                result.at(sq).at(0).at(index) = file_attack_moves;
+                result.at(sq).at(1).at(index) = rank_attack_moves;
+                result.at(sq).at(2).at(index) = diagonal_attack_moves;
+                result.at(sq).at(3).at(index) = anti_diagonal_attack_moves;
             }
         }
-
+        //bishop diagonal attacks (WIP)
+        // for(uint64_t us = 0; us < 256;++us)
+        // {
+        //     for(uint64_t them = 0; them < 256;++them)
+        //     {
+        //         if((us & them)) continue;
+        //         move_info move{};
+        //         uint8_t combined = (us | them) & ~Magics::file_of(sq);
+        //         for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8; ++current_file)
+        //         {
+        //             if(!((combined >> current_file) & 1)) //empty
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 continue;
+        //             }
+        //             if((us >> current_file) & 1) break; //our piece
+        //             if((them >> current_file) & 1)
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1); //their piece
+        //                 ++move.count;
+        //                 break;
+        //             }
+        //         }
+        //         for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ; --current_file)
+        //         {
+        //             if(!((combined >> current_file) & 1)) 
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 continue;
+        //             }
+        //             if((us >> current_file) & 1) break;
+        //             if((them >> current_file) & 1)
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 break;
+        //             }
+        //         }
+        //         uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((us << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+        //         uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((them << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+        //         uint16_t index = p1 + p2;
+        //         result.at(sq).at(2).at(index) = move;
+        //     }
+        // }
+        // //bishop anti-diagonal attacks (WIP)
+        // for(uint64_t us = 0; us < 256;++us)
+        // {
+        //     for(uint64_t them = 0; them < 256;++them)
+        //     {
+        //         if((us & them)) continue;
+        //         move_info move{};
+        //         uint8_t combined = (us | them) & ~Magics::file_of(sq);
+        //         for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8; ++current_file)
+        //         {
+        //             if(!((combined >> current_file) & 1)) //empty
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 continue;
+        //             }
+        //             if((us >> current_file) & 1) break; //our piece
+        //             if((them >> current_file) & 1)
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1); //their piece
+        //                 ++move.count;
+        //                 break;
+        //             }
+        //         }
+        //         for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ; --current_file)
+        //         {
+        //             if(!((combined >> current_file) & 1)) 
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 continue;
+        //             }
+        //             if((us >> current_file) & 1) break;
+        //             if((them >> current_file) & 1)
+        //             {
+        //                 move.encoded_move.at(move.count) = Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1);
+        //                 ++move.count;
+        //                 break;
+        //             }
+        //         }
+        //         uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((us << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+        //         uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex((them << (Magics::rank_of(sq) * 8)) & Magics::SLIDING_ATTACKS_MASK[sq][1])];
+        //         uint16_t index = p1 + p2;
+        //         result.at(sq).at(3).at(index) = move;
+        //     }
+        // }
     }
     return result;
 }
