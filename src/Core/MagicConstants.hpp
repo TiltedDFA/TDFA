@@ -143,10 +143,10 @@ namespace Magics
             for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0;++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 +f));
             for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8;--r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r*8 +f));
             
-            r_val[i][0] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
-            r_val[i][1] = (Magics::RANK_1BB << (8*rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
-            r_val[i][2] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
-            r_val[i][3] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
+            r_val[i][static_cast<int>(D::FILE)] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
+            r_val[i][static_cast<int>(D::RANK)] = (Magics::RANK_1BB << (8*rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
+            r_val[i][static_cast<int>(D::DIAG)] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
+            r_val[i][static_cast<int>(D::ADIAG)] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
         }
         return r_val;
     }

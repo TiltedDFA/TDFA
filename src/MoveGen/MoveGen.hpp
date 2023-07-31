@@ -30,7 +30,7 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
         {
             for(uint64_t them = 0; them < 256;++them)
             {
-                if((us & them)) continue;
+                if(us & them) continue;
 
                 move_info file_attack_moves{};
                 move_info rank_attack_moves{};
@@ -142,6 +142,33 @@ public:
     void BishopMoves(Move** move_list,BitBoard bishops)
     {
 
+    }
+    template<bool is_white>
+    void RookMoves(Move** move_list, BitBoard rooks)
+    {
+        if(!rooks) return;
+
+        while(rooks)
+        {
+            const uint8_t rook_index = Magics::FindLS1B(rooks);
+            //file 
+            uint16_t us = Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][static_cast<int>(D::FILE)])];
+            uint16_t them = 2 * Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][static_cast<int>(D::FILE)])];
+            move_info move = SLIDING_ATTACK_CONFIG[rook_index][static_cast<int>(D::FILE)][us+them];
+            for(uint8_t i{0}; i < move.count;++i)
+            {
+                *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
+            }
+            //rank
+            us = Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedFilesIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][static_cast<int>(D::RANK)])];
+            them = 2 * Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedFilesIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][static_cast<int>(D::RANK)])];
+            move = SLIDING_ATTACK_CONFIG[rook_index][static_cast<int>(D::RANK)][us+them];
+            for(uint8_t i{0}; i < move.count;++i)
+            {
+                *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
+            }
+            rooks = Magics::PopLSB(rooks);
+        }
     }
     template<bool is_white>
     void KnightMoves(Move** move_list, BitBoard knights) noexcept

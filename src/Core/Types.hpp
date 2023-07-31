@@ -31,4 +31,14 @@ struct move_info
     std::array<Move, 7> encoded_move;
     uint16_t count;
 };
+
+// This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
+enum class D : uint8_t
+{
+    FILE,
+    RANK,
+    DIAG,
+    ADIAG
+};
+
 #endif //#ifndef TYPES_HPP
