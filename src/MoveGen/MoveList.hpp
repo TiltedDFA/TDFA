@@ -3,7 +3,6 @@
 
 #include "../Core/Types.hpp"
 #include "../Core/Move.hpp"
-#include "../Core/Debug.hpp"
 #include <algorithm>
 #include <limits>
 #include <ranges>
@@ -24,7 +23,6 @@ public:
     constexpr Move** Current()  {return &tail;}
     constexpr std::size_t Size()const {return tail - head;}
     constexpr bool Contains(Move move)const{return std::ranges::find(head, move) != std::end(head);}
-    void print(){for(int i = 0; i < Size();++i) Debug::ShortPrintEncodedMoveStr(head[i]);}
     // constexpr MoveList(const MoveList&other)=delete;
     // constexpr MoveList& operator=(const MoveList& other)=delete;
 private:

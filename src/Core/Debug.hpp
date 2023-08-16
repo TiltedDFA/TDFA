@@ -12,7 +12,7 @@
 
 namespace Debug
 {
-     void PrintBB(BitBoard board, int board_center,bool mirrored=true)
+    void PrintBB(BitBoard board, int board_center,bool mirrored=true)
     {
         std::string output{},current_line{};
         for(int row{0}; row < 8; ++row)

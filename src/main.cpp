@@ -78,21 +78,32 @@ int main(void)
     Debug::PrintBB(Magics::CollapsedFilesIndex(pieces));
     std::cout << Magics::CollapsedFilesIndex(pieces);
     */
+    BB::Position pos;
+    pos.ImportFen(START_FEN);
+    MoveGen generator;
+    MoveGen::EnPassantTargetSquare = 0x00;
+    MoveList list = generator.GenerateAllMoves(pos);
     move_info info{};
+    Move* currentMove = list.First();
+    for(size_t i = 0; i < list.Size();++i)
+    {
+        Debug::ShortPrintEncodedMoveStr(*currentMove);
+        ++currentMove;
+    }
 
-    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/p1R2p1N w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/p1R2p1N w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
 
-    RunTitBoardTest<D::FILE>(4,"8/8/8/8/8/8/8/4r3 w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::FILE>(4,"8/8/8/8/8/8/8/4r3 w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
 
-    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
 
-    RunTitBoardTest<D::FILE>(29,"8/8/8/8/5R2/8/8/8 w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::FILE>(29,"8/8/8/8/5R2/8/8/8 w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
 
-    RunTitBoardTest<D::FILE>(29,"8/8/8/5p2/5R2/8/5P2/8 w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::FILE>(29,"8/8/8/5p2/5R2/8/5P2/8 w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
     return 0;
 }

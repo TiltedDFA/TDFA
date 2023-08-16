@@ -82,13 +82,6 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
     Debug::PrintBB(pos.GetPieces<false>());
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
 }
-bool RunWhitePawnGenTests()
-{
-    SET_UP_TESTS;
-    pos.ImportFen(TESTFEN1);
-    move_generator.WhitePawnMoves(move_list.Current(),pos.pieces_[BB::loc::WHITE][BB::loc::PAWN],Magics::IndexToBB(pos.en_passant_target_sq_));
-    return true;
-}
 
 
 #endif // #ifndef TESTING_HPP
