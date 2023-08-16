@@ -52,8 +52,8 @@ namespace Moves
     constexpr PieceType GetPieceType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}
     constexpr int GetTargetIndex(const Move move)     {return(move & END_SQ_MASK) >> END_SQ_SHIFT;}
     constexpr int GetStartIndex(const Move move)      {return move & START_SQ_MASK;}
-    template<bool is_white>
-    constexpr Move SetPieceTypeAndColour(const Move move, const PieceType type)
+    template<bool is_white, PieceType type>
+    constexpr Move SetPieceTypeAndColour(const Move move)
     {
         return is_white ? ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT) | 1 << PIECE_TYPE_SHIFT) : ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT));
     }

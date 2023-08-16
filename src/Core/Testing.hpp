@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "BitBoard.hpp"
+#include "Debug.hpp"
 #include "MagicConstants.hpp"
 #include "../MoveGen/MoveGen.hpp"
 #include "../MoveGen/MoveList.hpp"
@@ -75,6 +76,10 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
                                                                 : Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
     std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", fen='" << fen << "'" << std::endl;
+    std::cout << "White BB:\n";
+    Debug::PrintBB(pos.GetPieces<true>());
+    std::cout << "Black BB:\n";
+    Debug::PrintBB(pos.GetPieces<false>());
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
 }
 bool RunWhitePawnGenTests()

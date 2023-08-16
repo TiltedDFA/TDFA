@@ -45,11 +45,17 @@ namespace BB
         bool ImportFen(std::string_view fen);
 
         template<bool is_white>
-        constexpr BitBoard GetPieces()
+        constexpr BitBoard GetPieces()const
         {
             BitBoard combined_board{0ull};
             for(uint8_t i = 0; i < 6;++i) combined_board |= is_white ? pieces_[loc::WHITE][i] : pieces_[loc::BLACK][i];
             return combined_board;
+        }
+        template<uint8_t colour, uint8_t piecetype>
+        constexpr BitBoard GetSpecificPieces()const
+        {
+            assert(colour < 2 && piecetype < 6);
+            return pieces_[colour][piecetype];
         }
     public:
         BitBoard pieces_[2][6];
