@@ -9,16 +9,22 @@ MoveList MoveGen::GenerateAllMoves(const BB::Position& pos)
 {
     UpdateVariables(pos.GetPieces<true>(),pos.GetPieces<false>());
     MoveList moves;
+
     WhitePawnMoves(moves.Current(),white_pieces_,EnPassantTargetSquare);
     BlackPawnMoves(moves.Current(),black_pieces_,EnPassantTargetSquare);
+
     RookMoves<true>(moves.Current(),pos.GetSpecificPieces<BB::loc::WHITE,BB::loc::ROOK>());
     RookMoves<false>(moves.Current(),pos.GetSpecificPieces<BB::loc::BLACK,BB::loc::ROOK>());
+
     KnightMoves<true>(moves.Current(),pos.GetSpecificPieces<BB::loc::WHITE,BB::loc::KNIGHT>());
     KnightMoves<false>(moves.Current(),pos.GetSpecificPieces<BB::loc::BLACK,BB::loc::KNIGHT>());
+
     BishopMoves<true>(moves.Current(),pos.GetSpecificPieces<BB::loc::WHITE,BB::loc::BISHOP>());
     BishopMoves<false>(moves.Current(),pos.GetSpecificPieces<BB::loc::BLACK,BB::loc::BISHOP>());
+
     QueenMoves<true>(moves.Current(),pos.GetSpecificPieces<BB::loc::WHITE,BB::loc::QUEEN>());
     QueenMoves<false>(moves.Current(),pos.GetSpecificPieces<BB::loc::BLACK,BB::loc::QUEEN>());
+    
     WhiteKingMoves(moves.Current(),pos.GetSpecificPieces<BB::loc::WHITE, BB::loc::KING>());
     BlackKingMoves(moves.Current(),pos.GetSpecificPieces<BB::loc::BLACK, BB::loc::KING>());
     return moves;

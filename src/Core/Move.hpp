@@ -55,7 +55,7 @@ namespace Moves
     template<bool is_white, PieceType type>
     constexpr Move SetPieceTypeAndColour(const Move move)
     {
-        return is_white ? ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT) | 1 << PIECE_TYPE_SHIFT) : ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT));
+        return is_white ? ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT) | 1 << COLOUR_SHIFT) : ((move & (~PIECE_TYPE_MASK | ~COLOUR_MASK)) | (type << PIECE_TYPE_SHIFT));
     }
     template<bool is_white>
     constexpr Move SetColour(const Move move){ return is_white ? ((move & ~PIECE_TYPE_MASK) | 1 << PIECE_TYPE_SHIFT) : (move & ~PIECE_TYPE_MASK);}
