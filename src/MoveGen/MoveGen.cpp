@@ -65,19 +65,19 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
 
     pawn_move = Shift<MD::SOUTH>(pawns) & empty_squares_;
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
-        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+8,index,Moves::PAWN,1);
+        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+8,index,Moves::PAWN,0);
 
     pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & empty_squares_ & Shift<MD::NORTH>(empty_squares_) & Magics::RANK_4BB;
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
-        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+16,index,Moves::PAWN,1);
+        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+16,index,Moves::PAWN,0);
 
     pawn_move = Shift<MD::SOUTH_EAST>(pawns) & capturable_squares;
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
-        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+7,index,Moves::PAWN,1); 
+        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+7,index,Moves::PAWN,0); 
 
     pawn_move = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
-        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+9,index,Moves::PAWN,1);
+        if ((pawn_move >> index) & 1) *(*move_list)++ = Moves::EncodeMove(index+9,index,Moves::PAWN,0);
 }
 void MoveGen::WhiteKingMoves(Move** move_list, BitBoard king) noexcept
 {

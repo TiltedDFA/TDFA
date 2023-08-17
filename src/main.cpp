@@ -68,6 +68,9 @@ int main(void)
     // }
     // Debug::PrintBB(0x02020202020202);
     // Debug::PrintBB(Magics::CollapsedRanksIndex(0x02020202020202));
+
+
+
     move_info info;
     RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/p1R2p1N w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
@@ -83,6 +86,8 @@ int main(void)
 
     RunTitBoardTest<D::FILE>(29,"8/8/8/5p2/5R2/8/5P2/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
+
+
     // for(int i = 0; i < 4;++i)
     // {
     //     for(int sq = 0; sq < 64;++sq)
