@@ -9,6 +9,7 @@
 #include "../Core/BitBoard.hpp"
 #include "../Core/Move.hpp"
 #include "MoveList.hpp"
+using Magics::file_of;
 /**
  * Dir[0] = file atks
  * Dir[1] = rank atks
@@ -31,28 +32,30 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
             for(uint64_t them = 0; them < 256;++them)
             {
                 if(us & them) continue;
+                //if((~us) & file_of(sq)) continue;
+
 
                 move_info file_attack_moves{};
                 move_info rank_attack_moves{};
                 move_info diagonal_attack_moves{};
                 move_info anti_diagonal_attack_moves{};
 
-                uint8_t combined = (us | them) & ~Magics::file_of(sq);
+                uint8_t combined = (us | them) & ~file_of(sq);
 
-                for(int8_t current_file = Magics::file_of(sq) + 1; current_file < 8; ++current_file)
+                for(int8_t current_file = file_of(sq) + 1; current_file < 8; ++current_file)
                 {
                     if(!((combined >> current_file) & 1)) //empty
                     {
-                        if(Magics::IndexInBounds(sq + 8 * (current_file - Magics::rank_of(sq))))
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - Magics::rank_of(sq)), Moves::ROOK, 1));
+                        //if(Magics::IndexInBounds(sq + 8 * (current_file - file_of(sq))))
+                        file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq + 9 * (current_file - Magics::rank_of(sq)))) 
-                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - Magics::rank_of(sq)), Moves::BISHOP, 1));
+                       // if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq)))) 
+                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - file_of(sq)), Moves::BISHOP, 1));
                         
-                        if(Magics::IndexInBounds(sq + 7 * (current_file - Magics::rank_of(sq)))) 
-                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - Magics::rank_of(sq)), Moves::BISHOP, 1));
+                       // if(Magics::IndexInBounds(sq + 7 * (current_file - file_of(sq)))) 
+                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - file_of(sq)), Moves::BISHOP, 1));
 
                         continue;
                     }
@@ -61,35 +64,35 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 
                     if((them >> current_file) & 1) //their piece
                     {
-                        if(Magics::IndexInBounds(sq + 8 * (current_file - Magics::rank_of(sq))))
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - Magics::rank_of(sq)), Moves::ROOK, 1));
+                       // if(Magics::IndexInBounds(sq + 8 * (current_file - file_of(sq))))
+                        file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - Magics::file_of(sq)), Moves::ROOK, 1));
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq + 9 * (current_file - Magics::rank_of(sq))))
-                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - Magics::rank_of(sq)), Moves::BISHOP, 1)); 
+                        //if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq))))
+                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 9 * (current_file - file_of(sq)), Moves::BISHOP, 1)); 
                         
-                        if(Magics::IndexInBounds(sq + 7 * (current_file - Magics::rank_of(sq)))) 
-                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - Magics::file_of(sq)), Moves::BISHOP, 1));
+                      //  if(Magics::IndexInBounds(sq + 7 * (current_file - file_of(sq)))) 
+                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq + 7 * (current_file - file_of(sq)), Moves::BISHOP, 1));
 
                         break;
                     }
 
                 }
-                for(int8_t current_file = Magics::file_of(sq) - 1; current_file > - 1 ; --current_file)
+                for(int8_t current_file = file_of(sq) - 1; current_file > - 1 ; --current_file)
                 {
                     if(!((combined >> current_file) & 1)) 
                     {
-                        if(Magics::IndexInBounds(sq - 8 * (Magics::rank_of(sq) - current_file)))
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (Magics::rank_of(sq) - current_file), Moves::ROOK, 1));
+                      //  if(Magics::IndexInBounds(sq - 8 * (file_of(sq) - current_file)))
+                        file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq - 9 * (current_file - Magics::rank_of(sq)))) 
-                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (Magics::rank_of(sq) - current_file), Moves::BISHOP, 1));
+                     //   if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq)))) 
+                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (file_of(sq) - current_file), Moves::BISHOP, 1));
 
-                        if(Magics::IndexInBounds(sq - 7 * (current_file - Magics::rank_of(sq)))) 
-                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (Magics::rank_of(sq) - current_file), Moves::BISHOP, 1));
+                        //if(Magics::IndexInBounds(sq - 7 * (current_file - file_of(sq)))) 
+                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (file_of(sq) - current_file), Moves::BISHOP, 1));
 
                         continue;
                     }
@@ -98,24 +101,24 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 
                     if((them >> current_file) & 1)
                     {
-                        if(Magics::IndexInBounds(sq - 8 * (Magics::rank_of(sq) - current_file)))
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (Magics::rank_of(sq) - current_file), Moves::ROOK, 1));
+                       // if(Magics::IndexInBounds(sq - 8 * (file_of(sq) - current_file)))
+                        file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (Magics::file_of(sq) - current_file), Moves::ROOK, 1));
+                        rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq - 9 * (current_file - Magics::rank_of(sq)))) 
-                            diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (Magics::rank_of(sq) - current_file), Moves::BISHOP, 1));
+                      //  if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq)))) 
+                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 9 * (file_of(sq) - current_file), Moves::BISHOP, 1));
 
-                        if(Magics::IndexInBounds(sq - 7 * (current_file - Magics::rank_of(sq)))) 
-                            anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (Magics::rank_of(sq) - current_file), Moves::BISHOP, 1));
+                      //  if(Magics::IndexInBounds(sq - 7 * (current_file - file_of(sq)))) 
+                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, sq - 7 * (file_of(sq) - current_file), Moves::BISHOP, 1));
 
                         break;
                     }
 
                 }
 
-                uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][us & Magics::SLIDING_ATTACKS_MASK[Magics::file_of(sq)][1]];
-                uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][them & Magics::SLIDING_ATTACKS_MASK[Magics::file_of(sq)][1]];
+                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK]];
+                uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK]];
                 uint16_t index = p1 + p2;
 
                 result.at(sq).at(0).at(index) = file_attack_moves;

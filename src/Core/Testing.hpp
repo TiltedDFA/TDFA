@@ -31,7 +31,7 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
             std::cout << "sq= "<< (piece_to_move_sq) << " index = " << index << std::endl;\
             info = generator.SLIDING_ATTACK_CONFIG.at(sq).at((direction)).at(p1+p2);}
 
-#define PRINT_TIT_TEST_RESULTS for(int i = 0; i < info.count;++i) Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
+#define PRINT_TIT_TEST_RESULTS if(info.count == 0) std::cout << "No moves found\n"; else for(int i = 0; i < info.count;++i) Debug::ShortPrintEncodedMoveStr(info.encoded_move[i]);
 
 //white pawn move gen tests
 #define TESTFEN1 "8/8/8/4pP2/8/8/8/8 w - e6 0 1"     //checks left capturing en passant
