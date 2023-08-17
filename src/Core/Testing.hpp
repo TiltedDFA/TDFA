@@ -45,6 +45,35 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define TESTFEN9 "R7/P5k1/8/8/8/6P1/6K1/r7 w - - 0 1" //another pawn endgame with 1 possible pawn moves for white
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
 
+void PrintBBTests(BitBoard us, BitBoard them, bool mirrored=true)
+{
+    std::string output{},current_line{};
+        for(int row{0}; row < 8; ++row)
+        {
+            for(int col{0}; col < 8;++col)
+            {
+                const int current_index = (col + row*8);
+                if(((us >> current_index))&1ull)
+                {
+                    current_line = mirrored ?   current_line + "U  " : "U  " + current_line;
+                }
+                else if (((them >> current_index))&1ull)
+                {
+                    current_line = mirrored ?   current_line + "T  " : "T  " + current_line;
+                }
+                else
+                {
+                    current_line = mirrored ?   current_line + ((current_index < 10) ? ("0" + std::to_string(current_index) + " ") : (std::to_string(current_index) + " ")) : ((current_index < 10) ? ("0" + std::to_string(current_index) + " ") : (std::to_string(current_index) + " ")) + current_line;
+                }
+            }
+            current_line += "|" + std::to_string(row + 1) + " \n";
+            output = current_line + output;
+            current_line = "";
+        }                    
+        output += "------------------------\n";
+        output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
+        std::cout << output << std::endl;
+}
 
 template<D direction>
 constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
@@ -55,7 +84,8 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
     uint16_t p2{0};
     
     pos.ImportFen(fen);
-    if(Magics::IndexToBB(sq) & pos.GetPieces<true>())
+    const bool us_is_white = Magics::IndexToBB(sq) & pos.GetPieces<true>();
+    if(us_is_white)
     {
         p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
                                     [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
@@ -75,11 +105,17 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
                                         [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                                 : Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
-    std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", fen='" << fen << "'" << std::endl;
-    std::cout << "White BB:\n";
-    Debug::PrintBB(pos.GetPieces<true>());
-    std::cout << "Black BB:\n";
-    Debug::PrintBB(pos.GetPieces<false>());
+    std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", atk_dir=" << ((direction == D::FILE) ? "File" : (direction == D::RANK) ? "Rank" : (direction == D::DIAG) ? "Diagonal" : "Anti-Diagonal") <<  ", fen='" << fen << "'" << std::endl;
+   
+    // std::cout << "White BB:\n";
+    // Debug::PrintBB(pos.GetPieces<true>());
+    // std::cout << "Black BB:\n";
+    // Debug::PrintBB(pos.GetPieces<false>());
+    // std::cout << "Combined BB:\n";
+    // Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    std::cout << "Current Position:\n";
+    (us_is_white) ? PrintBBTests(pos.GetPieces<true>(),pos.GetPieces<false>()) : PrintBBTests(pos.GetPieces<false>(),pos.GetPieces<true>());
+
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
 }
 
