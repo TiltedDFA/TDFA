@@ -32,8 +32,8 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
             for(uint64_t them = 0; them < 256;++them)
             {
                 if(us & them) continue;
-                //if((~us) & file_of(sq)) continue;
 
+                if((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) continue;
 
                 move_info file_attack_moves{};
                 move_info rank_attack_moves{};

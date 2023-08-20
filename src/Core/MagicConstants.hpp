@@ -89,12 +89,14 @@ namespace Magics
 
     template<uint8_t N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
-
+    // 0 0 0 1 0 0 0 0
     constexpr uint8_t file_of(uint8_t index){return index & 7;}
 
     constexpr uint8_t rank_of(uint8_t index){return index >> 3;}
 
     constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
+
+    constexpr uint8_t BBFileOf(uint8_t square){return 1 << file_of(square);}
 
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
