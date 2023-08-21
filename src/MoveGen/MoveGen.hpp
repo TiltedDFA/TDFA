@@ -22,14 +22,15 @@ using Magics::file_of;
  * As of writing this (26/7/23 03:09) the only things that I think would differe between the directions in terms of how
  * we precompute the moves would be how the moves are recorded(target indexes vairing) 
 */
-static consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+
+consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
     {
-        for(uint64_t us = 0; us < 256;++us)
+        for(uint16_t us = 0; us < 256;++us)
         {
-            for(uint64_t them = 0; them < 256;++them)
+            for(uint16_t them = 0; them < 256;++them)
             {
                 if(us & them) continue;
 
@@ -117,8 +118,8 @@ static consteval std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 
                 }
 
-                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK]];
-                uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK]];
+                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
+                uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
                 uint16_t index = p1 + p2;
 
                 result.at(sq).at(0).at(index) = file_attack_moves;
@@ -135,14 +136,36 @@ class MoveGen
 {
 public:
     MoveGen();
+    
     [[nodiscard]] MoveList GenerateAllMoves(const BB::Position& pos);
+    
+    template<D direction>
+    static constexpr move_info GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
+    {
+        return SLIDING_ATTACK_CONFIG[piece_sq][static_cast<int>(direction)]
+                [
+                    //us
+                    (Magics::base_2_to_3
+                    [(direction == D::RANK) ? Magics::file_of(piece_sq) 
+                    : Magics::rank_of(piece_sq)]
+                    [(direction == D::RANK) ? Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                    : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
+                    +
+                    //them
+                    (2 * Magics::base_2_to_3
+                    [(direction == D::RANK) ? Magics::file_of(piece_sq) 
+                    : Magics::rank_of(piece_sq)]
+                    [(direction == D::RANK) ? Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                    : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
+                ];
+    }
 private:
+
     void UpdateVariables(BitBoard white_pieces, BitBoard black_pieces);
 
     void WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
 
     void BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
-
     template<bool is_white>
     void BishopMoves(Move** move_list,BitBoard bishops)
     {
@@ -151,22 +174,19 @@ private:
         while(bishops)
         {
             const uint8_t bishop_index = Magics::FindLS1B(bishops);
-            //file 
-            uint16_t us = Magics::base_2_to_3[Magics::rank_of(bishop_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[bishop_index][(int)D::DIAG])];
-            uint16_t them = 2 * Magics::base_2_to_3[Magics::rank_of(bishop_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[bishop_index][(int)D::DIAG])];
-            move_info move = SLIDING_ATTACK_CONFIG[bishop_index][(int)D::DIAG][us+them];
+
+            move_info move = GetMovesForSliding<D::DIAG>(bishop_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::BISHOP>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move.encoded_move[i]);
             }
-            //rank
-            us = Magics::base_2_to_3[Magics::rank_of(bishop_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[bishop_index][(int)D::ADIAG])];
-            them = 2 * Magics::base_2_to_3[Magics::rank_of(bishop_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[bishop_index][(int)D::ADIAG])];
-            move = SLIDING_ATTACK_CONFIG[bishop_index][(int)D::ADIAG][us+them];
+            
+            move = GetMovesForSliding<D::ADIAG>(bishop_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::BISHOP>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move.encoded_move[i]);
             }
+            
             bishops = Magics::PopLSB(bishops);
         }
     }
@@ -178,18 +198,14 @@ private:
         while(rooks)
         {
             const uint8_t rook_index = Magics::FindLS1B(rooks);
-            //file 
-            uint16_t us = Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][(int)D::FILE])];
-            uint16_t them = 2 * Magics::base_2_to_3[Magics::file_of(rook_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][(int)D::FILE])];
-            move_info move = SLIDING_ATTACK_CONFIG[rook_index][(int)D::FILE][us+them];
+
+            move_info move = GetMovesForSliding<D::FILE>(rook_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
             }
-            //rank
-            us = Magics::base_2_to_3[Magics::rank_of(rook_index)][Magics::CollapsedFilesIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][(int)D::RANK])];
-            them = 2 * Magics::base_2_to_3[Magics::rank_of(rook_index)][Magics::CollapsedFilesIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[rook_index][(int)D::RANK])];
-            move = SLIDING_ATTACK_CONFIG[rook_index][(int)D::RANK][us+them];
+
+            move = GetMovesForSliding<D::RANK>(rook_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
@@ -225,35 +241,30 @@ private:
         while(queens)
         {
             const uint8_t queen_index = Magics::FindLS1B(queens);
-            //file 
-            uint16_t us = Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedFilesIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::FILE])];
-            uint16_t them = 2 * Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedFilesIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::FILE])];
-            move_info move = SLIDING_ATTACK_CONFIG[queen_index][(int)D::FILE][us+them];
+            
+            move_info move = GetMovesForSliding<D::FILE>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::QUEEN>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
             }
-            //rank
-            us = Magics::base_2_to_3[Magics::file_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::RANK])];
-            them = 2 * Magics::base_2_to_3[Magics::file_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::RANK])];
-            move = SLIDING_ATTACK_CONFIG[queen_index][(int)D::RANK][us+them];
+
+            move = GetMovesForSliding<D::RANK>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);;
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::QUEEN>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
             }
-            us = Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::DIAG])];
-            them = 2 * Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::DIAG])];
-            move = SLIDING_ATTACK_CONFIG[queen_index][(int)D::DIAG][us+them];
+
+
+            move = GetMovesForSliding<D::DIAG>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::QUEEN>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
             }
-            us = Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? white_pieces_ : black_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::ADIAG])];
-            them = 2 * Magics::base_2_to_3[Magics::rank_of(queen_index)][Magics::CollapsedRanksIndex(((is_white) ? black_pieces_ : white_pieces_) & Magics::SLIDING_ATTACKS_MASK[queen_index][(int)D::ADIAG])];
-            move = SLIDING_ATTACK_CONFIG[queen_index][(int)D::ADIAG][us+them];
+
+            move = GetMovesForSliding<D::ADIAG>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
-                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white,Moves::QUEEN>(move.encoded_move[i]);
+                *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
             }
             queens = Magics::PopLSB(queens);
         }
