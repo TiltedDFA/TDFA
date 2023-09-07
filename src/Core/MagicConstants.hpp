@@ -83,9 +83,11 @@ namespace Magics
 
     constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
 
-    constexpr BitBoard PopLSB(BitBoard board) {return (board& (board-1));}
+    constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
+
+    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
     
-    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
+    constexpr BitBoard IndexToBB(uint8_t index){return (IndexInBounds(index)) ? 1ull << index : 0;}
 
     template<uint8_t N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
@@ -93,8 +95,6 @@ namespace Magics
     constexpr uint8_t file_of(uint8_t index){return index & 7;}
 
     constexpr uint8_t rank_of(uint8_t index){return index >> 3;}
-
-    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
 
     constexpr uint8_t BBFileOf(uint8_t square){return 1 << file_of(square);}
 

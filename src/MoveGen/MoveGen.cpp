@@ -86,7 +86,7 @@ void MoveGen::WhiteKingMoves(Move** move_list, BitBoard king) noexcept
     while(king_attacks)
     {
         *(*move_list)++ = Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1);
-        king_attacks = Magics::PopLSB(king_attacks);
+        king_attacks = Magics::PopLS1B(king_attacks);
     }
 }
 void MoveGen::BlackKingMoves(Move** move_list, BitBoard king) noexcept
@@ -96,6 +96,6 @@ void MoveGen::BlackKingMoves(Move** move_list, BitBoard king) noexcept
     while(king_attacks)
     {
         *(*move_list)++ = Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,0);
-        king_attacks = Magics::PopLSB(king_attacks);
+        king_attacks = Magics::PopLS1B(king_attacks);
     }
 }
