@@ -41,7 +41,7 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                 move_info diagonal_attack_moves{};
                 move_info anti_diagonal_attack_moves{};
 
-                const uint8_t combined = (us | them) & ~file_of(sq);
+                uint8_t combined = (us | them) & ~file_of(sq);
                 
                 uint64_t diag_attacks = 0ull;
                 uint64_t anti_diag_attacks = 0ull;
@@ -55,8 +55,10 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
-                        anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq))))
+                            diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
                         continue;
                     }
 
@@ -69,8 +71,10 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
 
-                        diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
-                        anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq))))
+                            diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
                         break;
                     }
 
@@ -84,8 +88,10 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
+                            diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
 
                         continue;
                     }
@@ -98,8 +104,10 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
+                            diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
                         break;
                     }
                 }
@@ -122,6 +130,20 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                 result.at(sq).at(0).at(index) = file_attack_moves;
                 result.at(sq).at(1).at(index) = rank_attack_moves;
+                
+                //needing to do this since in some positons across diagonals, bishops have less than 8 moves meaning the full blocker config cannot be used to index
+                uint16_t cpy_us = us;
+                uint16_t cpy_them = them;
+                while(!(combined & 1))
+                {
+                    cpy_us >>= 1;
+                    cpy_them >>= 1;
+                    combined >>= 1;
+                }
+                p1 = Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(cpy_us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
+                p2 = 2 * Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(cpy_them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
+                index = p1 + p2;
+
                 result.at(sq).at(2).at(index) = diagonal_attack_moves;
                 result.at(sq).at(3).at(index) = anti_diagonal_attack_moves;
             }
@@ -271,7 +293,7 @@ private:
             queens = Magics::PopLS1B(queens);
         }
     }
-    
+
     void WhiteKingMoves(Move** move_list, BitBoard king) noexcept;
 
     void BlackKingMoves(Move** move_list, BitBoard king) noexcept;

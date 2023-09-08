@@ -87,7 +87,7 @@ namespace Magics
 
     constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
     
-    constexpr BitBoard IndexToBB(uint8_t index){return (IndexInBounds(index)) ? 1ull << index : 0;}
+    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
 
     template<uint8_t N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
