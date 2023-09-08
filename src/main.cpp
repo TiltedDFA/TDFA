@@ -11,39 +11,6 @@ constexpr unsigned long long b = 0xFF;
 #define TEST_FEN_LONG "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8"
 #define TEST_FEN_WHITE_SPACE "                            8/8/8/8/4Pp2/8/8/8 w - e3 0 1                              "
 
-/*
-    BB::Position pos{};
-    pos.ImportFen(START_FEN);
-    MoveList instance;
-    MoveGen generator;
-    std::cout << instance.First() << "\n";
-    std::cout << instance.Last() << "\n";
-    for(uint16_t i = 0; i < MAX_MOVES;++i)
-    {
-        if(i == 198) *(*instance.Current())++ = std::numeric_limits<Move>::max()-1; 
-        else *(*instance.Current())++ = i;
-    }
-    std::cout << instance.Last() << "\n";
-    std::cout << instance.Contains(Move(std::numeric_limits<Move>::max())) << '\t' << std::numeric_limits<Move>::max();
-    CmpMoveLists(instance,std::vector<Move>());
-    generator.UpdateVariables(pos.GetPieces<true>(),pos.GetPieces<false>());
-    Debug::PrintEntireBoard(pos.pieces_);
-    for(uint8_t i = 0; i < 64;++i)
-    {
-        std::cout << "Index: " << (int)i << " Rank: " << static_cast<int>(Magics::rank_of(i)) << " File: " << static_cast<int>(Magics::file_of(i)) << std::endl;
-    }
-    Debug::PrintBB(Magics::CROSS_DIAG);
-    Debug::PrintBB(Magics::ANTI_CROSS_DIAG);
-    const std::array<std::array<BitBoard, 4>, 64> data = PrecomputeMask();
-    for(int i = 0; i < 64;++i)
-    {
-        for(int j = 0; j < 4;++j)
-        {
-            std::cout << "SQ: " << i << " DIR: " << j << std::endl;
-            Debug::PrintBB(data[i][j]);
-        }
-    }
-    */
 int main(void)
 {
     /*
@@ -109,7 +76,5 @@ int main(void)
     //         Debug::PrintBB(Magics::SLIDING_ATTACKS_MASK[sq][i]);
     //     }
     // }
-    
-    
     return 0;
 }
