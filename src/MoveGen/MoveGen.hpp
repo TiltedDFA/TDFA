@@ -50,7 +50,6 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                 {
                     if(!((combined >> current_file) & 1)) //empty
                     {
-                        //if(Magics::IndexInBounds(sq + 8 * (current_file - file_of(sq))))
                         file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - file_of(sq)), Moves::ROOK, 1));
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
@@ -66,7 +65,6 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                     if((them >> current_file) & 1) //their piece
                     {
-                       // if(Magics::IndexInBounds(sq + 8 * (current_file - file_of(sq))))
                         file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - file_of(sq)), Moves::ROOK, 1));
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - file_of(sq)), Moves::ROOK, 1));
@@ -83,7 +81,6 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                 {
                     if(!((combined >> current_file) & 1)) 
                     {
-                      //  if(Magics::IndexInBounds(sq - 8 * (file_of(sq) - current_file)))
                         file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (file_of(sq) - current_file), Moves::ROOK, 1));
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
@@ -99,7 +96,6 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                     if((us >> current_file) & 1) break;
                     if((them >> current_file) & 1)
                     {
-                       // if(Magics::IndexInBounds(sq - 8 * (file_of(sq) - current_file)))
                         file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (file_of(sq) - current_file), Moves::ROOK, 1));
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));

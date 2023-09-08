@@ -31,15 +31,11 @@ namespace Magics
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 
     constexpr BitBoard GetLS1B(BitBoard bb){return bb & -bb;}
-//#ifdef __GNUG__
+
 #ifdef __GNUG__
     constexpr int FindLS1B(BitBoard bb){return __builtin_ctzll(bb);}
-    //constexpr double pow(double x, double y){return __builtin_pow(x,y);}
 #else
-    constexpr int FindLS1B(BitBoard bb)
-    {
-        return std::countr_zero(bb);
-    }
+    constexpr int FindLS1B(BitBoard bb){return std::countr_zero(bb);}
 #endif
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
     static constexpr BitBoard CollapsedFilesIndex(BitBoard b) 
