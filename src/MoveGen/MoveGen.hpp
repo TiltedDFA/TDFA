@@ -48,8 +48,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq))))
                             diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
                         continue;
                     }
 
@@ -63,8 +63,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         if(Magics::IndexInBounds(sq + 9 * (current_file - file_of(sq))))
                             diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
                         break;
                     }
 
@@ -79,8 +79,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
                             diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
 
                         continue;
                     }
@@ -94,8 +94,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
 
                         if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
                             diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq -  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
                         break;
                     }
                 }
@@ -112,8 +112,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                     diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
                     anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                 }
-                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
-                uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
+                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us];
+                uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][them];
                 uint16_t index = p1 + p2;
 
                 result.at(sq).at(0).at(index) = file_attack_moves;
@@ -128,8 +128,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                     cpy_them >>= 1;
                     combined >>= 1;
                 }
-                p1 = Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(cpy_us & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
-                p2 = 2 * Magics::base_2_to_3[file_of(sq)][static_cast<uint8_t>(cpy_them & Magics::SLIDING_ATTACKS_MASK[file_of(sq)][(int)D::RANK])];
+                p1 = Magics::base_2_to_3[file_of(sq)][cpy_us];
+                p2 = 2 * Magics::base_2_to_3[file_of(sq)][cpy_them];
                 index = p1 + p2;
 
                 result.at(sq).at(2).at(index) = diagonal_attack_moves;
