@@ -6,6 +6,8 @@
 #include <string_view>
 namespace BB
 {
+    //This namespace is used to contain the accessing indexes for the pieces in 
+    //the pieces array
     namespace loc
     {
         constexpr uint8_t WHITE = 0;
@@ -42,7 +44,7 @@ namespace BB
             full_moves_ = 0;    
         }    
         //returns true/false depending on success of fen importing
-        bool ImportFen(std::string_view fen);
+        [[maybe_unused]]bool ImportFen(std::string_view fen);
 
         template<bool is_white>
         constexpr BitBoard GetPieces()const

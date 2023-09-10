@@ -33,19 +33,24 @@ namespace Magics
     constexpr BitBoard GetLS1B(BitBoard bb){return bb & -bb;}
 
 #ifdef __GNUG__
+    //finds least significant 1 bit and returns the position of it
     constexpr int FindLS1B(BitBoard bb){return __builtin_ctzll(bb);}
 #else
+    //finds least significant 1 bit and returns the position of it
     constexpr int FindLS1B(BitBoard bb){return std::countr_zero(bb);}
 #endif
+    //returns (x^y). compile time friendly.
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
-    static constexpr BitBoard CollapsedFilesIndex(BitBoard b) 
+    //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
+    static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
     {
         b |= b >> 32;
         b |= b >> 16;
         b |= b >>  8;
         return b & 0xFF;
     }
-    static constexpr BitBoard CollapsedRanksIndex(BitBoard b) 
+    //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
+    static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
     {
         b |= b >>  4;
         b |= b >>  2;
@@ -56,7 +61,8 @@ namespace Magics
         b |= b >> 28;
         return b & 0xFF;
     }
-    //Not a true conversion. Just returns the value of the binary number if it was base 3
+    //Not a true conversion. Just returns the value of the binary number if it was base 3.
+    //This omits the file of piece that you're trying to calculate the moves for
     static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
     {
         std::array<std::array<uint16_t,256>,8> result{};
@@ -74,26 +80,38 @@ namespace Magics
         }
         return result;
     }
-
+    //Not a true conversion. Just returns the value of the binary number if it was base 3.
+    //This omits the file of piece that you're trying to calculate the moves for
     static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3 = compute_base_2_to_3();
 
+    //Returns the index of the most significant 1 bit.
     constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
 
+    //Returns the number without the least significant 1 bit. 
+    //Not protected against 0 inputs
     constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
 
+    //Returns whether the index provided is inbounds of the board
     constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
     
+    //Returns the a bitboard with a 1 bit in the location of the index provided
     constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
 
+    //forced compile time eval version of the other IndexToBB
     template<uint8_t N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
-    // 0 0 0 1 0 0 0 0
+    
+    //returns the file of an index/square
     constexpr uint8_t file_of(uint8_t index){return index & 7;}
 
+    //returns the rank of an index/square
     constexpr uint8_t rank_of(uint8_t index){return index >> 3;}
 
+    //finds the file of the square/index and returns a bitboard containing a 1 bit
+    // in the square specified
     constexpr uint8_t BBFileOf(uint8_t square){return 1 << file_of(square);}
 
+    //Returns a bitboard which has been moved by the shift specified
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
     {
@@ -126,6 +144,7 @@ namespace Magics
         }
         return temp_array;
     }
+    //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
     static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
     {
         std::array<std::array<BitBoard,4>,64> r_val{};
@@ -148,7 +167,8 @@ namespace Magics
         }
         return r_val;
     }
-
+    
+    //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
     static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
     
     static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();

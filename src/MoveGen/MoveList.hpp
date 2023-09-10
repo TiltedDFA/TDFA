@@ -23,8 +23,6 @@ public:
     constexpr Move** Current()  {return &tail;}
     constexpr std::size_t Size()const {return tail - head;}
     constexpr bool Contains(Move move)const{return std::ranges::find(head, move) != std::end(head);}
-    // constexpr MoveList(const MoveList&other)=delete;
-    // constexpr MoveList& operator=(const MoveList& other)=delete;
 private:
     Move head[MAX_MOVES], *tail;
 };
