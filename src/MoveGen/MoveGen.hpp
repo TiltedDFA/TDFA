@@ -11,18 +11,11 @@
 #include "MoveList.hpp"
 using Magics::file_of;
 /**
- * Dir[0] = file atks
- * Dir[1] = rank atks
- * Dir[2] = cross atks
- * Dir[3] = anti-cross atks
- */
-/**
  * The reason that we'd need an array of [64][4][2187] despite the blocker configurations being the same in any direction
  * would be due to the target indexs recorded being different based on the diretions.
  * As of writing this (26/7/23 03:09) the only things that I think would differe between the directions in terms of how
  * we precompute the moves would be how the moves are recorded(target indexes vairing) 
 */
-
 consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
@@ -32,9 +25,8 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
         {
             for(uint16_t them = 0; them < 256;++them)
             {
-                if(us & them) continue;
-
-                if((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) continue;
+                //skiping useless blocker configs
+                if(us & them || (~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) continue;
 
                 move_info file_attack_moves{};
                 move_info rank_attack_moves{};
