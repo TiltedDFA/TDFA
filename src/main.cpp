@@ -64,7 +64,7 @@ int main(void)
 
     RunTitBoardTest<D::FILE>(29,"8/8/8/5p2/5R2/8/5P2/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
-
+    std::cout << sizeof(MoveGen::SLIDING_ATTACK_CONFIG);
     // RunTitBoardTest<D::DIAG>(24, "8/8/8/8/B7/8/8/8 w - - 0 1",info);
     // PRINT_TIT_TEST_RESULTS;
     // std::cout << sizeof(MoveGen::SLIDING_ATTACK_CONFIG);
