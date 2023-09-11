@@ -16,7 +16,7 @@ using Magics::file_of;
  * As of writing this (26/7/23 03:09) the only things that I think would differe between the directions in terms of how
  * we precompute the moves would be how the moves are recorded(target indexes vairing) 
 */
-static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+consteval static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
@@ -33,8 +33,9 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 move_info diagonal_attack_moves{};
                 move_info anti_diagonal_attack_moves{};
 
-                uint8_t combined = (us | them) & ~file_of(sq);
-                
+                uint8_t combined = (us | them) & ~Magics::BBFileOf(sq);
+                //uint8_t combined = (us | them) & ~file_of(sq);
+
                 uint64_t diag_attacks = 0ull;
                 uint64_t anti_diag_attacks = 0ull;
                 
@@ -288,7 +289,7 @@ private:
     void BlackKingMoves(Move** move_list, BitBoard king) noexcept;
     
 public:    
-    inline static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
     inline static BitBoard EnPassantTargetSquare;
 private:
     BitBoard white_pieces_;
