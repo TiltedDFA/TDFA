@@ -110,7 +110,7 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                 }
                 while(anti_diag_attacks)
                 {
-                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
+                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
                     anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                 }
                 uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us];
