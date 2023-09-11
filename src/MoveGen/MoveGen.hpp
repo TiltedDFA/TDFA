@@ -78,10 +78,10 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
-                            diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq - 9 * (file_of(sq) - current_file)))
+                            diag_attacks |= Magics::IndexToBB(sq - 9 * (file_of(sq) - current_file));
+                        if(Magics::IndexInBounds(sq +  7 * (file_of(sq) - current_file)))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (file_of(sq) - current_file));
 
                         continue;
                     }
@@ -93,10 +93,10 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (file_of(sq) - current_file), Moves::ROOK, 1));
 
-                        if(Magics::IndexInBounds(sq - 9 * (current_file - file_of(sq))))
-                            diag_attacks |= Magics::IndexToBB(sq - 9 * (current_file - file_of(sq)));
-                        if(Magics::IndexInBounds(sq +  7 * (current_file - file_of(sq))))
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - file_of(sq)));
+                        if(Magics::IndexInBounds(sq - 9 * (file_of(sq) - current_file)))
+                            diag_attacks |= Magics::IndexToBB(sq - 9 * (file_of(sq) - current_file));
+                        if(Magics::IndexInBounds(sq +  7 * (file_of(sq) - current_file)))
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (file_of(sq) - current_file));
                         break;
                     }
                 }
@@ -123,7 +123,7 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                 //needing to do this since in some positons across diagonals, bishops have less than 8 moves meaning the full blocker config cannot be used to index
                 uint16_t cpy_us = us;
                 uint16_t cpy_them = them;
-                combined |= file_of(sq);
+                combined |= Magics::BBFileOf(sq);
                 while(!(combined & 1))
                 {
                     cpy_us >>= 1;
