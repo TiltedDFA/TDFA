@@ -122,6 +122,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 //needing to do this since in some positons across diagonals, bishops have less than 8 moves meaning the full blocker config cannot be used to index
                 uint16_t cpy_us = us;
                 uint16_t cpy_them = them;
+                combined |= file_of(sq);
                 while(!(combined & 1))
                 {
                     cpy_us >>= 1;
