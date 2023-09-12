@@ -113,7 +113,7 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                     anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
                     anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                 }
-                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us];
+                uint16_t p1 = Magics::base_2_to_3[file_of(sq)][us & ~Magics::BBFileOf(sq)];
                 uint16_t p2 = 2 * Magics::base_2_to_3[file_of(sq)][them];
                 uint16_t index = p1 + p2;
 
@@ -130,6 +130,7 @@ consteval static std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                     cpy_them >>= 1;
                     combined >>= 1;
                 }
+                cpy_us &= ~Magics::BBFileOf(sq);
                 p1 = Magics::base_2_to_3[file_of(sq)][cpy_us];
                 p2 = 2 * Magics::base_2_to_3[file_of(sq)][cpy_them];
                 index = p1 + p2;
