@@ -159,14 +159,14 @@ public:
                     (Magics::base_2_to_3
                     [(direction == D::RANK) ? Magics::file_of(piece_sq) 
                     : Magics::rank_of(piece_sq)]
-                    [(direction == D::RANK) ? Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                    [(direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
                     : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
                     +
                     //them
                     (2 * Magics::base_2_to_3
                     [(direction == D::RANK) ? Magics::file_of(piece_sq) 
                     : Magics::rank_of(piece_sq)]
-                    [(direction == D::RANK) ? Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                    [(direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
                     : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
                 ];
     }
