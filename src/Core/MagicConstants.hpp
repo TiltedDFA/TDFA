@@ -102,15 +102,17 @@ namespace Magics
     consteval BitBoard IndexToBB(){return 1ull << N;}
     
     //returns the file of an index/square
-    constexpr uint8_t file_of(uint8_t index){return index & 7;}
+    constexpr uint8_t FileOf(uint8_t index){return index & 7;}
 
     //returns the rank of an index/square
-    constexpr uint8_t rank_of(uint8_t index){return index >> 3;}
+    constexpr uint8_t RankOf(uint8_t index){return index >> 3;}
+
 
     //finds the file of the square/index and returns a bitboard containing a 1 bit
     // in the square specified
-    constexpr uint8_t BBFileOf(uint8_t square){return 1 << file_of(square);}
+    constexpr uint8_t BBFileOf(uint8_t square){return 1 << FileOf(square);}
 
+    constexpr uint8_t BBRankOf(uint8_t square){return 1 << RankOf(square);}
     //Returns a bitboard which has been moved by the shift specified
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
@@ -150,8 +152,8 @@ namespace Magics
         std::array<std::array<BitBoard,4>,64> r_val{};
         for(uint8_t i = 0; i < 64;++i)
         {
-            uint8_t rank = Magics::rank_of(i);
-            uint8_t file = Magics::file_of(i);
+            uint8_t rank = Magics::RankOf(i);
+            uint8_t file = Magics::FileOf(i);
             BitBoard cross_attacks{0ull};
             BitBoard anti_cross_attacks{0ull};
 

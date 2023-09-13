@@ -25,8 +25,8 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define TEST_TITBOARD_GEN(piece_to_move_sq, fen, move_info_store,direction) {\
             uint8_t sq = (piece_to_move_sq);\
             pos.ImportFen((fen));\
-            uint16_t p1 = Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
-            uint16_t p2 = 2 * Magics::base_2_to_3[Magics::file_of(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+            uint16_t p1 = Magics::base_2_to_3[Magics::FileOf(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
+            uint16_t p2 = 2 * Magics::base_2_to_3[Magics::FileOf(sq)][Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][1])];\
             uint16_t index = p1+p2;\
             std::cout << "sq= "<< (piece_to_move_sq) << " index = " << index << std::endl;\
             info = generator.SLIDING_ATTACK_CONFIG.at(sq).at((direction)).at(p1+p2);}
@@ -87,21 +87,25 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
     const bool us_is_white = Magics::IndexToBB(sq) & pos.GetPieces<true>();
     if(us_is_white)
     {
-        p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
+        p1 = Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+                                                            : Magics::RankOf(sq)]
                                     [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
-        p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
+        p2 = 2 * Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+                                                            : Magics::RankOf(sq)]
                                         [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                                 : Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
     else
     {
-        p1 = Magics::base_2_to_3    [Magics::file_of(sq)]
+        p1 = Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+                                                            : Magics::RankOf(sq)]
                                     [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
-        p2 = 2 * Magics::base_2_to_3    [Magics::file_of(sq)]
+        p2 = 2 * Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+                                                            : Magics::RankOf(sq)]
                                         [(direction != D::RANK) ? Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                                 : Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
