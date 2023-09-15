@@ -170,7 +170,7 @@ public:
     [[nodiscard]] MoveList GenerateAllMoves(const BB::Position& pos);
     
     template<D direction>
-    static constexpr move_info GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
+    static constexpr move_info& GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
     {
         return SLIDING_ATTACK_CONFIG[piece_sq][static_cast<int>(direction)]
                 [
@@ -206,7 +206,7 @@ private:
         {
             const uint8_t bishop_index = Magics::FindLS1B(bishops);
 
-            move_info move = GetMovesForSliding<D::DIAG>(bishop_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
+            move_info& move = GetMovesForSliding<D::DIAG>(bishop_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move.encoded_move[i]);
@@ -231,7 +231,7 @@ private:
         {
             const uint8_t rook_index = Magics::FindLS1B(rooks);
 
-            move_info move = GetMovesForSliding<D::FILE>(rook_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
+            move_info& move = GetMovesForSliding<D::FILE>(rook_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
@@ -276,7 +276,7 @@ private:
         {
             const uint8_t queen_index = Magics::FindLS1B(queens);
             
-            move_info move = GetMovesForSliding<D::FILE>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
+            move_info& move = GetMovesForSliding<D::FILE>(queen_index,(is_white) ? white_pieces_ : black_pieces_,(is_white) ? black_pieces_ : white_pieces_);
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
