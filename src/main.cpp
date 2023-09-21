@@ -71,6 +71,10 @@ int main(void)
 
     RunTitBoardTest<D::DIAG>(24, "8/8/8/8/B7/8/8/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
+    
+    BB::Position pos("8/8/8/5p2/5R2/8/5P2/8 w - - 0 1");
+    Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    Debug::PrintBB(Magics::CollapsedRanksIndex(pos.GetPieces<true>() | pos.GetPieces<false>()));
     // std::cout << sizeof(MoveGen::SLIDING_ATTACK_CONFIG);
     // for(int i = 0; i < 4;++i)
     // {
