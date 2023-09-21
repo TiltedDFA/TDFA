@@ -27,7 +27,8 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
             for(uint16_t them = 0; them < 256;++them)
             {
                 //skiping useless blocker configs
-                if(us & them || (~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) continue;
+                // not us and fileofsq || 
+                if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
 
                 move_info file_attack_moves{};
                 move_info rank_attack_moves{};
@@ -149,9 +150,10 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                     cpy_them >>= 1;
                     other_combined >>= 1;
                 }
+                
                 cpy_us &= ~Magics::BBFileOf(sq);
-                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us];
-                p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][cpy_them];
+                p1 = Magics::base_2_to_3[Magics::FileOf(sq)][cpy_us];
+                p2 = 2 * Magics::base_2_to_3[Magics::FileOf(sq)][cpy_them];
                 index = p1 + p2;
 
                 result.at(sq).at(2).at(index) = diagonal_attack_moves;
