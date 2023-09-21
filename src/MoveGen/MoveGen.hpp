@@ -134,13 +134,13 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::ADIAG];
                 while(diag_attacks)
                 {
-                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
-                    diag_attacks = Magics::PopLS1B(diag_attacks);
+                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindMS1B(diag_attacks),Moves::BISHOP,1));
+                    diag_attacks = Magics::PopMS1B(diag_attacks);
                 }
                 while(anti_diag_attacks)
                 {
-                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
-                    anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
+                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindMS1B(anti_diag_attacks),Moves::BISHOP,1));
+                    anti_diag_attacks = Magics::PopMS1B(anti_diag_attacks);
                 }
 
                 uint16_t cpy_us = us;

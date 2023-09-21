@@ -90,7 +90,18 @@ namespace Magics
     //Returns the number without the least significant 1 bit. 
     //Not protected against 0 inputs
     constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
-
+    
+    constexpr BitBoard PopMS1B(const BitBoard board)
+    {
+        BitBoard b = board;
+        b |= b >> 1;
+        b |= b >> 2;
+        b |= b >> 4;
+        b |= b >> 8;
+        b |= b >> 16;
+        b |= b >> 32;
+        return board & (b >> 1);
+    }
     //Returns whether the index provided is inbounds of the board
     constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
     

@@ -12,7 +12,7 @@
 
 namespace Debug
 {
-    void PrintBB(BitBoard board, int board_center,bool mirrored=true)
+    void PrintBB(BitBoard board, int board_center,bool mirrored=false)
     {
         std::string output{},current_line{};
         for(int row{0}; row < 8; ++row)
@@ -40,7 +40,7 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
-    void PrintBB(BitBoard board, bool mirrored=true)
+    void PrintBB(BitBoard board, bool mirrored=false)
     {
         std::string output{},current_line{};
         for(int row{0}; row < 8; ++row)
@@ -132,7 +132,7 @@ namespace Debug
         move_str += "\n";
         std::cout << move_str;
     }
-    void PrintUsThem(BitBoard us, BitBoard them, bool mirrored=true)
+    void PrintUsThem(BitBoard us, BitBoard them, bool mirrored=false)
     {
         std::string output{},current_line{};
             for(int row{0}; row < 8; ++row)
@@ -165,7 +165,7 @@ namespace Debug
     {
         std::cout << std::bitset<16>(move) << std::endl;
     }
-    void PrintEncodedMovesVector(const std::vector<Move>& moves,bool mirrored=true)
+    void PrintEncodedMovesVector(const std::vector<Move>& moves,bool mirrored=false)
     {
         BitBoard combined_board{0ull};
         for(const Move i : moves)
@@ -174,7 +174,7 @@ namespace Debug
         }
         PrintBB(combined_board,mirrored);
     }
-    void PrintEncodedMovesMoveInfo(const move_info& move,bool mirrored=true)
+    void PrintEncodedMovesMoveInfo(const move_info& move,bool mirrored=false)
     {
         if(move.count == 0) std::cout << "No moves found\n";
         BitBoard combined_board{0ull};
@@ -185,7 +185,7 @@ namespace Debug
         }
         PrintBB(combined_board,mirrored);
     }
-    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored=true)
+    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored=false)
     {
         std::string output{},current_line{};
 
