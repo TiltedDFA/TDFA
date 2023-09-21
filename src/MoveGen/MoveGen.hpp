@@ -45,7 +45,6 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 {
                     if(!((rank_combined >> current_file) & 1)) //empty
                     {
-
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - FileOf(sq)), Moves::ROOK, 1));
                         continue;
                     }
@@ -55,7 +54,6 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - FileOf(sq)), Moves::ROOK, 1));
                         break;
                     }
-
                 }
                 for(int8_t current_file = FileOf(sq) - 1; current_file > - 1 ; --current_file)
                 {
@@ -121,50 +119,47 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                     }
                 }
                 
-                if(!((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)))
-                {
-                    uint16_t p1 = Magics::base_2_to_3[FileOf(sq)][us & ~Magics::BBFileOf(sq)];
-                    uint16_t p2 = 2 * Magics::base_2_to_3[FileOf(sq)][them];
-                    uint16_t index = p1 + p2;
 
-                    result.at(sq).at(0).at(index) = file_attack_moves;
-                    result.at(sq).at(1).at(index) = rank_attack_moves;
-                }
+                uint16_t p1 = Magics::base_2_to_3[FileOf(sq)][us & ~Magics::BBFileOf(sq)];
+                uint16_t p2 = 2 * Magics::base_2_to_3[FileOf(sq)][them];
+                uint16_t index = p1 + p2;
+
+                result.at(sq).at(0).at(index) = file_attack_moves;
+                result.at(sq).at(1).at(index) = rank_attack_moves;
+
                 
                 //needing to do this since in some positons across diagonals, bishops have less than 8 moves meaning the full blocker config cannot be used to index
-                if(!((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))
+
+                diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::DIAG];
+                anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::ADIAG];
+                while(diag_attacks)
                 {
-                    diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::DIAG];
-                    anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::ADIAG];
-                    while(diag_attacks)
-                    {
-                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
-                        diag_attacks = Magics::PopLS1B(diag_attacks);
-                    }
-                    while(anti_diag_attacks)
-                    {
-                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
-                        anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
-                    }
-
-                    uint16_t cpy_us = us;
-                    uint16_t cpy_them = them;
-                    other_combined |= Magics::BBRankOf(sq);
-                    while(!(other_combined & 1))
-                    {
-                        cpy_us >>= 1;
-                        cpy_them >>= 1;
-                        other_combined >>= 1;
-                    }
-                    
-                    cpy_us &= ~Magics::BBFileOf(sq);
-                    uint16_t p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us];
-                    uint16_t p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][cpy_them];
-                    uint16_t index = p1 + p2;
-
-                    result.at(sq).at(2).at(index) = diagonal_attack_moves;
-                    result.at(sq).at(3).at(index) = anti_diagonal_attack_moves;
+                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
+                    diag_attacks = Magics::PopLS1B(diag_attacks);
                 }
+                while(anti_diag_attacks)
+                {
+                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
+                    anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
+                }
+
+                uint16_t cpy_us = us;
+                uint16_t cpy_them = them;
+                other_combined |= Magics::BBRankOf(sq);
+                while(!(other_combined & 1))
+                {
+                    cpy_us >>= 1;
+                    cpy_them >>= 1;
+                    other_combined >>= 1;
+                }
+                
+                cpy_us &= ~Magics::BBFileOf(sq);
+                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us];
+                p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][cpy_them];
+                index = p1 + p2;
+
+                result.at(sq).at(2).at(index) = diagonal_attack_moves;
+                result.at(sq).at(3).at(index) = anti_diagonal_attack_moves;
             }
         }
     }
