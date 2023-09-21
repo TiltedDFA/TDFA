@@ -45,36 +45,6 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 #define TESTFEN9 "R7/P5k1/8/8/8/6P1/6K1/r7 w - - 0 1" //another pawn endgame with 1 possible pawn moves for white
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
 
-void PrintBBTests(BitBoard us, BitBoard them, bool mirrored=true)
-{
-    std::string output{},current_line{};
-        for(int row{0}; row < 8; ++row)
-        {
-            for(int col{0}; col < 8;++col)
-            {
-                const int current_index = (col + row*8);
-                if(((us >> current_index))&1ull)
-                {
-                    current_line = mirrored ?   current_line + "UU " : "UU " + current_line;
-                }
-                else if (((them >> current_index))&1ull)
-                {
-                    current_line = mirrored ?   current_line + "TT " : "TT " + current_line;
-                }
-                else
-                {
-                    current_line = mirrored ?   current_line + ((current_index < 10) ? ("0" + std::to_string(current_index) + " ") : (std::to_string(current_index) + " ")) : ((current_index < 10) ? ("0" + std::to_string(current_index) + " ") : (std::to_string(current_index) + " ")) + current_line;
-                }
-            }
-            current_line += "|" + std::to_string(row + 1) + " \n";
-            output = current_line + output;
-            current_line = "";
-        }                    
-        output += "------------------------\n";
-        output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
-        std::cout << output << std::endl;
-}
-
 template<D direction>
 constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
 {
@@ -118,7 +88,7 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
     // std::cout << "Combined BB:\n";
     // Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
     std::cout << "Current Position:\n";
-    (us_is_white) ? PrintBBTests(pos.GetPieces<true>(),pos.GetPieces<false>()) : PrintBBTests(pos.GetPieces<false>(),pos.GetPieces<true>());
+    (us_is_white) ? Debug::PrintUsThem(pos.GetPieces<true>(),pos.GetPieces<false>()) : Debug::PrintUsThem(pos.GetPieces<false>(),pos.GetPieces<true>());
 
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
 }

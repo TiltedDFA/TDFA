@@ -154,7 +154,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 }
                 
                 cpy_us &= ~Magics::BBFileOf(sq);
-                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us];
+                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us & ~Magics::BBRankOf(sq)];
                 p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][cpy_them];
                 index = p1 + p2;
 
