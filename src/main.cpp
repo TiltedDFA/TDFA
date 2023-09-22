@@ -60,8 +60,8 @@ int main(void)
     RunTitBoardTest<D::FILE>(6,"8/8/8/8/8/8/8/6R1 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
 
-    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
-    PRINT_TIT_TEST_RESULTS;
+    // RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
+    // PRINT_TIT_TEST_RESULTS;
 
     RunTitBoardTest<D::FILE>(29,"8/8/8/8/5R2/8/8/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;

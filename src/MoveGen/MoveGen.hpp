@@ -134,28 +134,28 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::ADIAG];
                 while(diag_attacks)
                 {
-                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindMS1B(diag_attacks),Moves::BISHOP,1));
-                    diag_attacks = Magics::PopMS1B(diag_attacks);
+                    diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
+                    diag_attacks = Magics::PopLS1B(diag_attacks);
                 }
                 while(anti_diag_attacks)
                 {
-                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindMS1B(anti_diag_attacks),Moves::BISHOP,1));
-                    anti_diag_attacks = Magics::PopMS1B(anti_diag_attacks);
+                    anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
+                    anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                 }
 
-                uint16_t cpy_us = us;
-                uint16_t cpy_them = them;
-                other_combined |= Magics::BBRankOf(sq);
-                while(!(other_combined & 1))
-                {
-                    cpy_us >>= 1;
-                    cpy_them >>= 1;
-                    other_combined >>= 1;
-                }
+                // uint16_t cpy_us = us;
+                // uint16_t cpy_them = them;
+                // other_combined |= Magics::BBRankOf(sq);
+                // while(!(other_combined & 1))
+                // {
+                //     cpy_us >>= 1;
+                //     cpy_them >>= 1;
+                //     other_combined >>= 1;
+                // }
                 
-                cpy_us &= ~Magics::BBFileOf(sq);
-                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][cpy_us & ~Magics::BBRankOf(sq)];
-                p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][cpy_them];
+                // cpy_us &= ~Magics::BBFileOf(sq);
+                p1 = Magics::base_2_to_3[Magics::RankOf(sq)][us & ~Magics::BBRankOf(sq)];
+                p2 = 2 * Magics::base_2_to_3[Magics::RankOf(sq)][them];
                 index = p1 + p2;
 
                 result.at(sq).at(2).at(index) = diagonal_attack_moves;
