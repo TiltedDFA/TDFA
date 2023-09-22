@@ -48,8 +48,7 @@ constexpr bool CmpMoveLists(MoveList& l1,const std::vector<Move>& l2)
 template<D direction>
 constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
 {
-    BB::Position pos;
-    pos.ImportFen(fen);
+    BB::Position pos(fen);
     
     uint16_t p1{0};
     uint16_t p2{0};
