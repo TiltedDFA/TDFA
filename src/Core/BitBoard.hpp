@@ -53,9 +53,13 @@ namespace BB
         template<bool is_white>
         constexpr BitBoard GetPieces()const
         {
-            BitBoard combined_board{0ull};
-            for(uint8_t i = 0; i < 6;++i) combined_board |= is_white ? pieces_[loc::WHITE][i] : pieces_[loc::BLACK][i];
-            return combined_board;
+            return 
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::KING]  |
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::QUEEN] |
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::BISHOP]|
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::KNIGHT]|
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::ROOK]  |
+                pieces_[is_white ? loc::WHITE : loc::BLACK][loc::PAWN];
         }
         template<uint8_t colour, uint8_t piecetype>
         constexpr BitBoard GetSpecificPieces()const
@@ -63,6 +67,19 @@ namespace BB
             assert(colour < 2 && piecetype < 6);
             return pieces_[colour][piecetype];
         }
+        constexpr BitBoard GetEmptySquares()const
+        {
+            return ~(GetPieces<true>() | GetPieces<false>());
+        }
+        constexpr uint8_t GetEnPassantSq()const 
+        {
+            return en_passant_target_sq_;
+        }
+        constexpr BitBoard GetEnPassantBB()const
+        {
+            return (en_passant_target_sq_ == 65) ? 0ull : Magics::IndexToBB(en_passant_target_sq_);
+        }
+
     public:
         BitBoard pieces_[2][6];
         // top 4 bits are ignored XXXX WkWqBkBq where Wx and Bx represents sides and colours
