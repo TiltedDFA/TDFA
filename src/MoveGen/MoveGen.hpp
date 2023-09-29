@@ -9,7 +9,7 @@
 #include "../Core/BitBoard.hpp"
 #include "../Core/Move.hpp"
 #include "MoveList.hpp"
-
+#include <iostream>
 using Magics::FileOf;
 /**
  * The reason that we'd need an array of [64][4][2187] despite the blocker configurations being the same in any direction
@@ -156,7 +156,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                     // cpy_us &= ~Magics::BBFileOf(sq);
                     uint16_t p1 = Magics::base_2_to_3[rankofsq][us & ~Magics::BBRankOf(sq)];
                     uint16_t p2 = 2 * Magics::base_2_to_3[rankofsq][them];
-
+                    if(sq == 29 && p1+p2 == 81) std::cout << "reached" << file_attack_moves.count << std::endl;
                     result.at(sq).at((uint8_t)D::FILE).at(p1 + p2) = file_attack_moves;
                     result.at(sq).at((uint8_t)D::DIAG).at(p1 + p2) = diagonal_attack_moves;
                     result.at(sq).at((uint8_t)D::ADIAG).at(p1 + p2) = anti_diagonal_attack_moves;
