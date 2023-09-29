@@ -92,7 +92,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
 
                             diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - rankofsq));
 
-                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - rankofsq));
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - rankofsq));
                             continue;
                         }
                         if((them >> current_file) & 1) //their piece
@@ -101,7 +101,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
 
                             diag_attacks |= Magics::IndexToBB(sq + 9 * (current_file - rankofsq));
                                 
-                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (current_file - rankofsq));
+                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (current_file - rankofsq));
                             break;
                         }
                         
@@ -115,7 +115,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
 
                             diag_attacks |= Magics::IndexToBB(sq - 9 * (rankofsq - current_file));
 
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (rankofsq - current_file));
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (rankofsq - current_file));
 
                             continue;
                         }
@@ -125,7 +125,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
 
                             diag_attacks |= Magics::IndexToBB(sq - 9 * (rankofsq - current_file));
 
-                            anti_diag_attacks |=  Magics::IndexToBB(sq +  7 * (rankofsq - current_file));
+                            anti_diag_attacks |=  Magics::IndexToBB(sq -  7 * (rankofsq - current_file));
                             break;
                         }
                     }

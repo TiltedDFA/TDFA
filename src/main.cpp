@@ -62,8 +62,9 @@ int main(void)
 
     RunTitBoardTest<D::RANK>(4,"8/8/8/8/8/8/8/P3R1p1 w -- 0 1",info);
     PRINT_TIT_TEST_RESULTS;
-    // RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
-    // PRINT_TIT_TEST_RESULTS;
+    
+    RunTitBoardTest<D::RANK>(2,"8/8/8/8/8/8/8/P1R2P1n w - - 0 1",info);
+    PRINT_TIT_TEST_RESULTS;
 
     RunTitBoardTest<D::FILE>(29,"8/8/8/8/5R2/8/8/8 w - - 0 1",info);
     PRINT_TIT_TEST_RESULTS;
@@ -77,14 +78,7 @@ int main(void)
     BB::Position pos("8/8/8/5p2/5R2/8/5P2/8 w - - 0 1");
     Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
     Debug::PrintBB(Magics::CollapsedRanksIndex(pos.GetPieces<true>() | pos.GetPieces<false>()));
-    // std::cout << sizeof(MoveGen::SLIDING_ATTACK_CONFIG);
-    // for(int i = 0; i < 4;++i)
-    // {
-    //     for(int sq = 0; sq < 64;++sq)
-    //     {
-    //         std::cout << "At sq:" << sq << "in direction" << i << std::endl;
-    //         Debug::PrintBB(Magics::SLIDING_ATTACKS_MASK[sq][i]);
-    //     }
-    // }
+    Debug::PrintBB(4647998506626711584);
+    Debug::PrintBB(18156244167032864);
     return 0;
 }
