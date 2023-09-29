@@ -31,7 +31,17 @@ struct move_info
     std::array<Move, 7> encoded_move;
     uint16_t count;
 };
-
+namespace loc
+{
+    constexpr uint8_t WHITE = 0;
+    constexpr uint8_t BLACK = 1;
+    constexpr uint8_t KING  = 0;
+    constexpr uint8_t QUEEN = 1;
+    constexpr uint8_t BISHOP= 2;
+    constexpr uint8_t KNIGHT= 3;
+    constexpr uint8_t ROOK  = 4;
+    constexpr uint8_t PAWN  = 5; 
+}
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum class D : uint8_t
 {

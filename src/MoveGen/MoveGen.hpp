@@ -168,6 +168,22 @@ public:
     
     void GenerateAllMoves(const BB::Position&,Move**);
     
+    template<bool is_white> 
+    bool InCheck()
+    {
+        return pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? b_atks_ : w_atks_);
+    }
+    
+    uint64_t Perft(int depth)
+    {
+        MoveList l;
+        uint64_t nodes{};
+
+        if(!depth) return 1ull;
+
+
+    }
+    
     template<D direction>
     static constexpr move_info& GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
     {
@@ -207,12 +223,14 @@ private:
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
             
             move = GetMovesForSliding<D::ADIAG>(bishop_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
             
             bishops = Magics::PopLS1B(bishops);
@@ -232,12 +250,14 @@ private:
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
 
             move = GetMovesForSliding<D::RANK>(rook_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetColour<is_white>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
             rooks = Magics::PopLS1B(rooks);
         }
@@ -258,6 +278,7 @@ private:
                 const uint8_t attack_index = Magics::FindLS1B(possible_move);
                 *(*move_list)++ = (is_white ?   Moves::EncodeMove(knight_index,attack_index,Moves::KNIGHT,1):
                                                 Moves::EncodeMove(knight_index,attack_index,Moves::KNIGHT,0));
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(attack_index);
                 possible_move = Magics::PopLS1B(possible_move);
             }
             knights = Magics::PopLS1B(knights);
@@ -277,25 +298,28 @@ private:
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
 
             move = GetMovesForSliding<D::RANK>(queen_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
-
 
             move = GetMovesForSliding<D::DIAG>(queen_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
 
             move = GetMovesForSliding<D::ADIAG>(queen_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
             for(uint8_t i{0}; i < move.count;++i)
             {
                 *(*move_list)++ = Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move.encoded_move[i]);
+                (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
             queens = Magics::PopLS1B(queens);
         }
@@ -310,6 +334,8 @@ public:
     inline static BitBoard EnPassantTargetSquare;
 private:
     BB::Position pos_;
+    BitBoard w_atks_;
+    BitBoard b_atks_;
 };
 
 #endif // #ifndef MOVEGEN_HPP

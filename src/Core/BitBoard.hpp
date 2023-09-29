@@ -8,17 +8,6 @@ namespace BB
 {
     //This namespace is used to contain the accessing indexes for the pieces in 
     //the pieces array
-    namespace loc
-    {
-        constexpr uint8_t WHITE = 0;
-        constexpr uint8_t BLACK = 1;
-        constexpr uint8_t KING  = 0;
-        constexpr uint8_t QUEEN = 1;
-        constexpr uint8_t BISHOP= 2;
-        constexpr uint8_t KNIGHT= 3;
-        constexpr uint8_t ROOK  = 4;
-        constexpr uint8_t PAWN  = 5; 
-    }
     struct Position
     {
     public:

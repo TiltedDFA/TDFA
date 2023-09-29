@@ -69,30 +69,30 @@ namespace Debug
     void PrintEntireBoard(const BitBoard (&board)[2][6])
     {
         std::cout << "wk" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::KING],true);
+        PrintBB(board[loc::WHITE][loc::KING],true);
         std::cout << "wq" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::QUEEN],true);
+        PrintBB(board[loc::WHITE][loc::QUEEN],true);
         std::cout << "wb" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::BISHOP],true);
+        PrintBB(board[loc::WHITE][loc::BISHOP],true);
         std::cout << "wn" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::KNIGHT],true);
+        PrintBB(board[loc::WHITE][loc::KNIGHT],true);
         std::cout << "wr" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::ROOK],true);
+        PrintBB(board[loc::WHITE][loc::ROOK],true);
         std::cout << "wp" << std::endl;
-        PrintBB(board[BB::loc::WHITE][BB::loc::PAWN],true);
+        PrintBB(board[loc::WHITE][loc::PAWN],true);
 
         std::cout << "bk" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::KING],true);
+        PrintBB(board[loc::BLACK][loc::KING],true);
         std::cout << "bq" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::QUEEN],true);
+        PrintBB(board[loc::BLACK][loc::QUEEN],true);
         std::cout << "bb" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::BISHOP],true);
+        PrintBB(board[loc::BLACK][loc::BISHOP],true);
         std::cout << "bn" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::KNIGHT],true);
+        PrintBB(board[loc::BLACK][loc::KNIGHT],true);
         std::cout << "br" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::ROOK],true);
+        PrintBB(board[loc::BLACK][loc::ROOK],true);
         std::cout << "bp" << std::endl;
-        PrintBB(board[BB::loc::BLACK][BB::loc::PAWN],true);
+        PrintBB(board[loc::BLACK][loc::PAWN],true);
     }
     std::string PieceTypeToStr(PieceType piece)
     {
