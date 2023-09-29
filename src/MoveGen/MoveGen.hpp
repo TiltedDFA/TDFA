@@ -26,8 +26,7 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
         {
             for(uint16_t them = 0; them < 256;++them)
             {
-                //skiping useless blocker configs
-                // not us and fileofsq || 
+                //skiping useless blocker configs 
                 if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
 
                 move_info file_attack_moves{};
@@ -142,21 +141,9 @@ static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
                         anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                     }
-
-                    // uint16_t cpy_us = us;
-                    // uint16_t cpy_them = them;
-                    // other_combined |= Magics::BBRankOf(sq);
-                    // while(!(other_combined & 1))
-                    // {
-                    //     cpy_us >>= 1;
-                    //     cpy_them >>= 1;
-                    //     other_combined >>= 1;
-                    // }
-                    
-                    // cpy_us &= ~Magics::BBFileOf(sq);
                     uint16_t p1 = Magics::base_2_to_3[rankofsq][us & ~Magics::BBRankOf(sq)];
                     uint16_t p2 = 2 * Magics::base_2_to_3[rankofsq][them];
-                    if(sq == 29 && p1+p2 == 81) std::cout << "reached" << file_attack_moves.count << std::endl;
+
                     result.at(sq).at((uint8_t)D::FILE).at(p1 + p2) = file_attack_moves;
                     result.at(sq).at((uint8_t)D::DIAG).at(p1 + p2) = diagonal_attack_moves;
                     result.at(sq).at((uint8_t)D::ADIAG).at(p1 + p2) = anti_diagonal_attack_moves;
@@ -172,7 +159,7 @@ class MoveGen
 public:
     MoveGen();
     
-    [[nodiscard]] MoveList GenerateAllMoves(const BB::Position& pos);
+    void GenerateAllMoves(const BB::Position&,Move**);
     
     template<D direction>
     static constexpr move_info& GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
@@ -181,16 +168,24 @@ public:
                 [
                     //us
                     (Magics::base_2_to_3
-                    [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
+                    [(direction == D::RANK) 
+                    ? Magics::FileOf(piece_sq) 
                     : Magics::RankOf(piece_sq)]
-                    [(direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+
+                    [(direction == D::RANK) 
+                    ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
                     : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
+
                     +
+
                     //them
                     (2 * Magics::base_2_to_3
-                    [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
+                    [(direction == D::RANK) 
+                    ? Magics::FileOf(piece_sq) 
                     : Magics::RankOf(piece_sq)]
-                    [(direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+
+                    [(direction == D::RANK) 
+                    ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
                     : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
                 ];
     }
@@ -203,7 +198,7 @@ private:
     void BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
 
     template<bool is_white>
-    void BishopMoves(Move** move_list,BitBoard bishops)
+    void BishopMoves(Move** move_list, BitBoard bishops)
     {
         if(!bishops) return;
 
@@ -273,7 +268,7 @@ private:
     }
 
     template<bool is_white>
-    void QueenMoves(Move** move_list,BitBoard queens)
+    void QueenMoves(Move** move_list, BitBoard queens)
     {
         if(!queens) return;
 

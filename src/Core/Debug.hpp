@@ -10,6 +10,8 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 
+#define PRINT(x) std::cout << (x) << std::endl
+
 namespace Debug
 {
     void PrintBB(BitBoard board, int board_center,bool mirrored=false)
@@ -205,6 +207,13 @@ namespace Debug
         output += "----------------\n";
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
+    }
+    constexpr BitBoard MoveToAtkBoard(MoveList& m)
+    {
+        BitBoard ret{0};
+        for(Move* it = m.First(); it != *m.Current();++it)
+            ret |= Magics::IndexToBB(Moves::GetTargetIndex(*it));
+        return ret;
     }
 }
 
