@@ -20,6 +20,7 @@ public:
     explicit constexpr MoveList() :head(), tail(&head[0]) { __FILL<Move>(head, MAX_MOVES, std::numeric_limits<Move>::max()); }
     constexpr Move* First() {return std::begin(head);}
     constexpr Move* Last() {return std::end(head);}
+    constexpr Move* End()   {return &head[MAX_MOVES];}
     constexpr Move** Current()  {return &tail;}
     constexpr std::size_t Size()const {return tail - head;}
     constexpr bool Contains(Move move)const{return std::ranges::find(head, move) != std::end(head);}

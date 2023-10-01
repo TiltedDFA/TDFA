@@ -26,6 +26,31 @@ namespace BB
         {
             ImportFen(fen);
         }
+        Position(Position& p)
+        {
+            for(int i = 0 ; i < 2;++i)
+                for(int j = 0; j < 6;++i)    
+                    this->pieces_[i][j] = p.pieces_[i][j];
+            this->castling_rights_ = p.castling_rights_;
+            this->whites_turn_ = p.whites_turn_;
+
+            this->en_passant_target_sq_ = p.en_passant_target_sq_;
+            this->half_moves_ = p.half_moves_;
+            this->full_moves_ = p.full_moves_;
+        }
+        Position& operator=(const Position& p)
+        {
+            for(int i = 0 ; i < 2;++i)
+                for(int j = 0; j < 6;++j)    
+                    this->pieces_[i][j] = p.pieces_[i][j];
+            this->castling_rights_ = p.castling_rights_;
+            this->whites_turn_ = p.whites_turn_;
+
+            this->en_passant_target_sq_ = p.en_passant_target_sq_;
+            this->half_moves_ = p.half_moves_;
+            this->full_moves_ = p.full_moves_;
+            return *this;
+        }
         constexpr void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)
