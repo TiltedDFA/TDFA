@@ -205,9 +205,9 @@ public:
     }
 private:
 
-    void WhitePawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
+    void WhitePawnMoves(MoveList& ml, BitBoard pawns) noexcept;
 
-    void BlackPawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept;
+    void BlackPawnMoves(MoveList& ml, BitBoard pawns) noexcept;
 
     template<bool is_white>
     constexpr void BishopMoves(MoveList& ml, BitBoard bishops)
@@ -328,7 +328,6 @@ private:
     
 public:    
     constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
-    inline static BitBoard EnPassantTargetSquare;
 private:
     BB::Position pos_;
     BitBoard w_atks_;

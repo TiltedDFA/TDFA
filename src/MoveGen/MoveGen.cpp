@@ -12,8 +12,8 @@ void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
     w_atks_ = 0ull;
     b_atks_ = 0ull;
 
-    WhitePawnMoves(ml, pos_.GetPieces<true>(), EnPassantTargetSquare);
-    BlackPawnMoves(ml, pos_.GetPieces<false>(), EnPassantTargetSquare);
+    WhitePawnMoves(ml, pos_.GetPieces<true>());
+    BlackPawnMoves(ml, pos_.GetPieces<false>());
 
     BishopMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
     BishopMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
@@ -34,7 +34,7 @@ BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
     w_atks_ = 0ull;
-    WhitePawnMoves(ml, pos_.GetPieces<true>(), EnPassantTargetSquare);
+    WhitePawnMoves(ml, pos_.GetPieces<true>());
     BishopMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
     RookMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
     KnightMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
@@ -46,7 +46,7 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
     b_atks_ = 0ull;
-    BlackPawnMoves(ml, pos_.GetPieces<false>(), EnPassantTargetSquare);
+    BlackPawnMoves(ml, pos_.GetPieces<false>());
     BishopMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
     RookMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
     KnightMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
@@ -54,11 +54,11 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
     BlackKingMoves(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
     return b_atks_;
 }
-void MoveGen::WhitePawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
+void MoveGen::WhitePawnMoves(MoveList& ml, BitBoard pawns) noexcept
 {
     if(!pawns) return;
     BitBoard pawn_move{0};
-    const BitBoard capturable_squares = pos_.GetPieces<false>() | en_passant_target_sq;
+    const BitBoard capturable_squares = pos_.GetPieces<false>() | pos_.GetEnPassantBB();
 
     pawn_move = Shift<MD::NORTH>(pawns) & pos_.GetEmptySquares();
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
@@ -92,11 +92,11 @@ void MoveGen::WhitePawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_t
             w_atks_  |= Magics::IndexToBB(index);
         }
 }
-void MoveGen::BlackPawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
+void MoveGen::BlackPawnMoves(MoveList& ml, BitBoard pawns) noexcept
 {
     if(!pawns) return;
     BitBoard pawn_move{0};
-    const BitBoard capturable_squares = pos_.GetPieces<true>() | en_passant_target_sq;
+    const BitBoard capturable_squares = pos_.GetPieces<true>() | pos_.GetEnPassantBB();
 
     pawn_move = Shift<MD::SOUTH>(pawns) & pos_.GetEmptySquares();
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
