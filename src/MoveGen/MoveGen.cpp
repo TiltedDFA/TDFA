@@ -27,8 +27,8 @@ void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
     QueenMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
     QueenMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
     
-    WhiteKingMoves(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
-    BlackKingMoves(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
+    KingMoves<true>(ml);
+    KingMoves<false>(ml);
 }
 BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
 {
@@ -39,7 +39,7 @@ BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
     RookMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
     KnightMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
     QueenMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
-    WhiteKingMoves(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
+    KingMoves<true>(ml);
     return w_atks_;
 }
 BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
@@ -51,7 +51,7 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
     RookMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
     KnightMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
     QueenMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
-    BlackKingMoves(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
+    KingMoves<false>(ml);
     return b_atks_;
 }
 void MoveGen::WhitePawnMoves(MoveList& ml, BitBoard pawns) noexcept
@@ -130,26 +130,4 @@ void MoveGen::BlackPawnMoves(MoveList& ml, BitBoard pawns) noexcept
             b_atks_  |= Magics::IndexToBB(index);
         } 
 
-}
-void MoveGen::WhiteKingMoves(MoveList& ml, BitBoard king) noexcept
-{
-    const uint8_t king_index = Magics::FindLS1B(king);
-    BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (pos_.GetPieces<false>() & ~pos_.GetPieces<true>()));
-    while(king_attacks)
-    {
-        ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
-        w_atks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
-        king_attacks = Magics::PopLS1B(king_attacks);
-    }
-}
-void MoveGen::BlackKingMoves(MoveList& ml, BitBoard king) noexcept
-{
-    const uint8_t king_index = Magics::FindLS1B(king);
-    BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (~pos_.GetPieces<false>() & pos_.GetPieces<true>()));
-    while(king_attacks)
-    {
-        ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,0));
-        b_atks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
-        king_attacks = Magics::PopLS1B(king_attacks);
-    }
 }

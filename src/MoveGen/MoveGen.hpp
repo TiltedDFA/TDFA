@@ -322,10 +322,18 @@ private:
         }
     }
 
-    void WhiteKingMoves(MoveList& ml, BitBoard king) noexcept;
-
-    void BlackKingMoves(MoveList& ml, BitBoard king) noexcept;
-    
+    template<bool is_white>
+    void KingMoves(MoveList& ml) noexcept
+    {
+        const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::KING>());
+        BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (is_white ? pos_.GetPieces<false>() : pos_.GetPieces<true>()));
+        while(king_attacks)
+        {
+            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
+            (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
+            king_attacks = Magics::PopLS1B(king_attacks);
+        }
+    }
 public:    
     constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:

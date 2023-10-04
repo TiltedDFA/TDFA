@@ -75,6 +75,7 @@ namespace BB
                 pieces_[is_white ? loc::WHITE : loc::BLACK][loc::ROOK]  |
                 pieces_[is_white ? loc::WHITE : loc::BLACK][loc::PAWN];
         }
+        
         template<uint8_t colour, uint8_t piecetype>
         constexpr BitBoard GetSpecificPieces()const
         {
