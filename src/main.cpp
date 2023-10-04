@@ -24,6 +24,10 @@ int main(void)
         Debug::PrintEncodedMoveStr(list[i]);
     }
     PRINT(list.len());
+    // for(int i = 0; i < 64;++i)
+    // {
+    //     Debug::PrintBB(Magics::KNIGHT_ATTACK_MASKS[i],i,false);
+    // }
 
 
 

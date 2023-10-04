@@ -145,7 +145,7 @@ namespace Magics
     static consteval std::array<BitBoard, 64> KnightAttackingMask()
     {
         std::array<BitBoard, 64> temp_array{};
-        constexpr BitBoard knight_attack_template = IndexToBB<0>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
+        constexpr BitBoard knight_attack_template = IndexToBB<1>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
                                                     IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
         for(uint8_t i{0}; i < 64;++i)
         {
