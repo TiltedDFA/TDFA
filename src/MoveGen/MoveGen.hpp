@@ -338,6 +338,47 @@ private:
             king_attacks = Magics::PopLS1B(king_attacks);
         }
     }
+
+    template<bool is_white>
+    constexpr void Castling(MoveList& ml) noexcept
+    {   
+        BitBoard king_attacks;
+        BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
+        const uint8_t king_index = (is_white ? 4 : 60);
+        if(is_white)
+        {
+            uint8_t fileLookedAt = wholeBoard & 0xFF; // the & 0xff might not be needed, i think converting a 64bit num to 8bit truncates anything to the left of the 8bits
+            if((pos_.castling_rights_ & 0x08) && !(fileLookedAt & 0x60))
+            {
+                king_attacks |= Magics::IndexToBB(6);
+            }
+            else if((pos_.castling_rights_ & 0x04) && !(fileLookedAt & 0x07))
+            {
+                king_attacks |= Magics::IndexToBB(2);
+            }
+
+        }
+        else
+        {
+            uint8_t fileLookedAt = (wholeBoard >> 56) & 0xFF ; //again, 0xFF might not be needed
+            if((pos_.castling_rights_ & 0x02) && !(fileLookedAt & 0x60))
+            {
+                king_attacks |= Magics::IndexToBB(62);
+            }
+            else if((pos_.castling_rights_ & 0x01) && !(fileLookedAt & 0x07))
+            {
+                king_attacks |= Magics::IndexToBB(58);
+            }
+        }
+
+        while(king_attacks)
+        {
+            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
+            (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
+            king_attacks = Magics::PopLS1B(king_attacks);
+        }
+    }
+    
 public:    
     constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:
