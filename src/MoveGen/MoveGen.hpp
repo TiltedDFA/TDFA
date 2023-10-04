@@ -205,13 +205,14 @@ public:
     }
 private:
 
-    void WhitePawnMoves(MoveList& ml, BitBoard pawns) noexcept;
+    void WhitePawnMoves(MoveList& ml) noexcept;
 
-    void BlackPawnMoves(MoveList& ml, BitBoard pawns) noexcept;
+    void BlackPawnMoves(MoveList& ml) noexcept;
 
     template<bool is_white>
-    constexpr void BishopMoves(MoveList& ml, BitBoard bishops)
+    constexpr void BishopMoves(MoveList& ml)
     {
+        BitBoard bishops = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::BISHOP>();
         if(!bishops) return;
 
         while(bishops)
@@ -237,8 +238,9 @@ private:
     }
 
     template<bool is_white>
-    constexpr void RookMoves(MoveList& ml, BitBoard rooks)
+    constexpr void RookMoves(MoveList& ml)
     {
+        BitBoard rooks = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::ROOK>();
         if(!rooks) return;
 
         while(rooks)
@@ -263,8 +265,9 @@ private:
     }
 
     template<bool is_white>
-    constexpr void KnightMoves(MoveList& ml, BitBoard knights) noexcept
+    constexpr void KnightMoves(MoveList& ml) noexcept
     {
+        BitBoard knights = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::KNIGHT>();
         if(!knights) return;
         while(knights)
         {
@@ -283,8 +286,9 @@ private:
     }
 
     template<bool is_white>
-    constexpr void QueenMoves(MoveList& ml, BitBoard queens)
+    constexpr void QueenMoves(MoveList& ml)
     {
+        BitBoard queens = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::QUEEN>();
         if(!queens) return;
 
         while(queens)
