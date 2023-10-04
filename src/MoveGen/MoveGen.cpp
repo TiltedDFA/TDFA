@@ -6,55 +6,55 @@ using Magics::Shift;
 MoveGen::MoveGen() 
     :pos_(),w_atks_(0ull),b_atks_(0ull)
     {}
-void MoveGen::GenerateAllMoves(const BB::Position& pos, Move** move_list)
+void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
 {
     pos_ = pos;
     w_atks_ = 0ull;
     b_atks_ = 0ull;
 
-    WhitePawnMoves(move_list, pos_.GetPieces<true>(), EnPassantTargetSquare);
-    BlackPawnMoves(move_list, pos_.GetPieces<false>(), EnPassantTargetSquare);
+    WhitePawnMoves(ml, pos_.GetPieces<true>(), EnPassantTargetSquare);
+    BlackPawnMoves(ml, pos_.GetPieces<false>(), EnPassantTargetSquare);
 
-    BishopMoves<true>(move_list, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
-    BishopMoves<false>(move_list, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
+    BishopMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
+    BishopMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
 
-    RookMoves<true>(move_list, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
-    RookMoves<false>(move_list, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
+    RookMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
+    RookMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
 
-    KnightMoves<true>(move_list, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
-    KnightMoves<false>(move_list, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
+    KnightMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
+    KnightMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
 
-    QueenMoves<true>(move_list, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
-    QueenMoves<false>(move_list, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
+    QueenMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
+    QueenMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
     
-    WhiteKingMoves(move_list, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
-    BlackKingMoves(move_list, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
+    WhiteKingMoves(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
+    BlackKingMoves(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
 }
-BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, Move** list)
+BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
     w_atks_ = 0ull;
-    WhitePawnMoves(list, pos_.GetPieces<true>(), EnPassantTargetSquare);
-    BishopMoves<true>(list, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
-    RookMoves<true>(list, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
-    KnightMoves<true>(list, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
-    QueenMoves<true>(list, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
-    WhiteKingMoves(list, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
+    WhitePawnMoves(ml, pos_.GetPieces<true>(), EnPassantTargetSquare);
+    BishopMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::BISHOP>());
+    RookMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::ROOK>());
+    KnightMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KNIGHT>());
+    QueenMoves<true>(ml, pos_.GetSpecificPieces<loc::WHITE, loc::QUEEN>());
+    WhiteKingMoves(ml, pos_.GetSpecificPieces<loc::WHITE, loc::KING>());
     return w_atks_;
 }
-BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, Move** list)
+BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
     b_atks_ = 0ull;
-    BlackPawnMoves(list, pos_.GetPieces<false>(), EnPassantTargetSquare);
-    BishopMoves<false>(list, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
-    RookMoves<false>(list, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
-    KnightMoves<false>(list, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
-    QueenMoves<false>(list, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
-    BlackKingMoves(list, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
+    BlackPawnMoves(ml, pos_.GetPieces<false>(), EnPassantTargetSquare);
+    BishopMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::BISHOP>());
+    RookMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::ROOK>());
+    KnightMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KNIGHT>());
+    QueenMoves<false>(ml, pos_.GetSpecificPieces<loc::BLACK, loc::QUEEN>());
+    BlackKingMoves(ml, pos_.GetSpecificPieces<loc::BLACK, loc::KING>());
     return b_atks_;
 }
-void MoveGen::WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
+void MoveGen::WhitePawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
 {
     if(!pawns) return;
     BitBoard pawn_move{0};
@@ -64,7 +64,7 @@ void MoveGen::WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index-8,index,Moves::PAWN,1);
+            ml.add(Moves::EncodeMove(index-8,index,Moves::PAWN,1));
             w_atks_  |= Magics::IndexToBB(index);
         }
 
@@ -72,7 +72,7 @@ void MoveGen::WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index-16,index,Moves::PAWN,1);
+            ml.add(Moves::EncodeMove(index-16,index,Moves::PAWN,1));
             w_atks_  |= Magics::IndexToBB(index);
         }
 
@@ -80,7 +80,7 @@ void MoveGen::WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1)  
         {
-            *(*move_list)++ = Moves::EncodeMove(index-9,index,Moves::PAWN,1);
+            ml.add(Moves::EncodeMove(index-9,index,Moves::PAWN,1));
             w_atks_  |= Magics::IndexToBB(index);
         }
 
@@ -88,11 +88,11 @@ void MoveGen::WhitePawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index-7,index,Moves::PAWN,1);
+            ml.add(Moves::EncodeMove(index-7,index,Moves::PAWN,1));
             w_atks_  |= Magics::IndexToBB(index);
         }
 }
-void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
+void MoveGen::BlackPawnMoves(MoveList& ml, BitBoard pawns, BitBoard en_passant_target_sq) noexcept
 {
     if(!pawns) return;
     BitBoard pawn_move{0};
@@ -102,7 +102,7 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1)
         {
-            *(*move_list)++ = Moves::EncodeMove(index+8,index,Moves::PAWN,0);
+            ml.add(Moves::EncodeMove(index+8,index,Moves::PAWN,0));
             b_atks_  |= Magics::IndexToBB(index);
         } 
 
@@ -110,7 +110,7 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index+16,index,Moves::PAWN,0);
+            ml.add(Moves::EncodeMove(index+16,index,Moves::PAWN,0));
             b_atks_  |= Magics::IndexToBB(index);
         } 
 
@@ -118,7 +118,7 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index+7,index,Moves::PAWN,0); 
+            ml.add(Moves::EncodeMove(index+7,index,Moves::PAWN,0)); 
             b_atks_  |= Magics::IndexToBB(index);
         } 
 
@@ -126,29 +126,29 @@ void MoveGen::BlackPawnMoves(Move** move_list, BitBoard pawns, BitBoard en_passa
     for(int index = Magics::FindLS1B(pawn_move);index< 64;++index)
         if ((pawn_move >> index) & 1) 
         {
-            *(*move_list)++ = Moves::EncodeMove(index+9,index,Moves::PAWN,0);
+            ml.add(Moves::EncodeMove(index+9,index,Moves::PAWN,0));
             b_atks_  |= Magics::IndexToBB(index);
         } 
 
 }
-void MoveGen::WhiteKingMoves(Move** move_list, BitBoard king) noexcept
+void MoveGen::WhiteKingMoves(MoveList& ml, BitBoard king) noexcept
 {
     const uint8_t king_index = Magics::FindLS1B(king);
     BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (pos_.GetPieces<false>() & ~pos_.GetPieces<true>()));
     while(king_attacks)
     {
-        *(*move_list)++ = Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1);
+        ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
         w_atks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
         king_attacks = Magics::PopLS1B(king_attacks);
     }
 }
-void MoveGen::BlackKingMoves(Move** move_list, BitBoard king) noexcept
+void MoveGen::BlackKingMoves(MoveList& ml, BitBoard king) noexcept
 {
     const uint8_t king_index = Magics::FindLS1B(king);
     BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (~pos_.GetPieces<false>() & pos_.GetPieces<true>()));
     while(king_attacks)
     {
-        *(*move_list)++ = Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,0);
+        ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,0));
         b_atks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
         king_attacks = Magics::PopLS1B(king_attacks);
     }

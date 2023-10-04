@@ -46,7 +46,7 @@ namespace Moves
         start_index = move & START_SQ_MASK;
         target_index =  (move & END_SQ_MASK) >> END_SQ_SHIFT;
         piece_type = (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;
-        is_white = (move >> COLOUR_SHIFT) == 1;
+        is_white = (move >> COLOUR_SHIFT);
     }
     constexpr bool IsWhite(const Move move)            {return (move >> COLOUR_SHIFT) == 1;}
     constexpr PieceType GetPieceType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}

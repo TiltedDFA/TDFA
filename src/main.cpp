@@ -16,19 +16,18 @@ int main(void)
     BB::Position pos(START_FEN);
     MoveGen gen;
     MoveList list;
-    gen.GenerateAllMoves(pos,list.Current());
-    //Debug::PrintBB(Debug::MoveToAtkBoard(list));
-    size_t count{};
-    for(Move* i = list.First(); i != list.End();++i)
+    gen.GenerateAllMoves(pos,list);
+
+    for(size_t i{0}; i < list.len();++i)
     {
-        if(*i != std::numeric_limits<Move>::max())++count;
+        std::cout << i << '\t';
+        Debug::PrintEncodedMoveStr(list[i]);
     }
-    std::cout << count << std::endl;
     Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
     Debug::PrintBB(pos.GetEmptySquares());
-    Debug::PrintBB(gen.GenerateAllWhiteMoves(pos,list.Current()));
-    Debug::PrintBB(gen.GenerateAllBlackMoves(pos,list.Current()));
-    PRINT(list.Size());
+    Debug::PrintBB(gen.GenerateAllWhiteMoves(pos,list));
+    Debug::PrintBB(gen.GenerateAllBlackMoves(pos,list));
+    PRINT(list.len());
 
     // move_info info;
     // RunTitBoardTest<D::DIAG>(12,"8/8/8/8/8/8/4B3/8 w - - 0 1",info);

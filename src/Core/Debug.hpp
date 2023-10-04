@@ -117,20 +117,10 @@ namespace Debug
     void PrintEncodedMoveStr(Move move)
     {
         std::string move_str{""};
-        move_str += "The start index is: " + std::to_string(move & Moves::START_SQ_MASK) + "\n";
-        move_str += "The end index is: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + "\n";
-        move_str += "THe piece moved was: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + "\n";
-        move_str += (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "The piece was white" : "The piece was black";
-        move_str += "\n";
-        std::cout << move_str;
-    }
-    void ShortPrintEncodedMoveStr(Move move)
-    {
-        std::string move_str{""};
         move_str += "S: " + std::to_string(move & Moves::START_SQ_MASK) + ", ";
         move_str += "E: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + ", ";
         move_str += "T: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + ", ";
-        move_str += "C: " + (((move & Moves::COLOUR_MASK) >> Moves::COLOUR_SHIFT) == 1) ? "W" : "B";
+        move_str += std::string("C: ") + std::string(((move >> Moves::COLOUR_SHIFT) ? "W" : "B"));
         move_str += "\n";
         std::cout << move_str;
     }
@@ -208,13 +198,13 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
-    constexpr BitBoard MoveToAtkBoard(MoveList& m)
-    {
-        BitBoard ret{0};
-        for(Move* it = m.First(); it != *m.Current();++it)
-            ret |= Magics::IndexToBB(Moves::GetTargetIndex(*it));
-        return ret;
-    }
+    // constexpr BitBoard MoveToAtkBoard(MoveList& m)
+    // {
+    //     BitBoard ret{0};
+    //     for(Move* it = m.First(); it != *m.Current();++it)
+    //         ret |= Magics::IndexToBB(Moves::GetTargetIndex(*it));
+    //     return ret;
+    // }
 }
 
 #endif // #ifndef DEBUG_HPP
