@@ -269,9 +269,7 @@ private:
         while(knights)
         {
             const uint8_t knight_index = Magics::FindLS1B(knights);
-            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & (pos_.GetEmptySquares() 
-                                        | (is_white ?   (pos_.GetPieces<false>() & ~pos_.GetPieces<true>()): 
-                                                        (~pos_.GetPieces<false>() & pos_.GetPieces<true>())));
+            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & (pos_.GetEmptySquares() | (is_white ? pos_.GetPieces<false>() : pos_.GetPieces<true>()));
             while(possible_move)
             {
                 const uint8_t attack_index = Magics::FindLS1B(possible_move);

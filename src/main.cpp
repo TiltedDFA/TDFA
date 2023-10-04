@@ -23,11 +23,20 @@ int main(void)
         std::cout << i << '\t';
         Debug::PrintEncodedMoveStr(list[i]);
     }
-    Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
-    Debug::PrintBB(pos.GetEmptySquares());
-    Debug::PrintBB(gen.GenerateAllWhiteMoves(pos,list));
-    Debug::PrintBB(gen.GenerateAllBlackMoves(pos,list));
     PRINT(list.len());
+
+
+
+
+
+
+
+
+
+    // Debug::PrintBB(pos.GetPieces<true>() | pos.GetPieces<false>());
+    // Debug::PrintBB(pos.GetEmptySquares());
+    // Debug::PrintBB(gen.GenerateAllWhiteMoves(pos,list));
+    // Debug::PrintBB(gen.GenerateAllBlackMoves(pos,list));
 
     // move_info info;
     // RunTitBoardTest<D::DIAG>(12,"8/8/8/8/8/8/4B3/8 w - - 0 1",info);
