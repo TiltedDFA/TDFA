@@ -342,12 +342,12 @@ private:
     template<bool is_white>
     constexpr void Castling(MoveList& ml) noexcept
     {   
-        BitBoard king_attacks;
-        BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
+        BitBoard king_attacks = 0;
+        const BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
         const uint8_t king_index = (is_white ? 4 : 60);
         if(is_white)
         {
-            uint8_t fileLookedAt = wholeBoard & 0xFF; // the & 0xff might not be needed, i think converting a 64bit num to 8bit truncates anything to the left of the 8bits
+            const uint8_t fileLookedAt = wholeBoard & 0xFF; // the & 0xff might not be needed, i think converting a 64bit num to 8bit truncates anything to the left of the 8bits
             if((pos_.castling_rights_ & 0x08) && !(fileLookedAt & 0x60))
             {
                 king_attacks |= Magics::IndexToBB(6);
@@ -360,7 +360,7 @@ private:
         }
         else
         {
-            uint8_t fileLookedAt = (wholeBoard >> 56) & 0xFF ; //again, 0xFF might not be needed
+            const uint8_t fileLookedAt = (wholeBoard >> 56) & 0xFF ; //again, 0xFF might not be needed
             if((pos_.castling_rights_ & 0x02) && !(fileLookedAt & 0x60))
             {
                 king_attacks |= Magics::IndexToBB(62);
