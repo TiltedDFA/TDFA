@@ -333,7 +333,7 @@ private:
         BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (is_white ? pos_.GetPieces<false>() : pos_.GetPieces<true>()));
         while(king_attacks)
         {
-            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
+            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,(is_white ? 1 : 0)));
             (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }
@@ -344,7 +344,6 @@ private:
     {   
         if(!((is_white ? 0x0C : 0x03) & pos_.castling_rights_)){return;} //checks for castling rights
         if(InCheck<is_white>()){return;}
-        //if(pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? b_atks_ : w_atks_)){return;}
 
         BitBoard king_attacks = 0;
         const BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
@@ -360,7 +359,7 @@ private:
             !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x60) // not under attack by enemy
         )
         {
-            king_attacks |= (is_white ? Magics::IndexToBB(6) : Magics::IndexToBB(62));
+            king_attacks |= (is_white ? Magics::IndexToBB<6>() : Magics::IndexToBB<62>());
         }
         if //queenside
         (
@@ -371,12 +370,12 @@ private:
             !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x0C) // not under attack by enemy
         )
         {
-            king_attacks |= (is_white ? Magics::IndexToBB(2):Magics::IndexToBB(58));
+            king_attacks |= (is_white ? Magics::IndexToBB<2>():Magics::IndexToBB<58>());
         }
 
         while(king_attacks)
         {
-            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
+            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,(is_white ? 1 : 0)));
             (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }

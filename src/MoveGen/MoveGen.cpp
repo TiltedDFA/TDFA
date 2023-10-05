@@ -29,6 +29,9 @@ void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
     
     KingMoves<true>(ml);
     KingMoves<false>(ml);
+
+    Castling<true>(ml);
+    Castling<false>(ml);
 }
 BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
 {
@@ -40,6 +43,7 @@ BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
     KnightMoves<true>(ml);
     QueenMoves<true>(ml);
     KingMoves<true>(ml);
+    Castling<true>(ml); // can't do this!!!
     return w_atks_;
 }
 BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
@@ -52,6 +56,7 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
     KnightMoves<false>(ml);
     QueenMoves<false>(ml);
     KingMoves<false>(ml);
+    Castling<false>(ml);
     return b_atks_;
 }
 void MoveGen::WhitePawnMoves(MoveList& ml) noexcept

@@ -13,23 +13,64 @@ constexpr unsigned long long b = 0xFF;
 
 int main(void)
 {
-    // BB::Position pos(START_FEN);
-    // MoveGen gen;
-    // MoveList list;
-    // gen.GenerateAllMoves(pos,list);
+    {
+        BB::Position pos("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+        MoveGen gen;
+        MoveList list;
+        gen.GenerateAllMoves(pos,list);
 
-    // for(size_t i{0}; i < list.len();++i)
-    // {
-    //     std::cout << i << '\t';
-    //     Debug::PrintEncodedMoveStr(list[i]);
-    // }
-    // PRINT(list.len());
-    // for(int i = 0; i < 64;++i)
-    // {
-    //     Debug::PrintBB(Magics::KNIGHT_ATTACK_MASKS[i],i,false);
-    // }
-    Debug::PrintBB(0x0c);
+        for(size_t i{0}; i < list.len();++i)
+        {
+            std::cout << i << '\t';
+            Debug::PrintEncodedMoveStr(list[i]);
+        }
+        PRINT(list.len());
+    }
+        
+    {
+        BB::Position pos("r3k2r/8/8/8/8/5q2/8/R3K2R w KQkq - 0 1");
+        MoveGen gen;
+        MoveList list;
+        gen.GenerateAllBlackMoves(pos,list);
+        gen.GenerateAllWhiteMoves(pos,list);
 
+        for(size_t i{0}; i < list.len();++i)
+        {
+            std::cout << i << '\t';
+            Debug::PrintEncodedMoveStr(list[i]);
+        }
+        PRINT(list.len());
+    }
+
+    {
+        BB::Position pos("r3k2r/8/8/6q1/8/8/8/R3K2R w KQkq - 0 1");
+        MoveGen gen;
+        MoveList list;
+        gen.GenerateAllBlackMoves(pos,list);
+        gen.GenerateAllWhiteMoves(pos,list);
+
+        for(size_t i{0}; i < list.len();++i)
+        {
+            std::cout << i << '\t';
+            Debug::PrintEncodedMoveStr(list[i]);
+        }
+        PRINT(list.len());
+    }
+   
+    {
+        BB::Position pos("r3k2r/8/8/4Q3/8/8/8/R3K2R w KQkq - 0 1");
+        MoveGen gen;
+        MoveList list;
+        gen.GenerateAllWhiteMoves(pos,list);
+        gen.GenerateAllBlackMoves(pos,list); 
+
+        for(size_t i{0}; i < list.len();++i)
+        {
+            std::cout << i << '\t';
+            Debug::PrintEncodedMoveStr(list[i]);
+        }
+        PRINT(list.len());
+    }
 
 
 
