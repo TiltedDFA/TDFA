@@ -342,7 +342,8 @@ private:
     template<bool is_white>
     constexpr void Castling(MoveList& ml) noexcept
     {   
-        //if(InCheck()){break;} //doesn't seem to work
+        //if(InCheck()){return;} //doesn't seem to work
+        if(pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? b_atks_ : w_atks_)){return;}
 
         BitBoard king_attacks = 0;
         const BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
@@ -350,28 +351,29 @@ private:
         if(is_white)
         {
             const uint8_t rankLookedAt = wholeBoard & 0xFF; // the & 0xff might not be needed, i think converting a 64bit num to 8bit truncates anything to the left of the 8bits
-            if((pos_.castling_rights_ & 0x08) && !(rankLookedAt & 0x60))
+            if((pos_.castling_rights_ & 0x08) && (!(rankLookedAt & 0x60) || ((b_atks_ & 0xFF) & 0x60)))
             {
                 king_attacks |= Magics::IndexToBB(6);
             }
-            else if((pos_.castling_rights_ & 0x04) && !(rankLookedAt & 0x0E))
+            else if((pos_.castling_rights_ & 0x04) && (!(rankLookedAt & 0x0E) || ((b_atks_ & 0xFF) & 0x06)))
             {
                 king_attacks |= Magics::IndexToBB(2);
             }
-
         }
         else
         {
             const uint8_t rankLookedAt = (wholeBoard >> 56) & 0xFF ; //again, 0xFF might not be needed
-            if((pos_.castling_rights_ & 0x02) && !(rankLookedAt & 0x60))
+            if((pos_.castling_rights_ & 0x02) && (!(rankLookedAt & 0x60) || (((w_atks_ >> 56) & 0xFF) & 0x60)))
             {
                 king_attacks |= Magics::IndexToBB(62);
             }
-            else if((pos_.castling_rights_ & 0x01) && !(rankLookedAt & 0x0E))
+            else if((pos_.castling_rights_ & 0x01) && (!(rankLookedAt & 0x0E) || (((w_atks_ >> 56) & 0xFF) & 0x06)))
             {
                 king_attacks |= Magics::IndexToBB(58);
             }
         }
+
+
         while(king_attacks)
         {
             ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,1));
