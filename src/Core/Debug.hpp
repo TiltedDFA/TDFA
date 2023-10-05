@@ -117,9 +117,10 @@ namespace Debug
     void PrintEncodedMoveStr(Move move)
     {
         std::string move_str{""};
-        move_str += "S: " + std::to_string(move & Moves::START_SQ_MASK) + ", ";
-        move_str += "E: " + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + ", ";
-        move_str += "T: " + PieceTypeToStr((move & Moves::PIECE_TYPE_MASK) >> Moves::PIECE_TYPE_SHIFT) + ", ";
+        const std::string comma (", ");
+        move_str += std::string("S: ") + std::to_string(move & Moves::START_SQ_MASK) + comma;
+        move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
+        move_str += std::string("T: ") + PieceTypeToStr(Moves::GetPieceType(move)) + comma;
         move_str += std::string("C: ") + std::string(((move >> Moves::COLOUR_SHIFT) ? "W" : "B"));
         move_str += "\n";
         std::cout << move_str;
