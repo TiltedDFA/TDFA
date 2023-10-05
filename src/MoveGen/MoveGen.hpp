@@ -342,37 +342,37 @@ private:
     template<bool is_white>
     constexpr void Castling(MoveList& ml) noexcept
     {   
-        //if(InCheck()){return;} //doesn't seem to work
-        if(pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? b_atks_ : w_atks_)){return;}
+        if(!((is_white ? 0x0C : 0x03) & pos_.castling_rights_)){return;} //checks for castling rights
+        if(InCheck<is_white>()){return;}
+        //if(pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? b_atks_ : w_atks_)){return;}
 
         BitBoard king_attacks = 0;
         const BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
         const uint8_t king_index = (is_white ? 4 : 60);
-        if(is_white)
-        {
-            const uint8_t rankLookedAt = wholeBoard & 0xFF; // the & 0xff might not be needed, i think converting a 64bit num to 8bit truncates anything to the left of the 8bits
-            if((pos_.castling_rights_ & 0x08) && (!(rankLookedAt & 0x60) || ((b_atks_ & 0xFF) & 0x60)))
-            {
-                king_attacks |= Magics::IndexToBB(6);
-            }
-            else if((pos_.castling_rights_ & 0x04) && (!(rankLookedAt & 0x0E) || ((b_atks_ & 0xFF) & 0x06)))
-            {
-                king_attacks |= Magics::IndexToBB(2);
-            }
-        }
-        else
-        {
-            const uint8_t rankLookedAt = (wholeBoard >> 56) & 0xFF ; //again, 0xFF might not be needed
-            if((pos_.castling_rights_ & 0x02) && (!(rankLookedAt & 0x60) || (((w_atks_ >> 56) & 0xFF) & 0x60)))
-            {
-                king_attacks |= Magics::IndexToBB(62);
-            }
-            else if((pos_.castling_rights_ & 0x01) && (!(rankLookedAt & 0x0E) || (((w_atks_ >> 56) & 0xFF) & 0x06)))
-            {
-                king_attacks |= Magics::IndexToBB(58);
-            }
-        }
+        const uint8_t rankLookedAt = (is_white ? (wholeBoard & 0xFF) : wholeBoard >> 56);
 
+        if // kingside
+        (
+            (pos_.castling_rights_ & (is_white ? 0x08 : 0x02)) // has rights
+            &&
+            !(rankLookedAt & 0x60) // not blocked
+            &&
+            !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x60) // not under attack by enemy
+        )
+        {
+            king_attacks |= (is_white ? Magics::IndexToBB(6) : Magics::IndexToBB(62));
+        }
+        if //queenside
+        (
+            (pos_.castling_rights_ & (is_white ? 0x04 : 0x01)) // has rights
+            && 
+            !(rankLookedAt & 0x0E) // not blocked
+            && 
+            !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x0C) // not under attack by enemy
+        )
+        {
+            king_attacks |= (is_white ? Magics::IndexToBB(2):Magics::IndexToBB(58));
+        }
 
         while(king_attacks)
         {
