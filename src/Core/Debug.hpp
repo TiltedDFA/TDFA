@@ -14,9 +14,9 @@
 
 namespace Debug
 {
-    void PrintBB(BitBoard board, int board_center,bool mirrored=false)
+    void PrintBB(BitBoard board, int board_center, bool mirrored = false)
     {
-        std::string output{},current_line{};
+        std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
         {
             for(int col{0}; col < 8;++col)
@@ -25,7 +25,7 @@ namespace Debug
                 {
                     current_line = mirrored ?   current_line + "X " : "X " + current_line;
                 }
-                else if(((board >> (col + row*8)))&1ull)
+                else if(((board >> (col + row * 8))) & 1ull)
                 {
                     current_line = mirrored ?   current_line + "1 " : "1 " + current_line ;
                 }
@@ -42,14 +42,14 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
-    void PrintBB(BitBoard board, bool mirrored=false)
+    void PrintBB(BitBoard board, bool mirrored = false)
     {
-        std::string output{},current_line{};
+        std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
         {
-            for(int col{0}; col < 8;++col)
+            for(int col{0}; col < 8; ++col)
             {
-                if(((board >> (col + row*8)))&1ull)
+                if(((board >> (col + row * 8))) & 1ull)
                 {
                     current_line = mirrored ?   current_line + "1 " : "1 " + current_line;
                 }
@@ -125,19 +125,19 @@ namespace Debug
         move_str += "\n";
         std::cout << move_str;
     }
-    void PrintUsThem(BitBoard us, BitBoard them, bool mirrored=false)
+    void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false)
     {
         std::string output{},current_line{};
             for(int row{0}; row < 8; ++row)
             {
-                for(int col{0}; col < 8;++col)
+                for(int col{0}; col < 8; ++col)
                 {
-                    const int current_index = (col + row*8);
-                    if(((us >> current_index))&1ull)
+                    const int current_index = (col + row * 8);
+                    if(((us >> current_index)) & 1ull)
                     {
                         current_line = mirrored ?   current_line + "UU " : "UU " + current_line;
                     }
-                    else if (((them >> current_index))&1ull)
+                    else if (((them >> current_index)) & 1ull)
                     {
                         current_line = mirrored ?   current_line + "TT " : "TT " + current_line;
                     }
@@ -158,7 +158,7 @@ namespace Debug
     {
         std::cout << std::bitset<16>(move) << std::endl;
     }
-    void PrintEncodedMovesVector(const std::vector<Move>& moves,bool mirrored=false)
+    void PrintEncodedMovesVector(const std::vector<Move>& moves, bool mirrored = false)
     {
         BitBoard combined_board{0ull};
         for(const Move i : moves)
@@ -167,26 +167,26 @@ namespace Debug
         }
         PrintBB(combined_board,mirrored);
     }
-    void PrintEncodedMovesMoveInfo(const move_info& move,bool mirrored=false)
+    void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored = false)
     {
         if(move.count == 0) std::cout << "No moves found\n";
+
         BitBoard combined_board{0ull};
-        for(uint8_t i = 0; i < move.count;++i)
-        {
-           // combined_board |= 1ull << Moves::GetStartIndex(move.encoded_move[i]);
+
+        for(uint8_t i = 0; i < move.count; ++i)
             combined_board |= 1ull << Moves::GetTargetIndex(move.encoded_move[i]);
-        }
-        PrintBB(combined_board,mirrored);
+        
+        PrintBB(combined_board, mirrored);
     }
-    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored=false)
+    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored = false)
     {
         std::string output{},current_line{};
 
-        for(int col{0}; col < 8;++col)
+        for(int col{0}; col < 8; ++col)
         {
             if(col == board_center)
                 current_line = mirrored ?   current_line + "X " : "X " + current_line;
-            else if((bb >> col)&1ull)
+            else if((bb >> col) & 1ull)
                 current_line = mirrored ?   current_line + "1 " : "1 " + current_line ;
             else
                 current_line = mirrored ?   current_line + "0 " : "0 " + current_line;
@@ -194,18 +194,10 @@ namespace Debug
         }
         output = current_line + output;
         current_line = "";
-                            
         output += "----------------\n";
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
-    // constexpr BitBoard MoveToAtkBoard(MoveList& m)
-    // {
-    //     BitBoard ret{0};
-    //     for(Move* it = m.First(); it != *m.Current();++it)
-    //         ret |= Magics::IndexToBB(Moves::GetTargetIndex(*it));
-    //     return ret;
-    // }
 }
 
 #endif // #ifndef DEBUG_HPP

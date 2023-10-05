@@ -7,9 +7,9 @@ static constexpr std::string_view RemoveWhiteSpace(std::string_view str)
     int end_index{static_cast<int>(str.size())};
     while(str.at(++start_index) == ' '){}
     while(str.at(--end_index) == ' '){}
-    return std::string_view(str.begin()+start_index,str.begin()+end_index+1);
+    return std::string_view(str.begin() + start_index, str.begin() + end_index + 1);
 }
-static inline void Split(std::string_view fen,std::array<std::string_view,6>& fen_sections)
+static inline void Split(std::string_view fen, std::array<std::string_view,6>& fen_sections)
 {
         int start = 0;
         int end = -1;
@@ -38,7 +38,6 @@ namespace BB
     {
         ResetBoard();
         fen = RemoveWhiteSpace(fen);
-        //if(fen.length() < 27 || fen.length() > 87) return false;    
         std::array<std::string_view,6> fen_sections;
         Split(fen,fen_sections);
 
@@ -138,8 +137,8 @@ namespace BB
             en_passant_index += (fen_sections.at(3).at(1) - '1') * 8;
         }
 
-        std::from_chars(fen_sections.at(4).data(),fen_sections.at(4).data() + fen_sections.size(),half_moves_);
-        std::from_chars(fen_sections.at(5).data(),fen_sections.at(5).data() + fen_sections.size(),full_moves_);
+        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), half_moves_);
+        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
 
         return true;
     }

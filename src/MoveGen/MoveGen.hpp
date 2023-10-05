@@ -212,7 +212,7 @@ private:
     template<bool is_white>
     constexpr void BishopMoves(MoveList& ml)
     {
-        BitBoard bishops = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::BISHOP>();
+        BitBoard bishops = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::BISHOP>();
         if(!bishops) return;
 
         while(bishops)
@@ -240,7 +240,7 @@ private:
     template<bool is_white>
     constexpr void RookMoves(MoveList& ml)
     {
-        BitBoard rooks = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::ROOK>();
+        BitBoard rooks = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::ROOK>();
         if(!rooks) return;
 
         while(rooks)
@@ -248,14 +248,14 @@ private:
             const uint8_t rook_index = Magics::FindLS1B(rooks);
 
             const move_info& move = GetMovesForSliding<D::FILE>(rook_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
-            for(uint8_t i{0}; i < move.count;++i)
+            for(uint8_t i{0}; i < move.count; ++i)
             {
                 ml.add(Moves::SetColour<is_white>(move.encoded_move[i]));
                 (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move.encoded_move[i]));
             }
 
             const move_info& move1 = GetMovesForSliding<D::RANK>(rook_index, (is_white) ? pos_.GetPieces<true>() : pos_.GetPieces<false>(), (is_white) ? pos_.GetPieces<false>() : pos_.GetPieces<true>());
-            for(uint8_t i{0}; i < move1.count;++i)
+            for(uint8_t i{0}; i < move1.count; ++i)
             {
                 ml.add(Moves::SetColour<is_white>(move1.encoded_move[i]));
                 (is_white ? w_atks_ : b_atks_) |= Magics::IndexToBB(Moves::GetTargetIndex(move1.encoded_move[i]));
@@ -267,7 +267,7 @@ private:
     template<bool is_white>
     constexpr void KnightMoves(MoveList& ml) noexcept
     {
-        BitBoard knights = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::KNIGHT>();
+        BitBoard knights = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::KNIGHT>();
         if(!knights) return;
         while(knights)
         {
@@ -288,7 +288,7 @@ private:
     template<bool is_white>
     constexpr void QueenMoves(MoveList& ml)
     {
-        BitBoard queens = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::QUEEN>();
+        BitBoard queens = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::QUEEN>();
         if(!queens) return;
 
         while(queens)
@@ -329,11 +329,11 @@ private:
     template<bool is_white>
     void KingMoves(MoveList& ml) noexcept
     {
-        const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK),loc::KING>());
+        const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::KING>());
         BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | (is_white ? pos_.GetPieces<false>() : pos_.GetPieces<true>()));
         while(king_attacks)
         {
-            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,(is_white ? 1 : 0)));
+            ml.add(Moves::EncodeMove(king_index, Magics::FindLS1B(king_attacks), Moves::KING, (is_white ? 1 : 0)));
             (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }
@@ -342,21 +342,21 @@ private:
     template<bool is_white>
     constexpr void Castling(MoveList& ml) noexcept
     {   
-        if(!((is_white ? 0x0C : 0x03) & pos_.castling_rights_)){return;} //checks for castling rights
-        if(InCheck<is_white>()){return;}
+        if(!((is_white ? 0x0C : 0x03) & pos_.castling_rights_)) {return;} //checks for castling rights
+        if(InCheck<is_white>()) {return;}
 
         BitBoard king_attacks = 0;
-        const BitBoard wholeBoard = pos_.GetPieces<true>() | pos_.GetPieces<false>();
+        const BitBoard whole_board = pos_.GetPieces<true>() | pos_.GetPieces<false>();
         const uint8_t king_index = (is_white ? 4 : 60);
-        const uint8_t rankLookedAt = (is_white ? (wholeBoard & 0xFF) : wholeBoard >> 56);
+        const uint8_t rank_looked_at = (is_white ? (whole_board & 0xFF) : whole_board >> 56);
 
         if // kingside
         (
             (pos_.castling_rights_ & (is_white ? 0x08 : 0x02)) // has rights
             &&
-            !(rankLookedAt & 0x60) // not blocked
+            !(rank_looked_at & 0x60) // not blocked
             &&
-            !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x60) // not under attack by enemy
+            !(0xFF & (is_white ? b_atks_ : w_atks_ >> 56) & 0x60) // not under attack by enemy
         )
         {
             king_attacks |= (is_white ? Magics::IndexToBB<6>() : Magics::IndexToBB<62>());
@@ -365,17 +365,17 @@ private:
         (
             (pos_.castling_rights_ & (is_white ? 0x04 : 0x01)) // has rights
             && 
-            !(rankLookedAt & 0x0E) // not blocked
+            !(rank_looked_at & 0x0E) // not blocked
             && 
-            !(0xFF & (is_white ? b_atks_:w_atks_ >> 56) & 0x0C) // not under attack by enemy
+            !(0xFF & (is_white ? b_atks_ : w_atks_ >> 56) & 0x0C) // not under attack by enemy
         )
         {
-            king_attacks |= (is_white ? Magics::IndexToBB<2>():Magics::IndexToBB<58>());
+            king_attacks |= (is_white ? Magics::IndexToBB<2>() : Magics::IndexToBB<58>());
         }
 
         while(king_attacks)
         {
-            ml.add(Moves::EncodeMove(king_index,Magics::FindLS1B(king_attacks),Moves::KING,(is_white ? 1 : 0)));
+            ml.add(Moves::EncodeMove(king_index, Magics::FindLS1B(king_attacks), Moves::KING, (is_white ? 1 : 0)));
             (is_white ? w_atks_ : b_atks_)  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }

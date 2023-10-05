@@ -22,7 +22,7 @@
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
 
 template<D direction>
-constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
+constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info)
 {
     BB::Position pos(fen);
     
@@ -54,12 +54,12 @@ constexpr void RunTitBoardTest(uint8_t sq,std::string_view fen, move_info& info)
                                         [(direction == D::RANK) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
-    std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1+p2 << ", atk_dir=" << ((direction == D::FILE) ? "File" : (direction == D::RANK) ? "Rank" : (direction == D::DIAG) ? "Diagonal" : "Anti-Diagonal") <<  ", fen='" << fen << "'" << std::endl;
+    std::cout << "sq="<< static_cast<int>(sq) << ", index=" << p1 + p2 << ", atk_dir=" << ((direction == D::FILE) ? "File" : (direction == D::RANK) ? "Rank" : (direction == D::DIAG) ? "Diagonal" : "Anti-Diagonal") <<  ", fen='" << fen << "'" << std::endl;
 
     std::cout << "Current Position:\n";
     (us_is_white) ? Debug::PrintUsThem(pos.GetPieces<true>(),pos.GetPieces<false>()) : Debug::PrintUsThem(pos.GetPieces<false>(),pos.GetPieces<true>());
 
-    info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1+p2);
+    info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1 + p2);
 }
 
 

@@ -31,9 +31,9 @@ namespace BB
             for(int i = 0 ; i < 2;++i)
                 for(int j = 0; j < 6;++i)    
                     this->pieces_[i][j] = p.pieces_[i][j];
+
             this->castling_rights_ = p.castling_rights_;
             this->whites_turn_ = p.whites_turn_;
-
             this->en_passant_target_sq_ = p.en_passant_target_sq_;
             this->half_moves_ = p.half_moves_;
             this->full_moves_ = p.full_moves_;
@@ -43,9 +43,9 @@ namespace BB
             for(int i = 0 ; i < 2;++i)
                 for(int j = 0; j < 6;++j)    
                     this->pieces_[i][j] = p.pieces_[i][j];
+
             this->castling_rights_ = p.castling_rights_;
             this->whites_turn_ = p.whites_turn_;
-
             this->en_passant_target_sq_ = p.en_passant_target_sq_;
             this->half_moves_ = p.half_moves_;
             this->full_moves_ = p.full_moves_;
@@ -55,6 +55,7 @@ namespace BB
         {
             for(uint8_t i = 0; i < 2; ++i)
                     for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
+
             castling_rights_ = 0x0F;
             whites_turn_ = true;
             en_passant_target_sq_ = 65;
@@ -85,10 +86,6 @@ namespace BB
         constexpr BitBoard GetEmptySquares()const
         {
             return ~(GetPieces<true>() | GetPieces<false>());
-        }
-        constexpr uint8_t GetEnPassantSq()const 
-        {
-            return en_passant_target_sq_;
         }
         constexpr BitBoard GetEnPassantBB()const
         {
