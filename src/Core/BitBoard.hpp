@@ -191,7 +191,7 @@ namespace BB
         
         constexpr BitBoard GetEnPassantBB()const
         {
-            return (en_passant_target_sq_ == 65) ? 0ull : Magics::IndexToBB(en_passant_target_sq_);
+            return (en_passant_target_sq_) ? Magics::IndexToBB(en_passant_target_sq_) : 0ull;
         }
 
     public:
