@@ -167,7 +167,55 @@ public:
 
     BitBoard GenerateAllBlackMoves(const BB::Position&, MoveList& ml);
 
-    
+    template<bool is_white>
+    void GenerateLegalMoves(const BB::Position& pos, MoveList& ml)
+    {
+        /*
+        
+        -Gen pseudo legal
+            -ez
+            
+        -Gen next bitboard after each move, regen attacks bitboard, see if legal
+            -possibly store attacks bitboard? for less overhead?
+
+        */
+        pos_ = pos;
+        MoveList pseudo_legal_ml;
+        //Pseudo legal:
+        KingMoves<is_white>(pseudo_legal_ml);
+        QueenMoves<is_white>(pseudo_legal_ml);
+        BishopMoves<is_white>(pseudo_legal_ml);
+        KnightMoves<is_white>(pseudo_legal_ml);
+        RookMoves<is_white>(pseudo_legal_ml);
+        (is_white ? WhitePawnMoves(pseudo_legal_ml) : BlackPawnMoves(pseudo_legal_ml));
+        Castling<is_white>(pseudo_legal_ml);
+
+        //regen attacks   
+        BitBoard king = pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>();
+        uint8_t king_square = Magics::FindLS1B(king);
+        uint8_t regenFlags = 0; //0000 0111 top 5 bits are ignored, bottom 3 indicate rook, bishop, and queenmoves to be regenerated respectively
+        
+        BitBoard rookFindingRayCast = Magics::SLIDING_ATTACKS_MASK[king_square][0] | Magics::SLIDING_ATTACKS_MASK[king_square][1];
+        BitBoard bishopFindingRayCast = Magics::SLIDING_ATTACKS_MASK[king_square][2] | Magics::SLIDING_ATTACKS_MASK[king_square][3];
+        if(rookFindingRayCast & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::ROOK>()){regenFlags |= 0x04;}
+        if(bishopFindingRayCast & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::BISHOP>()){regenFlags |= 0x02;}
+        if((rookFindingRayCast | bishopFindingRayCast) & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::QUEEN>()){regenFlags |= 0x01;}
+        
+        if(InCheck<is_white>())
+        {
+            
+        }
+        else
+        {
+            for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
+            {
+                pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
+   
+            }
+        }
+
+    }
+
     template<bool is_white> 
     constexpr bool InCheck()
     {
