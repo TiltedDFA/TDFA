@@ -6,7 +6,7 @@
 
 using Move      = uint16_t;
 using BitBoard  = uint64_t;
-using PieceType = uint32_t;
+using PieceType = uint8_t;
 
 constexpr std::size_t MAX_MOVES = 256;
 
@@ -42,6 +42,14 @@ namespace loc
     constexpr uint8_t ROOK  = 4;
     constexpr uint8_t PAWN  = 5; 
 }
+enum class PromType : uint8_t
+{
+    NOPROMO,
+    QUEEN,
+    BISHOP,
+    KNIGHT,
+    ROOK
+};
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum class D : uint8_t
 {
