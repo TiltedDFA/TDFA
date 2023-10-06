@@ -29,7 +29,7 @@ namespace BB
             ImportFen(fen);
         }
         
-        Position(Position& p)
+        constexpr Position(Position& p)
         {
             for(int i = 0 ; i < 2;++i)
                 for(int j = 0; j < 6;++i)    
@@ -80,14 +80,19 @@ namespace BB
             PieceType p_type;
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
+            
+            full_moves_ += is_white;
 
             if((uint8_t)promotion) //if not NOPROMO
             {
                 pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
                 pieces_[is_white][(uint8_t)promotion] |= Magics::IndexToBB(target);
+                half_moves_ = 0;
                 return;
             }
             
+            if((GetPieces<true>() | GetPieces<false>()) & Magics::IndexToBB(target))
+                half_moves_ = 0;
         
             //updates en passant state
             if(p_type == Moves::PAWN && std::abs(target - start) == 16) 
