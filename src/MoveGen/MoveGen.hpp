@@ -207,9 +207,8 @@ public:
         }
         else
         {
-            for(uint8_t i = 0, i < pseudo_legal_ml.len(), ++i)
+            for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
             {
-                
             }
         }
 
