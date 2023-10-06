@@ -21,7 +21,7 @@ public:
 
     constexpr bool contains(const Move m){return std::find(data_.cbegin(),data_.cend(),m) != data_.cend();}
 private:
-    std::array<Move,MAX_MOVES> data_;
+    std::array<Move, MAX_MOVES> data_;
     size_t idx_;
 };
 
