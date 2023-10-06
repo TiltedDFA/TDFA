@@ -19,12 +19,12 @@ E.g.
 */
 namespace Moves
 {
-    constexpr PieceType KING            = 0x01;
-    constexpr PieceType QUEEN           = 0x02;
-    constexpr PieceType BISHOP          = 0x03;
-    constexpr PieceType KNIGHT          = 0x04;
-    constexpr PieceType ROOK            = 0x05;
-    constexpr PieceType PAWN            = 0x06;
+    constexpr PieceType KING            = 0;
+    constexpr PieceType QUEEN           = 1;
+    constexpr PieceType BISHOP          = 2;
+    constexpr PieceType KNIGHT          = 3;
+    constexpr PieceType ROOK            = 4;
+    constexpr PieceType PAWN            = 5;
     constexpr uint32_t START_SQ_MASK    = 0x0000003F;
     constexpr uint32_t END_SQ_MASK      = 0x00000FC0;
     constexpr uint32_t PIECE_TYPE_MASK  = 0x00007000;
@@ -32,7 +32,7 @@ namespace Moves
     constexpr uint16_t END_SQ_SHIFT     = 6;
     constexpr uint16_t PIECE_TYPE_SHIFT = 12;
     constexpr uint16_t COLOUR_SHIFT     = 15;
-    [[nodiscard]] constexpr Move EncodeMove(const uint8_t start_index, const uint8_t target_index, const uint8_t piece_type, const bool is_white)
+    [[nodiscard]] constexpr Move EncodeMove(const uint8_t start_index, const uint8_t target_index, const PieceType piece_type, const bool is_white)
     {
         Move move{0};
         move |= (start_index & START_SQ_MASK);
@@ -41,7 +41,7 @@ namespace Moves
         move |= ((is_white ? 1u : 0u) << COLOUR_SHIFT);
         return move;
     }
-    constexpr void DecodeMove(const Move move, uint8_t& start_index, uint8_t& target_index, uint8_t& piece_type, bool& is_white)
+    constexpr void DecodeMove(const Move move, uint8_t& start_index, uint8_t& target_index, PieceType& piece_type, bool& is_white)
     {
         start_index = move & START_SQ_MASK;
         target_index =  (move & END_SQ_MASK) >> END_SQ_SHIFT;

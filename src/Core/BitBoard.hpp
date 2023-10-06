@@ -3,6 +3,7 @@
 
 #include "Types.hpp"
 #include "MagicConstants.hpp"
+#include "Move.hpp"
 #include <string_view>
 namespace BB
 {
@@ -15,17 +16,19 @@ namespace BB
             pieces_(),
             castling_rights_(0xF),
             whites_turn_(true),
-            en_passant_target_sq_(65),
+            en_passant_target_sq_(0),
             half_moves_(0),
             full_moves_(0)
         {
             for(uint8_t i = 0; i < 2; ++i)
                 for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
         }
+        
         Position(std::string_view fen)
         {
             ImportFen(fen);
         }
+        
         Position(Position& p)
         {
             for(int i = 0 ; i < 2;++i)
@@ -38,6 +41,7 @@ namespace BB
             this->half_moves_ = p.half_moves_;
             this->full_moves_ = p.full_moves_;
         }
+        
         Position& operator=(const Position& p)
         {
             for(int i = 0 ; i < 2;++i)
@@ -51,6 +55,7 @@ namespace BB
             this->full_moves_ = p.full_moves_;
             return *this;
         }
+        
         constexpr void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)
@@ -58,13 +63,98 @@ namespace BB
 
             castling_rights_ = 0x0F;
             whites_turn_ = true;
-            en_passant_target_sq_ = 65;
+            en_passant_target_sq_ = 0;
             half_moves_ = 0;
             full_moves_ = 0;    
         }    
         //returns true/false depending on success of fen importing
         [[maybe_unused]]bool ImportFen(std::string_view fen);
 
+        constexpr void MakeMove(Move m, PromType promotion)
+        {
+            //switch turns
+            whites_turn_ = !whites_turn_;
+
+            uint8_t start;
+            uint8_t target;
+            PieceType p_type;
+            bool is_white;
+            Moves::DecodeMove(m, start, target, p_type, is_white);
+
+            if((uint8_t)promotion) //if not NOPROMO
+            {
+                pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
+                pieces_[is_white][(uint8_t)promotion] |= Magics::IndexToBB(target);
+                return;
+            }
+            
+        
+            //updates en passant state
+            if(p_type == Moves::PAWN && std::abs(target - start) == 16) 
+            {
+                en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
+            }
+            else
+            {
+                en_passant_target_sq_ = 0;
+            }
+
+            if(p_type == Moves::KING)
+            {
+                castling_rights_ &= is_white ? 0x03 : 0x0C;
+
+                if(is_white && start - target == 2) //queen side
+                {
+                    pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
+                    pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
+                    pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
+                    return;
+                }
+                else if(is_white && target - start == 2) //king side
+                {
+                    pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
+                    pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
+                    pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
+                    return;
+                }
+                else if(start - target == 2) //queen side
+                {
+                    pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
+                    pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
+                    pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
+                    return;
+                }   
+                else if(target - start == 2)
+                {
+                    pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
+                    pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
+                    pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
+                    return;
+                }
+            } 
+            else if(p_type == Moves::ROOK)
+            {
+                switch(start)
+                {
+                case 0:
+                    castling_rights_ &= 0x0B;
+                    break;
+                case 7: 
+                    castling_rights_ &= 0x07;
+                    break;
+                case 63:
+                    castling_rights_ &= 0x0D;
+                    break;
+                case 56:
+                    castling_rights_ &= 0x0E;
+                    break;
+                default:
+                    break;
+                }
+            }
+            pieces_[is_white][p_type] &= ~Magics::IndexToBB(start);
+            pieces_[is_white][p_type] |= Magics::IndexToBB(target);
+        }
         template<bool is_white>
         constexpr BitBoard GetPieces()const
         {
@@ -83,10 +173,12 @@ namespace BB
             assert(colour < 2 && piecetype < 6);
             return pieces_[colour][piecetype];
         }
+        
         constexpr BitBoard GetEmptySquares()const
         {
             return ~(GetPieces<true>() | GetPieces<false>());
         }
+        
         constexpr BitBoard GetEnPassantBB()const
         {
             return (en_passant_target_sq_ == 65) ? 0ull : Magics::IndexToBB(en_passant_target_sq_);
