@@ -81,7 +81,7 @@ namespace BB
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
             
-            full_moves_ += is_white;
+            full_moves_ += !is_white;
 
             if((uint8_t)promotion) //if not NOPROMO
             {
@@ -93,11 +93,16 @@ namespace BB
             
             if((GetPieces<true>() | GetPieces<false>()) & Magics::IndexToBB(target))
                 half_moves_ = 0;
-        
+            else ++half_moves_;
+
             //updates en passant state
-            if(p_type == Moves::PAWN && std::abs(target - start) == 16) 
+            if(p_type == Moves::PAWN) 
             {
-                en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
+                if (std::abs(target - start) == 16)
+                {
+                   en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
+                }             
+                half_moves_ = 0;
             }
             else
             {

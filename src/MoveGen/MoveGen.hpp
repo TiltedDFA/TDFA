@@ -203,12 +203,14 @@ public:
         
         if(InCheck<is_white>())
         {
-
+            
         }
         else
         {
             for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
             {
+                pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
+   
             }
         }
 
