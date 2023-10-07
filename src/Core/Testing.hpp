@@ -73,16 +73,16 @@ uint64_t Perft(int depth, BB::Position& pos)
 
     if(pos.whites_turn_)
     {
-        std::cout << "is white's turn" << std::endl;
+        // std::cout << "is white's turn" << std::endl;
         gen.GenerateLegalMoves<true>(pos,ml);
     }
     else
     {
-        std::cout << "is black's turn" << std::endl;
+        // std::cout << "is black's turn" << std::endl;
         gen.GenerateLegalMoves<false>(pos,ml);
     }
     //gen.GenerateLegalMoves<true>(pos,ml);
-    std::cout << ml.len() << " Moves generated" << std::endl;
+    // std::cout << ml.len() << " Moves generated" << std::endl;
     for(size_t i = 0; i < ml.len(); ++i)
     {
         pos.MakeMove(ml[i], PromType::NOPROMO);

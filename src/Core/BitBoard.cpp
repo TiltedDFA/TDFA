@@ -14,27 +14,24 @@ static constexpr std::string_view RemoveWhiteSpace(std::string_view str)
 }
 static inline void Split(std::string_view fen, std::array<std::string_view,6>& fen_sections)
 {
-        int start = 0;
-        int end = -1;
-        uint8_t current_fen_section = 0;
-        while(static_cast<uint64_t>(++end) < fen.size())
+    int start = 0;
+    int end = -1;
+    uint8_t current_fen_section = 0;
+    while(static_cast<uint64_t>(++end) < fen.size())
+    {
+        if(fen.at(end) == ' ')
         {
-            if(fen.at(end) == ' ')
-            {
-                ++end;
-                fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (end - 1));
-                ++current_fen_section;
-                start = end;
-                continue;
-            }
+            ++end;
+            fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (end - 1));
+            ++current_fen_section;
+            start = end;
+            continue;
         }
-        fen_sections.at(current_fen_section) = std::string_view(fen.begin()+start,fen.begin()+(++end-1));
-        ++current_fen_section;
+    }
+    fen_sections.at(current_fen_section) = std::string_view(fen.begin()+start,fen.begin()+(++end-1));
+    ++current_fen_section;
 }
-static inline bool isdigit(const char i)
-{
-    return i <= '9' && i >= '0';
-}
+static constexpr bool isdigit(const char i) {return i <= '9' && i >= '0';}
 namespace BB
 {
     bool Position::ImportFen(std::string_view fen)

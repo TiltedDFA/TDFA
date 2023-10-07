@@ -194,30 +194,30 @@ public:
         //regen attacks   
         BitBoard king = pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>();
         uint8_t king_square = Magics::FindLS1B(king);
-        bool bishopFlag = false;
-        bool rook_flag = false;
-        bool queen_flag = false;
+        bool regen_bishop = false;
+        bool regen_rook = false;
+        bool regen_queen = false;
 
-        BitBoard rookFindingRayCast = Magics::SLIDING_ATTACKS_MASK[king_square][0] | Magics::SLIDING_ATTACKS_MASK[king_square][1];
-        BitBoard bishopFindingRayCast = Magics::SLIDING_ATTACKS_MASK[king_square][2] | Magics::SLIDING_ATTACKS_MASK[king_square][3];
-        if(rookFindingRayCast & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::ROOK>()){rook_flag = true;}
-        if(bishopFindingRayCast & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::BISHOP>()){bishopFlag = true;}
-        if((rookFindingRayCast | bishopFindingRayCast) & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::QUEEN>()){queen_flag = true;}
+        const BitBoard rook_attacks = Magics::SLIDING_ATTACKS_MASK[king_square][0] | Magics::SLIDING_ATTACKS_MASK[king_square][1];
+        const BitBoard bishop_attacks = Magics::SLIDING_ATTACKS_MASK[king_square][2] | Magics::SLIDING_ATTACKS_MASK[king_square][3];
+        if(rook_attacks & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::ROOK>()){regen_rook = true;}
+        if(bishop_attacks & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::BISHOP>()){regen_bishop = true;}
+        if((rook_attacks | bishop_attacks) & pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::QUEEN>()){regen_queen = true;}
         
         for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
         {
             pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
             BitBoard attackBB = 0; 
 
-            if(bishopFlag)
+            if(regen_bishop)
             {
                 attackBB |= BishopAttacks<is_white ? false : true>();
             }
-            if(rook_flag)
+            if(regen_rook)
             {
                 attackBB |= RookAttacks<is_white ? false : true>();
             }
-            if(queen_flag)
+            if(regen_queen)
             {
                 attackBB |= QueenAttacks<is_white ? false : true>();
             }

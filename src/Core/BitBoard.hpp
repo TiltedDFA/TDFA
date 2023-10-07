@@ -104,10 +104,10 @@ namespace BB
             PieceType p_type;
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
-            if(!is_white)
-            {
-                std::cout << std::to_string(start) << '\t' <<  std::to_string(target) << '\t' << std::to_string(p_type) << std::endl;
-            }
+            // if(!is_white)
+            // {
+            //     std::cout << std::to_string(start) << '\t' <<  std::to_string(target) << '\t' << std::to_string(p_type) << std::endl;
+            // }
             
             full_moves_ += !is_white;
 
