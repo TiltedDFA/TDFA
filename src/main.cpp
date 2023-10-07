@@ -13,12 +13,24 @@ constexpr unsigned long long b = 0xFF;
 
 int main(void)
 {
-    BB::Position pos(START_FEN);
-    for(int i = 0; i < 10; ++i)
+    // BB::Position pos(START_FEN);
+    // for(int i = 0; i < 5; ++i)
+    // {
+    //     pos.ImportFen(START_FEN);
+    //     PRINT(Perft(i,pos));
+    //     pos.ResetBoard();
+    // }
     {
-        pos.ImportFen(START_FEN);
-        PRINT(Perft(i,pos));
-        pos.ResetBoard();
+        BB::Position pos(START_FEN);
+        PRINT(Perft(2,pos));
+    }
+
+    {
+        BB::Position pos("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1");
+        MoveGen gen{};
+        MoveList ml{};
+        gen.GenerateLegalMoves<false>(pos,ml);
+        std::cout << ml.len() << std::endl;
     }
     // {
     //     BB::Position pos("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");

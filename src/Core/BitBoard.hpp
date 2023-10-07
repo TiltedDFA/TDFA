@@ -4,6 +4,7 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 #include "Move.hpp"
+#include <iostream>
 #include <string_view>
 #include <stack>
 namespace BB
@@ -36,9 +37,7 @@ namespace BB
             pieces_(),
             info_({}),
             whites_turn_(true),
-            full_moves_(0),
-            w_atks_(0),
-            b_atks_(0)
+            full_moves_(0)
         {
             for(uint8_t i = 0; i < 2; ++i)
                 for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
@@ -60,8 +59,6 @@ namespace BB
             this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
             this->info_.half_moves_ = p.info_.half_moves_;
             this->full_moves_ = p.full_moves_;
-            this->w_atks_ = p.w_atks_;
-            this->b_atks_ = p.b_atks_;
         }
         
         constexpr Position& operator=(const Position& p)
@@ -75,12 +72,10 @@ namespace BB
             this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
             this->info_.half_moves_ = p.info_.half_moves_;
             this->full_moves_ = p.full_moves_;
-            this->w_atks_ = p.w_atks_;
-            this->b_atks_ = p.b_atks_;
             return *this;
         }
         
-        constexpr void ResetBoard()
+        void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)
                     for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
@@ -90,8 +85,6 @@ namespace BB
             info_.en_passant_target_sq_ = 0;
             info_.half_moves_ = 0;
             full_moves_ = 0;
-            w_atks_ = 0;
-            b_atks_ = 0;
 
             while(!previous_pos_info.empty())
                 previous_pos_info.pop();    
@@ -99,7 +92,7 @@ namespace BB
         //returns true/false depending on success of fen importing
         [[maybe_unused]]bool ImportFen(std::string_view fen);
 
-        constexpr void MakeMove(Move m, PromType promotion)
+        void MakeMove(Move m, PromType promotion)
         {
             //switch turns
             whites_turn_ = !whites_turn_;
@@ -111,6 +104,10 @@ namespace BB
             PieceType p_type;
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
+            if(!is_white)
+            {
+                std::cout << std::to_string(start) << '\t' <<  std::to_string(target) << '\t' << std::to_string(p_type) << std::endl;
+            }
             
             full_moves_ += !is_white;
 
@@ -256,8 +253,6 @@ namespace BB
         PosInfo info_;
         bool whites_turn_;
         uint16_t full_moves_;
-        BitBoard w_atks_;
-        BitBoard b_atks_;
         static std::stack<PosInfo> previous_pos_info;
     };
 }

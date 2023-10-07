@@ -10,7 +10,8 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 
-#define PRINT(x) std::cout << (x) << std::endl
+#define PRINT(x) std::cout << (x)
+#define PRINTNL(x) std::cout << (x) << std::endl
 
 namespace Debug
 {
@@ -66,6 +67,28 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         std::cout << output << std::endl;
     }
+    void PrintBoardState(const BB::Position& pos)
+    {
+        PRINTNL("White's side: ");
+        Debug::PrintBB(pos.GetPieces<true>());
+        PRINTNL("Black's side: ");
+        Debug::PrintBB(pos.GetPieces<false>());
+        
+        {
+            std::string prnt{"Castiling rights: "};
+            if(pos.info_.castling_rights_ & 0x08) prnt += "Wk";
+            if(pos.info_.castling_rights_ & 0x04) prnt += "Wq";
+            if(pos.info_.castling_rights_ & 0x02) prnt += "Bk";
+            if(pos.info_.castling_rights_ & 0x01) prnt += "Bq";
+            PRINTNL(prnt);
+        }
+
+        PRINTNL("Half moves: " + std::to_string(pos.info_.half_moves_)); 
+        PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_target_sq_)); 
+        pos.whites_turn_ ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
+        PRINTNL("Full moves: " + std::to_string(pos.full_moves_)); 
+    }
+    
     void PrintEntireBoard(const BitBoard (&board)[2][6])
     {
         std::cout << "wk" << std::endl;
