@@ -1,6 +1,9 @@
 #include "BitBoard.hpp"
 #include <array>
 #include <charconv>
+
+std::stack<BB::PosInfo> BB::Position::previous_pos_info{};
+
 static constexpr std::string_view RemoveWhiteSpace(std::string_view str)
 {
     int start_index{-1};
@@ -19,7 +22,7 @@ static inline void Split(std::string_view fen, std::array<std::string_view,6>& f
             if(fen.at(end) == ' ')
             {
                 ++end;
-                fen_sections.at(current_fen_section) = std::string_view(fen.begin()+start,fen.begin()+(end-1));
+                fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (end - 1));
                 ++current_fen_section;
                 start = end;
                 continue;
@@ -111,16 +114,16 @@ namespace BB
             case '-':                
                 break;
             case 'K':
-                castling_rights_ |= 0x08;
+                info_.castling_rights_ |= 0x08;
                 break;
             case 'Q':
-                castling_rights_ |= 0x04;
+                info_.castling_rights_ |= 0x04;
                 break;
             case 'k':
-                castling_rights_ |= 0x02;
+                info_.castling_rights_ |= 0x02;
                 break;
             case 'q':
-                castling_rights_ |= 0x01;
+                info_.castling_rights_ |= 0x01;
                 break; 
             default:
                 return false;
@@ -135,9 +138,10 @@ namespace BB
             int en_passant_index = 0;
             en_passant_index += (fen_sections.at(3).at(0)) - 'a';
             en_passant_index += (fen_sections.at(3).at(1) - '1') * 8;
+            info_.en_passant_target_sq_ = en_passant_index;
         }
 
-        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), half_moves_);
+        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
         std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
 
         return true;

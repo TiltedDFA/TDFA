@@ -61,6 +61,24 @@ constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info
 
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1 + p2);
 }
+uint64_t Perft(int depth, BB::Position& pos)
+{
+    if(!depth) return 1ull;
 
+    MoveList ml{};
+    uint64_t nodes{0};
+    
+    MoveGen gen{};
+    pos.whites_turn_ ? gen.GenerateLegalMoves<true>(pos,ml) : gen.GenerateLegalMoves<false>(pos,ml);
+    
+
+    for(size_t i = 0; i < ml.len(); ++i)
+    {
+        pos.MakeMove(ml[i], PromType::NOPROMO);
+        nodes += Perft(depth - 1, pos);
+        pos.UnmakeMove(ml[i], PromType::NOPROMO);
+    }
+    return nodes;
+}
 
 #endif // #ifndef TESTING_HPP

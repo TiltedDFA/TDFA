@@ -225,7 +225,7 @@ public:
             { 
                 ml.add(pseudo_legal_ml[i]);
             }
-            pos_.UnmakeMove<is_white>();
+            pos_.UnmakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
         }
 
     }
@@ -236,16 +236,7 @@ public:
         return pos_.GetSpecificPieces<is_white ? loc::WHITE : loc::BLACK, loc::KING>() & (is_white ? pos_.b_atks_ : pos_.w_atks_);
     }
     
-    
-    uint64_t Perft(int depth)
-    {
-        MoveList l;
-        uint64_t nodes{};
-
-        if(!depth) return 1ull;
-
-        return nodes;
-    }
+  
     
     template<D direction>
     static constexpr move_info& GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
@@ -484,7 +475,7 @@ private:
     template<bool is_white>
     constexpr void Castling(MoveList& ml) noexcept
     {   
-        if(!((is_white ? 0x0C : 0x03) & pos_.castling_rights_)) {return;} //checks for castling rights
+        if(!((is_white ? 0x0C : 0x03) & pos_.info_.castling_rights_)) {return;} //checks for castling rights
         if(InCheck<is_white>()) {return;}
 
         BitBoard king_attacks = 0;
@@ -494,7 +485,7 @@ private:
 
         if // kingside
         (
-            (pos_.castling_rights_ & (is_white ? 0x08 : 0x02)) // has rights
+            (pos_.info_.castling_rights_ & (is_white ? 0x08 : 0x02)) // has rights
             &&
             !(rank_looked_at & 0x60) // not blocked
             &&
@@ -505,7 +496,7 @@ private:
         }
         if //queenside
         (
-            (pos_.castling_rights_ & (is_white ? 0x04 : 0x01)) // has rights
+            (pos_.info_.castling_rights_ & (is_white ? 0x04 : 0x01)) // has rights
             && 
             !(rank_looked_at & 0x0E) // not blocked
             && 
