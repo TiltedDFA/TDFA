@@ -4,13 +4,12 @@ using Magics::Shift;
 
 
 MoveGen::MoveGen() 
-    :pos_(),w_atks_(0ull),b_atks_(0ull)
-    {}
+    :pos_(){}
 void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
 {
     pos_ = pos;
-    w_atks_ = 0ull;
-    b_atks_ = 0ull;
+    pos_.w_atks_ = 0ull;
+    pos_.b_atks_ = 0ull;
 
     WhitePawnMoves(ml);
     BlackPawnMoves(ml);
@@ -36,7 +35,7 @@ void MoveGen::GenerateAllMoves(const BB::Position& pos, MoveList& ml)
 BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
-    w_atks_ = 0ull;
+    pos_.w_atks_ = 0ull;
     WhitePawnMoves(ml);
     BishopMoves<true>(ml);
     RookMoves<true>(ml);
@@ -44,12 +43,12 @@ BitBoard MoveGen::GenerateAllWhiteMoves(const BB::Position& p, MoveList& ml)
     QueenMoves<true>(ml);
     KingMoves<true>(ml);
     Castling<true>(ml); // can't do this!!!
-    return w_atks_;
+    return pos_.w_atks_;
 }
 BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
 {
     pos_ = p;
-    b_atks_ = 0ull;
+    pos_.b_atks_ = 0ull;
     BlackPawnMoves(ml);
     BishopMoves<false>(ml);
     RookMoves<false>(ml);
@@ -57,7 +56,7 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
     QueenMoves<false>(ml);
     KingMoves<false>(ml);
     Castling<false>(ml);
-    return b_atks_;
+    return pos_.b_atks_;
 }
 void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
 {
@@ -71,7 +70,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index - 8, index, Moves::PAWN, 1));
-            w_atks_  |= Magics::IndexToBB(index);
+            pos_.w_atks_  |= Magics::IndexToBB(index);
         }
 
     pawn_move = Shift<MD::NORTHNORTH>(pawns) & pos_.GetEmptySquares() & Shift<MD::NORTH>(pos_.GetEmptySquares()) & Magics::RANK_4BB;
@@ -79,7 +78,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index - 16, index, Moves::PAWN, 1));
-            w_atks_  |= Magics::IndexToBB(index);
+            pos_.w_atks_  |= Magics::IndexToBB(index);
         }
 
     pawn_move = Shift<MD::NORTH_EAST>(pawns) & capturable_squares;
@@ -87,7 +86,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1)  
         {
             ml.add(Moves::EncodeMove(index - 9, index, Moves::PAWN, 1));
-            w_atks_  |= Magics::IndexToBB(index);
+            pos_.w_atks_  |= Magics::IndexToBB(index);
         }
 
     pawn_move = Shift<MD::NORTH_WEST>(pawns) & capturable_squares;
@@ -95,7 +94,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index - 7, index, Moves::PAWN, 1));
-            w_atks_  |= Magics::IndexToBB(index);
+            pos_.w_atks_  |= Magics::IndexToBB(index);
         }
 }
 void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
@@ -110,7 +109,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1)
         {
             ml.add(Moves::EncodeMove(index + 8, index, Moves::PAWN, 0));
-            b_atks_  |= Magics::IndexToBB(index);
+            pos_.b_atks_  |= Magics::IndexToBB(index);
         } 
 
     pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos_.GetEmptySquares() & Shift<MD::SOUTH>(pos_.GetEmptySquares()) & Magics::RANK_5BB;
@@ -118,7 +117,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index + 16, index, Moves::PAWN, 0));
-            b_atks_  |= Magics::IndexToBB(index);
+            pos_.b_atks_  |= Magics::IndexToBB(index);
         } 
 
     pawn_move = Shift<MD::SOUTH_EAST>(pawns) & capturable_squares;
@@ -126,7 +125,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index + 7, index, Moves::PAWN, 0)); 
-            b_atks_  |= Magics::IndexToBB(index);
+            pos_.b_atks_  |= Magics::IndexToBB(index);
         } 
 
     pawn_move = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
@@ -134,6 +133,6 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         if ((pawn_move >> index) & 1) 
         {
             ml.add(Moves::EncodeMove(index + 9, index, Moves::PAWN, 0));
-            b_atks_  |= Magics::IndexToBB(index);
+            pos_.b_atks_  |= Magics::IndexToBB(index);
         } 
 }

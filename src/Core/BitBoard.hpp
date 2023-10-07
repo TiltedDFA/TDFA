@@ -18,7 +18,9 @@ namespace BB
             whites_turn_(true),
             en_passant_target_sq_(0),
             half_moves_(0),
-            full_moves_(0)
+            full_moves_(0),
+            w_atks_(0),
+            b_atks_(0)
         {
             for(uint8_t i = 0; i < 2; ++i)
                 for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
@@ -40,6 +42,8 @@ namespace BB
             this->en_passant_target_sq_ = p.en_passant_target_sq_;
             this->half_moves_ = p.half_moves_;
             this->full_moves_ = p.full_moves_;
+            this->w_atks_ = p.w_atks_;
+            this->b_atks_ = p.b_atks_;
         }
         
         Position& operator=(const Position& p)
@@ -53,6 +57,8 @@ namespace BB
             this->en_passant_target_sq_ = p.en_passant_target_sq_;
             this->half_moves_ = p.half_moves_;
             this->full_moves_ = p.full_moves_;
+            this->w_atks_ = p.w_atks_;
+            this->b_atks_ = p.b_atks_;
             return *this;
         }
         
@@ -65,7 +71,9 @@ namespace BB
             whites_turn_ = true;
             en_passant_target_sq_ = 0;
             half_moves_ = 0;
-            full_moves_ = 0;    
+            full_moves_ = 0;
+            w_atks_ = 0;
+            b_atks_ = 0;    
         }    
         //returns true/false depending on success of fen importing
         [[maybe_unused]]bool ImportFen(std::string_view fen);
@@ -165,6 +173,11 @@ namespace BB
             pieces_[is_white][p_type] &= ~Magics::IndexToBB(start);
             pieces_[is_white][p_type] |= Magics::IndexToBB(target);
         }
+
+        template<bool is_white>
+        constexpr void UnmakeMove()
+        {
+        }
         template<bool is_white>
         constexpr BitBoard GetPieces()const
         {
@@ -203,6 +216,8 @@ namespace BB
         uint8_t en_passant_target_sq_;
         uint8_t half_moves_;
         uint16_t full_moves_;
+        BitBoard w_atks_;
+        BitBoard b_atks_;
     };
 }
 
