@@ -42,6 +42,35 @@ namespace Magics
     //returns (x^y). compile time friendly.
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
+    //Returns the index of the most significant 1 bit.
+    constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
+
+    //Returns the number without the least significant 1 bit. 
+    //Not protected against 0 inputs
+    constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
+
+    //Returns whether the index provided is inbounds of the board
+    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
+    
+    //Returns the a bitboard with a 1 bit in the location of the index provided
+    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
+
+    //forced compile time eval version of the other IndexToBB
+    template<uint8_t N>
+    consteval BitBoard IndexToBB(){return 1ull << N;}
+    
+    //returns the file of an index/square
+    constexpr uint8_t FileOf(uint8_t index){return index & 7;}
+
+    //returns the rank of an index/square
+    constexpr uint8_t RankOf(uint8_t index){return index >> 3;}
+
+    //finds the file of the square/index and returns a bitboard containing a 1 bit
+    // in the square specified
+    constexpr uint8_t BBFileOf(uint8_t square){return 1 << FileOf(square);}
+
+    constexpr uint8_t BBRankOf(uint8_t square){return 1 << RankOf(square);}
+    
     static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
     {
         b |= b >> 32;
@@ -61,36 +90,6 @@ namespace Magics
         b |= b >> 28;
         return b & 0xFF;
     }
-    //Not a true conversion. Just returns the value of the binary number if it was base 3.
-    //This omits the file of piece that you're trying to calculate the moves for
-    static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
-    {
-        std::array<std::array<uint16_t,256>,8> result{};
-        for(uint8_t missed_file = 0; missed_file < 8;++missed_file)
-        {
-            for(uint16_t i = 0; i < 256;++i)
-            {
-                for(int j = 0; j < 8;++j)
-                {
-                    if(j == missed_file) continue;
-                    result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
-                }
-                    assert(result.at(missed_file).at(i) < 1094);
-            }
-        }
-        return result;
-    }
-    //Not a true conversion. Just returns the value of the binary number if it was base 3.
-    //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3 = compute_base_2_to_3();
-
-    //Returns the index of the most significant 1 bit.
-    constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
-
-    //Returns the number without the least significant 1 bit. 
-    //Not protected against 0 inputs
-    constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
-    
     constexpr BitBoard PopMS1B(const BitBoard board)
     {
         BitBoard b = board;
@@ -102,28 +101,6 @@ namespace Magics
         b |= b >> 32;
         return board & (b >> 1);
     }
-    //Returns whether the index provided is inbounds of the board
-    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
-    
-    //Returns the a bitboard with a 1 bit in the location of the index provided
-    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
-
-    //forced compile time eval version of the other IndexToBB
-    template<uint8_t N>
-    consteval BitBoard IndexToBB(){return 1ull << N;}
-    
-    //returns the file of an index/square
-    constexpr uint8_t FileOf(uint8_t index){return index & 7;}
-
-    //returns the rank of an index/square
-    constexpr uint8_t RankOf(uint8_t index){return index >> 3;}
-
-
-    //finds the file of the square/index and returns a bitboard containing a 1 bit
-    // in the square specified
-    constexpr uint8_t BBFileOf(uint8_t square){return 1 << FileOf(square);}
-
-    constexpr uint8_t BBRankOf(uint8_t square){return 1 << RankOf(square);}
     //Returns a bitboard which has been moved by the shift specified
     template<MD D>
     constexpr BitBoard Shift(BitBoard b)
@@ -149,13 +126,32 @@ namespace Magics
                                                     IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
         for(uint8_t i{0}; i < 64;++i)
         {
-            if(i%8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)))
+            if(i % 8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)))
                                             & (~Magics::FILE_GBB & ~FILE_HBB);
-            else if(i%8 > 5)temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)))
+            else if(i % 8 > 5)temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)))
                                             & (~Magics::FILE_ABB & ~Magics::FILE_BBB);
-            else temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18-i)) : (knight_attack_template  << (i-18)));
+            else temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)));
         }
         return temp_array;
+    }
+    //Not a true conversion. Just returns the value of the binary number if it was base 3.
+    //This omits the file of piece that you're trying to calculate the moves for
+    static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
+    {
+        std::array<std::array<uint16_t,256>,8> result{};
+        for(uint8_t missed_file = 0; missed_file < 8;++missed_file)
+        {
+            for(uint16_t i = 0; i < 256;++i)
+            {
+                for(int j = 0; j < 8;++j)
+                {
+                    if(j == missed_file) continue;
+                    result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
+                }
+                    assert(result.at(missed_file).at(i) < 1094);
+            }
+        }
+        return result;
     }
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
     static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
@@ -181,11 +177,6 @@ namespace Magics
         return r_val;
     }
     
-    //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
-    
-    static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
-
     static consteval std::array<BitBoard, 64> KingAttackingMask()
     {
         std::array<BitBoard, 64> temp_array{};
@@ -202,6 +193,15 @@ namespace Magics
         }
         return temp_array;
     }
+    //Not a true conversion. Just returns the value of the binary number if it was base 3.
+    //This omits the file of piece that you're trying to calculate the moves for
+    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3 = compute_base_2_to_3();
+
+    //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
+    static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
+    
+    static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
+
     static constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP
