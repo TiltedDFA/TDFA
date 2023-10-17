@@ -34,10 +34,10 @@ namespace Magics
 
 #ifdef __GNUG__
     //finds least significant 1 bit and returns the position of it
-    constexpr int FindLS1B(BitBoard bb){return __builtin_ctzll(bb);}
+    constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 65);}
 #else
     //finds least significant 1 bit and returns the position of it
-    constexpr int FindLS1B(BitBoard bb){return std::countr_zero(bb);}
+    constexpr Sq FindLS1B(BitBoard bb){return std::countr_zero(bb);}
 #endif
     //returns (x^y). compile time friendly.
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
@@ -53,23 +53,23 @@ namespace Magics
     constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
-    constexpr BitBoard IndexToBB(uint8_t index){return 1ull << index;}
+    constexpr BitBoard IndexToBB(Sq index){return 1ull << index;}
 
     //forced compile time eval version of the other IndexToBB
-    template<uint8_t N>
+    template<Sq N>
     consteval BitBoard IndexToBB(){return 1ull << N;}
     
     //returns the file of an index/square
-    constexpr uint8_t FileOf(uint8_t index){return index & 7;}
+    constexpr Sq FileOf(uint8_t index){return index & 7;}
 
     //returns the rank of an index/square
-    constexpr uint8_t RankOf(uint8_t index){return index >> 3;}
+    constexpr Sq RankOf(uint8_t index){return index >> 3;}
 
     //finds the file of the square/index and returns a bitboard containing a 1 bit
     // in the square specified
-    constexpr uint8_t BBFileOf(uint8_t square){return 1 << FileOf(square);}
+    constexpr uint8_t BBFileOf(Sq square){return 1 << FileOf(square);}
 
-    constexpr uint8_t BBRankOf(uint8_t square){return 1 << RankOf(square);}
+    constexpr uint8_t BBRankOf(Sq square){return 1 << RankOf(square);}
     
     static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
     {

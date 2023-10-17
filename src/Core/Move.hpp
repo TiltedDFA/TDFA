@@ -32,7 +32,7 @@ namespace Moves
     constexpr uint16_t END_SQ_SHIFT     = 6;
     constexpr uint16_t PIECE_TYPE_SHIFT = 12;
     constexpr uint16_t COLOUR_SHIFT     = 15;
-    [[nodiscard]] constexpr Move EncodeMove(const uint8_t start_index, const uint8_t target_index, const PieceType piece_type, const bool is_white)
+    [[nodiscard]] constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const PieceType piece_type, const bool is_white)
     {
         Move move{0};
         move |= start_index & START_SQ_MASK;
@@ -41,7 +41,7 @@ namespace Moves
         move |= (is_white ? 1u : 0u) << COLOUR_SHIFT;
         return move;
     }
-    constexpr void DecodeMove(const Move move, uint8_t& start_index, uint8_t& target_index, PieceType& piece_type, bool& is_white)
+    constexpr void DecodeMove(const Move move, Sq& start_index, Sq& target_index, PieceType& piece_type, bool& is_white)
     {
         start_index = move & START_SQ_MASK;
         target_index =  (move & END_SQ_MASK) >> END_SQ_SHIFT;

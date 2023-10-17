@@ -85,6 +85,8 @@ uint64_t Perft(int depth, BB::Position& pos)
     // std::cout << ml.len() << " Moves generated" << std::endl;
     for(size_t i = 0; i < ml.len(); ++i)
     {
+        // PRINTNL("Making this move: \n");
+        // Debug::PrintEncodedMoveStr(ml[i]);
         pos.MakeMove(ml[i], PromType::NOPROMO);
         nodes += Perft(depth - 1, pos);
         pos.UnmakeMove(ml[i], PromType::NOPROMO);

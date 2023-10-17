@@ -28,7 +28,7 @@ static inline void Split(std::string_view fen, std::array<std::string_view,6>& f
             continue;
         }
     }
-    fen_sections.at(current_fen_section) = std::string_view(fen.begin()+start,fen.begin()+(++end-1));
+    fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (++end - 1));
     ++current_fen_section;
 }
 static constexpr bool isdigit(const char i) {return i <= '9' && i >= '0';}

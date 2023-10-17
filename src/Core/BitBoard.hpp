@@ -48,10 +48,10 @@ namespace BB
             ImportFen(fen);
         }
         
-        constexpr Position(Position& p)
+        constexpr Position(const Position& p)
         {
             for(int i = 0 ; i < 2;++i)
-                for(int j = 0; j < 6;++i)    
+                for(int j = 0; j < 6;++j)    
                     this->pieces_[i][j] = p.pieces_[i][j];
 
             this->info_.castling_rights_ = p.info_.castling_rights_;
@@ -99,8 +99,8 @@ namespace BB
 
             previous_pos_info.push(info_);
 
-            uint8_t start;
-            uint8_t target;
+            Sq start;
+            Sq target;
             PieceType p_type;
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
@@ -119,8 +119,13 @@ namespace BB
                 return;
             }
             
-            if((GetPieces<true>() | GetPieces<false>()) & Magics::IndexToBB(target))
+            //removes the piece we take
+            if((is_white ? GetPieces<false>() : GetPieces<false>()) & Magics::IndexToBB(target))
+            {
                 info_.half_moves_ = 0;
+                is_white ? RemoveIntersectingPiece<false>(Magics::IndexToBB(target)) 
+                         : RemoveIntersectingPiece<true>(Magics::IndexToBB(target));
+            }
             else
                 ++info_.half_moves_;
 
@@ -197,10 +202,10 @@ namespace BB
         
         void UnmakeMove(Move m, PromType promotion)
         {
-            whites_turn_ = !whites_turn_;
-
             info_ = previous_pos_info.top();
             previous_pos_info.pop();
+
+            whites_turn_ = !whites_turn_;
 
             uint8_t start;
             uint8_t target;
@@ -248,6 +253,21 @@ namespace BB
             return (info_.en_passant_target_sq_) ? Magics::IndexToBB(info_.en_passant_target_sq_) : 0ull;
         }
 
+
+        /*
+            This function is used in makemove to quickly find which piece is being attacked(which is necessary
+            as different types of pieces are stored sperately) and removes the attacked piece from its given board.
+            An implamented assumption is that the king can never be removed as no legal move should be able to do this.
+        */
+        template<bool is_white>
+        constexpr void RemoveIntersectingPiece(BitBoard attacked_sq)
+        {
+            if(pieces_[is_white][loc::PAWN] & attacked_sq)          pieces_[is_white][loc::PAWN] &= ~attacked_sq;
+            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] &= ~attacked_sq;
+            else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] &= ~attacked_sq;
+            else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] &= ~attacked_sq;
+            else pieces_[is_white][loc::QUEEN] &= ~attacked_sq;
+        }
     public:
         BitBoard pieces_[2][6];
         PosInfo info_;

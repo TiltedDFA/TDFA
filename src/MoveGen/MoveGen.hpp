@@ -242,8 +242,7 @@ public:
     template<D direction>
     static constexpr const move_info* GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
     {
-        return &SLIDING_ATTACK_CONFIG[piece_sq][static_cast<int>(direction)]
-            [
+        const uint16_t index = 
                 //us
                 (Magics::base_2_to_3
                 [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
@@ -256,8 +255,8 @@ public:
                 [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
                 : Magics::RankOf(piece_sq)]
                 [(direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
-                : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
-            ];
+                : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])]);
+        return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(static_cast<int>(direction)).at(index);
     }
 private:
 

@@ -7,6 +7,7 @@
 using Move      = uint16_t;
 using BitBoard  = uint64_t;
 using PieceType = uint8_t;
+using Sq        = uint8_t;
 
 constexpr std::size_t MAX_MOVES = 256;
 
@@ -33,8 +34,8 @@ struct move_info
 };
 namespace loc
 {
-    constexpr uint8_t WHITE = 0;
-    constexpr uint8_t BLACK = 1;
+    constexpr uint8_t BLACK = 0;
+    constexpr uint8_t WHITE = 1;
     constexpr uint8_t KING  = 0;
     constexpr uint8_t QUEEN = 1;
     constexpr uint8_t BISHOP= 2;
