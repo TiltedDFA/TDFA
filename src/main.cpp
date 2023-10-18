@@ -18,7 +18,7 @@ int main(void)
     // Debug::PrintBB(140737488943099); 
     {
         BB::Position pos(START_FEN);
-        for(int i = 0; i < 5; ++i)
+        for(int i = 0; i < 10; ++i)
         {
             pos.ImportFen(START_FEN);
             // Debug::PrintBB(pos.GetPieces<true>());

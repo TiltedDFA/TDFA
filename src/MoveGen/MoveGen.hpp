@@ -10,7 +10,7 @@
 #include "../Core/Move.hpp"
 #include "MoveList.hpp"
 #include <iostream>
-using Magics::FileOf;
+
 
 consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
@@ -33,7 +33,7 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                 uint8_t other_combined = (us | them) & ~Magics::BBRankOf(sq); 
 
                 const uint8_t rankofsq = Magics::RankOf(sq);
-                const uint8_t fileofsq = FileOf(sq);
+                const uint8_t fileofsq = Magics::FileOf(sq);
 
                 uint64_t diag_attacks = 0ull;
                 uint64_t anti_diag_attacks = 0ull;

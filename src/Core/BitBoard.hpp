@@ -120,7 +120,7 @@ namespace BB
             }
             
             //removes the piece we take
-            if((is_white ? GetPieces<false>() : GetPieces<false>()) & Magics::IndexToBB(target))
+            if((is_white ? GetPieces<false>() : GetPieces<true>()) & Magics::IndexToBB(target))
             {
                 info_.half_moves_ = 0;
                 is_white ? RemoveIntersectingPiece<false>(Magics::IndexToBB(target)) 
@@ -147,6 +147,32 @@ namespace BB
             {
                 info_.castling_rights_ &= is_white ? 0x03 : 0x0C;
 
+                // switch(static_cast<int8_t>(is_white) + static_cast<int8_t>(start) - static_cast<int8_t>(target))
+                // {
+                //     case 3:
+                //         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
+                //         pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
+                //         pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
+                //         return;
+                //     case -1:
+                //         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
+                //         pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
+                //         pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
+                //         return;
+                //     case 2:
+                //         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
+                //         pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
+                //         pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
+                //         return;
+                //     case -2:
+                //         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
+                //         pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
+                //         pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
+                //         return;
+                //     default:
+                //         break;
+                // }
+
                 if(is_white && start - target == 2) //queen side
                 {
                     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
@@ -154,21 +180,21 @@ namespace BB
                     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
                     return;
                 }
-                else if(is_white && target - start == 2) //king side
+                if(is_white && target - start == 2) //king side
                 {
                     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
                     pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
                     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
                     return;
                 }
-                else if(start - target == 2) //queen side
+                if(start - target == 2) //queen side
                 {
                     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
                     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
                     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
                     return;
                 }   
-                else if(target - start == 2)
+                if(target - start == 2)
                 {
                     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
                     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
