@@ -147,60 +147,60 @@ namespace BB
             {
                 info_.castling_rights_ &= is_white ? 0x03 : 0x0C;
 
-                // switch(static_cast<int8_t>(is_white) + static_cast<int8_t>(start) - static_cast<int8_t>(target))
-                // {
-                //     case 3:
-                //         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
-                //         pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
-                //         pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
-                //         return;
-                //     case -1:
-                //         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
-                //         pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
-                //         pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
-                //         return;
-                //     case 2:
-                //         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
-                //         pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
-                //         pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
-                //         return;
-                //     case -2:
-                //         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
-                //         pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
-                //         pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
-                //         return;
-                //     default:
-                //         break;
-                // }
+                switch(start | (target << 6))
+                {
+                    case 132: //queen
+                        pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
+                        pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
+                        pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
+                        return;
+                    case 388: //king
+                        pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
+                        pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
+                        pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
+                        return;
+                    case 3772: //queen
+                        pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
+                        pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
+                        pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
+                        return;
+                    case 4028: //king
+                        pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
+                        pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
+                        pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
+                        return;
+                    default:
+                        break;
+                }
 
-                if(is_white && start - target == 2) //queen side
-                {
-                    pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
-                    pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
-                    pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
-                    return;
-                }
-                if(is_white && target - start == 2) //king side
-                {
-                    pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
-                    pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
-                    pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
-                    return;
-                }
-                if(start - target == 2) //queen side
-                {
-                    pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
-                    pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
-                    pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
-                    return;
-                }   
-                if(target - start == 2)
-                {
-                    pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
-                    pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
-                    pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
-                    return;
-                }
+                // if(is_white && start - target == 2) //queen side
+                // {
+                //     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
+                //     pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
+                //     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
+                //     return;
+                // }
+                // if(is_white && target - start == 2) //king side
+                // {
+                //     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
+                //     pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
+                //     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
+                //     return;
+                // }
+                // if(start - target == 2) //queen side
+                // {
+                //     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
+                //     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
+                //     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
+                //     return;
+                // }   
+                // if(target - start == 2)
+                // {
+                //     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
+                //     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
+                //     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
+                //     return;
+                // }
             } 
             else if(p_type == Moves::ROOK)
             {
