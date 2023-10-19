@@ -104,10 +104,6 @@ namespace BB
             PieceType p_type;
             bool is_white;
             Moves::DecodeMove(m, start, target, p_type, is_white);
-            // if(!is_white)
-            // {
-            //     std::cout << std::to_string(start) << '\t' <<  std::to_string(target) << '\t' << std::to_string(p_type) << std::endl;
-            // }
             
             full_moves_ += !is_white;
 
@@ -151,18 +147,15 @@ namespace BB
                 {
                     case 132: //queen
                         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
-                        pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
-                        pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
+                        pieces_[loc::WHITE][loc::ROOK] ^= Magics::IndexToBB<0>() | Magics::IndexToBB<3>();
                         return;
                     case 388: //king
                         pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
-                        pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
-                        pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
+                        pieces_[loc::WHITE][loc::ROOK] ^= Magics::IndexToBB<7>() | Magics::IndexToBB<5>();
                         return;
                     case 3772: //queen
                         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
-                        pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
-                        pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
+                        pieces_[loc::BLACK][loc::ROOK] ^= Magics::IndexToBB<56>() | Magics::IndexToBB<59>();
                         return;
                     case 4028: //king
                         pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
@@ -172,35 +165,6 @@ namespace BB
                     default:
                         break;
                 }
-
-                // if(is_white && start - target == 2) //queen side
-                // {
-                //     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
-                //     pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<0>();
-                //     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<3>();
-                //     return;
-                // }
-                // if(is_white && target - start == 2) //king side
-                // {
-                //     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
-                //     pieces_[loc::WHITE][loc::ROOK] &= ~Magics::IndexToBB<7>();
-                //     pieces_[loc::WHITE][loc::ROOK] |= Magics::IndexToBB<5>();
-                //     return;
-                // }
-                // if(start - target == 2) //queen side
-                // {
-                //     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
-                //     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<56>();
-                //     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<59>();
-                //     return;
-                // }   
-                // if(target - start == 2)
-                // {
-                //     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
-                //     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
-                //     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
-                //     return;
-                // }
             } 
             else if(p_type == Moves::ROOK)
             {
@@ -222,8 +186,7 @@ namespace BB
                     break;
                 }
             }
-            pieces_[is_white][p_type] &= ~Magics::IndexToBB(start);
-            pieces_[is_white][p_type] |= Magics::IndexToBB(target);
+            pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
         
         void UnmakeMove(Move m, PromType promotion)
@@ -246,8 +209,7 @@ namespace BB
                 return;
             }
 
-            pieces_[is_white][p_type] &= ~Magics::IndexToBB(target);
-            pieces_[is_white][p_type] |= Magics::IndexToBB(start);
+            pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
        
         template<bool is_white>
@@ -288,11 +250,11 @@ namespace BB
         template<bool is_white>
         constexpr void RemoveIntersectingPiece(BitBoard attacked_sq)
         {
-            if(pieces_[is_white][loc::PAWN] & attacked_sq)          pieces_[is_white][loc::PAWN] &= ~attacked_sq;
-            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] &= ~attacked_sq;
-            else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] &= ~attacked_sq;
-            else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] &= ~attacked_sq;
-            else pieces_[is_white][loc::QUEEN] &= ~attacked_sq;
+            if(pieces_[is_white][loc::PAWN] & attacked_sq)          pieces_[is_white][loc::PAWN] ^= attacked_sq;
+            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
+            else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] ^= attacked_sq;
+            else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
+            else pieces_[is_white][loc::QUEEN] ^= attacked_sq;
         }
     public:
         BitBoard pieces_[2][6];
