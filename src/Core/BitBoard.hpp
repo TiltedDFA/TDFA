@@ -94,10 +94,10 @@ namespace BB
 
         void MakeMove(Move m, PromType promotion)
         {
+            previous_pos_info.push(*this);
             //switch turns
             whites_turn_ = !whites_turn_;
 
-            previous_pos_info.push(info_);
 
             Sq start;
             Sq target;
@@ -191,25 +191,28 @@ namespace BB
         
         void UnmakeMove(Move m, PromType promotion)
         {
-            info_ = previous_pos_info.top();
+            *this = previous_pos_info.top();
             previous_pos_info.pop();
 
-            whites_turn_ = !whites_turn_;
+            // info_ = previous_pos_info.top();
+            // previous_pos_info.pop();
 
-            uint8_t start;
-            uint8_t target;
-            PieceType p_type;
-            bool is_white;
-            Moves::DecodeMove(m, start, target, p_type, is_white);
+            // whites_turn_ = !whites_turn_;
 
-            if((uint8_t)promotion) //if not NOPROMO
-            {
-                pieces_[is_white][loc::PAWN] |= ~Magics::IndexToBB(start);
-                pieces_[is_white][(uint8_t)promotion] &= Magics::IndexToBB(target);
-                return;
-            }
+            // uint8_t start;
+            // uint8_t target;
+            // PieceType p_type;
+            // bool is_white;
+            // Moves::DecodeMove(m, start, target, p_type, is_white);
 
-            pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
+            // if((uint8_t)promotion) //if not NOPROMO
+            // {
+            //     pieces_[is_white][loc::PAWN] |= ~Magics::IndexToBB(start);
+            //     pieces_[is_white][(uint8_t)promotion] &= Magics::IndexToBB(target);
+            //     return;
+            // }
+
+            // pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
        
         template<bool is_white>
@@ -261,7 +264,7 @@ namespace BB
         PosInfo info_;
         bool whites_turn_;
         uint16_t full_moves_;
-        static std::stack<PosInfo> previous_pos_info;
+        static std::stack<Position> previous_pos_info;
     };
 }
 

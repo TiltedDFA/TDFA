@@ -2,7 +2,7 @@
 #include <array>
 #include <charconv>
 
-std::stack<BB::PosInfo> BB::Position::previous_pos_info{};
+std::stack<BB::Position> BB::Position::previous_pos_info{};
 
 static constexpr std::string_view RemoveWhiteSpace(std::string_view str)
 {
