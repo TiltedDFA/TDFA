@@ -189,7 +189,7 @@ namespace BB
             pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
         
-        void UnmakeMove(Move m, PromType promotion)
+        void UnmakeMove(/*Move m, PromType promotion*/)
         {
             *this = previous_pos_info.top();
             previous_pos_info.pop();

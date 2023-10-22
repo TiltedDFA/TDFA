@@ -226,7 +226,8 @@ public:
             { 
                 ml.add(pseudo_legal_ml[i]);
             }
-            pos_.UnmakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
+            // pos_.UnmakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
+            pos_.UnmakeMove();
         }
 
     }

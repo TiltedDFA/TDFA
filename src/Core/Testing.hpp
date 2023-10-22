@@ -7,8 +7,12 @@
 #include "Debug.hpp"
 #include "MagicConstants.hpp"
 #include <iostream>
+#include <algorithm>
+#include <numeric>
+#include <format>
 #include "../MoveGen/MoveGen.hpp"
 #include "../MoveGen/MoveList.hpp"
+#include "Uci.hpp"
 
 //white pawn move gen tests
 #define TESTFEN1 "8/8/8/4pP2/8/8/8/8 w - e6 0 1"     //checks left capturing en passant
@@ -62,36 +66,63 @@ constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info
 
     info = MoveGen::SLIDING_ATTACK_CONFIG.at(sq).at(static_cast<uint8_t>(direction)).at(p1 + p2);
 }
-uint64_t Perft(int depth, BB::Position& pos)
+class PerftHandler
 {
-    if(!depth) return 1ull;
+public:
+    PerftHandler():perft_data_({}),idx_(0),total_nodes_(0){}
 
-    MoveList ml{};
-    uint64_t nodes{0};
-    
-    MoveGen gen{};
+    void ResetData(){perft_data_ = std::array<std::string, 20>{}; idx_ = total_nodes_ = 0;}
 
-    if(pos.whites_turn_)
+    void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true>(depth, pos);}
+
+    void PrintData()
     {
-        // std::cout << "is white's turn" << std::endl;
-        gen.GenerateLegalMoves<true>(pos,ml);
+        std::cout << std::format("\nTotal: {}\n", total_nodes_);
+        std::sort(perft_data_.begin(), perft_data_.end());
+        for(const auto& i : perft_data_)
+            std::cout << i;
     }
-    else
+private:
+    template<bool is_root>
+    uint64_t Perft(int depth, BB::Position& pos)
     {
-        // std::cout << "is black's turn" << std::endl;
-        gen.GenerateLegalMoves<false>(pos,ml);
+        if(!depth) return 1ull;
+
+        MoveList ml{};
+        uint64_t nodes{0};
+        
+        MoveGen gen{};
+
+        if(pos.whites_turn_)
+            gen.GenerateLegalMoves<true>(pos,ml);
+        else
+            gen.GenerateLegalMoves<false>(pos,ml);
+        
+        for(size_t i = 0; i < ml.len(); ++i)
+        {
+            if constexpr(is_root)
+            {
+                pos.MakeMove(ml[i], PromType::NOPROMO);
+                const auto cnt = Perft<false>(depth - 1, pos);
+                nodes += cnt;
+                total_nodes_ += cnt;
+                pos.UnmakeMove();
+                perft_data_[idx_++] = std::format("{}: {}\n", UCI::move(ml[i]), cnt);
+            } 
+            else
+            {
+                pos.MakeMove(ml[i], PromType::NOPROMO);
+                nodes += Perft<false>(depth - 1, pos);
+                pos.UnmakeMove();
+            }
+        }
+        return nodes;
     }
-    //gen.GenerateLegalMoves<true>(pos,ml);
-    // std::cout << ml.len() << " Moves generated" << std::endl;
-    for(size_t i = 0; i < ml.len(); ++i)
-    {
-        // PRINTNL("Making this move: \n");
-        // Debug::PrintEncodedMoveStr(ml[i]);
-        pos.MakeMove(ml[i], PromType::NOPROMO);
-        nodes += Perft(depth - 1, pos);
-        pos.UnmakeMove(ml[i], PromType::NOPROMO);
-    }
-    return nodes;
-}
+
+private:
+    std::array<std::string, 20> perft_data_;
+    size_t idx_;
+    uint64_t total_nodes_;
+};
 
 #endif // #ifndef TESTING_HPP
