@@ -5,6 +5,7 @@
 #include "MoveGen/MoveGen.hpp"
 #include "Core/Testing.hpp"
 #include "Core/Debug.hpp"
+#include "Core/Timer.hpp"
 
 constexpr unsigned long long b = 0xFF;
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -21,18 +22,27 @@ int main(void)
 //    PRINTNL(CALC(4,6)); 
 //    PRINTNL(CALC(60,58)); 
 //    PRINTNL(CALC(60,62)); 
+    // PerftHandler perft;
+    // {
+    //     BB::Position pos(START_FEN);
+    //     for(int i = 0; i < 10; ++i)
+    //     {
+    //         pos.ImportFen(START_FEN);
+    //         perft.RunPerft(i,pos);
+    //         perft.PrintData();
+    //         pos.ResetBoard();
+    //     }
+    // }
+    
     PerftHandler perft;
     {
         BB::Position pos(START_FEN);
-        for(int i = 0; i < 10; ++i)
         {
-            pos.ImportFen(START_FEN);
-            perft.RunPerft(i,pos);
-            perft.PrintData();
-            pos.ResetBoard();
+            Timer<std::chrono::microseconds> t;
+            perft.RunPerft(4,pos);
         }
+        perft.PrintData();
     }
-    
 
     // {
     //     BB::Position pos(START_FEN);
