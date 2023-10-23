@@ -54,31 +54,31 @@ namespace BB
                 for(int j = 0; j < 6;++j)    
                     this->pieces_[i][j] = p.pieces_[i][j];
 
-            this->info_.castling_rights_ = p.info_.castling_rights_;
             this->whites_turn_ = p.whites_turn_;
+            this->full_moves_ = p.full_moves_;
+            this->info_.castling_rights_ = p.info_.castling_rights_;
             this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
             this->info_.half_moves_ = p.info_.half_moves_;
-            this->full_moves_ = p.full_moves_;
         }
         
         constexpr Position& operator=(const Position& p)
         {
-            for(int i = 0 ; i < 2;++i)
-                for(int j = 0; j < 6;++j)    
+            for(int i = 0; i < 2; ++i)
+                for(int j = 0; j < 6; ++j)    
                     this->pieces_[i][j] = p.pieces_[i][j];
 
-            this->info_.castling_rights_ = p.info_.castling_rights_;
             this->whites_turn_ = p.whites_turn_;
+            this->full_moves_ = p.full_moves_;
+            this->info_.castling_rights_ = p.info_.castling_rights_;
             this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
             this->info_.half_moves_ = p.info_.half_moves_;
-            this->full_moves_ = p.full_moves_;
             return *this;
         }
         
         void ResetBoard()
         {
             for(uint8_t i = 0; i < 2; ++i)
-                    for(uint8_t j = 0; j < 6;++j) pieces_[i][j] = 0ull;
+                    for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
 
             info_.castling_rights_ = 0x0F;
             whites_turn_ = true;
