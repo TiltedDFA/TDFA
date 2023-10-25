@@ -135,12 +135,12 @@ consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitb
                     anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)D::ADIAG];
                     while(diag_attacks)
                     {
-                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
+                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_attacks),Moves::BISHOP,1));
                         diag_attacks = Magics::PopLS1B(diag_attacks);
                     }
                     while(anti_diag_attacks)
                     {
-                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq,Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
+                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP,1));
                         anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                     }
                     uint16_t p1 = Magics::base_2_to_3[rankofsq][us & ~Magics::BBRankOf(sq)];
@@ -266,7 +266,7 @@ private:
     template<bool is_white>
     constexpr void BishopMoves(MoveList& ml)
     {
-        BitBoard bishops = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::BISHOP>();
+        BitBoard bishops = pos_.GetSpecificPieces<is_white, loc::BISHOP>();
         if(!bishops) return;
 
         while(bishops)
@@ -372,7 +372,7 @@ private:
     template<bool is_white>
     constexpr void RookMoves(MoveList& ml)
     {
-        BitBoard rooks = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::ROOK>();
+        BitBoard rooks = pos_.GetSpecificPieces<is_white, loc::ROOK>();
         if(!rooks) return;
 
         while(rooks)
@@ -399,7 +399,7 @@ private:
     template<bool is_white>
     constexpr void KnightMoves(MoveList& ml) noexcept
     {
-        BitBoard knights = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::KNIGHT>();
+        BitBoard knights = pos_.GetSpecificPieces<is_white, loc::KNIGHT>();
         if(!knights) return;
         while(knights)
         {
@@ -420,7 +420,7 @@ private:
     template<bool is_white>
     constexpr void QueenMoves(MoveList& ml)
     {
-        BitBoard queens = pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::QUEEN>();
+        BitBoard queens = pos_.GetSpecificPieces<is_white, loc::QUEEN>();
         if(!queens) return;
 
         while(queens)
@@ -461,7 +461,7 @@ private:
     template<bool is_white>
     void KingMoves(MoveList& ml) noexcept
     {
-        const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<(is_white ? loc::WHITE : loc::BLACK), loc::KING>());
+        const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<is_white, loc::KING>());
         BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | pos_.GetPieces<!is_white>());
         while(king_attacks)
         {

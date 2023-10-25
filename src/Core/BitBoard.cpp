@@ -132,7 +132,7 @@ namespace BB
             if(fen_sections.at(3).at(0) < 'a' || fen_sections.at(3).at(0) > 'h') return false;
             if(fen_sections.at(3).at(1) != '3' && fen_sections.at(3).at(1) != '6') return false;
 
-            int en_passant_index = 0;
+            uint8_t en_passant_index = 0;
             en_passant_index += (fen_sections.at(3).at(0)) - 'a';
             en_passant_index += (fen_sections.at(3).at(1) - '1') * 8;
             info_.en_passant_target_sq_ = en_passant_index;

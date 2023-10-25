@@ -57,7 +57,7 @@ namespace Moves
     constexpr uint8_t GetStartIndex(const Move move)      {return move & START_SQ_MASK;}
 
     template<bool is_white>
-    constexpr Move SetColour(const Move move){ return is_white ?((move & ~COLOUR_MASK) | 1 << COLOUR_SHIFT) : (move & ~COLOUR_MASK);}
+    constexpr Move SetColour(const Move move){ return is_white ? ((move & ~COLOUR_MASK) | 1 << COLOUR_SHIFT) : (move & ~COLOUR_MASK);}
     
     template<bool is_white, PieceType type>
     constexpr Move SetPieceTypeAndColour(const Move move)

@@ -227,13 +227,11 @@ namespace BB
                 pieces_[is_white ? loc::WHITE : loc::BLACK][loc::PAWN];
         }
         
-        template<uint8_t colour, uint8_t piecetype>
+        template<bool is_white, uint8_t piecetype>
         constexpr BitBoard GetSpecificPieces()const
         {
-            assert(colour < 2 && piecetype < 6);
-            return pieces_[colour][piecetype];
+            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][piecetype];
         }
-        
         constexpr BitBoard GetEmptySquares()const
         {
             return ~(GetPieces<true>() | GetPieces<false>());

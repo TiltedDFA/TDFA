@@ -59,7 +59,7 @@ BitBoard MoveGen::GenerateAllBlackMoves(const BB::Position& p, MoveList& ml)
 }
 void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
 {
-    BitBoard pawns = pos_.GetSpecificPieces<loc::WHITE, loc::PAWN>();
+    BitBoard pawns = pos_.GetSpecificPieces<true, loc::PAWN>();
     if(!pawns) return;
     BitBoard pawn_move{0};
     const BitBoard capturable_squares = pos_.GetPieces<false>() | pos_.GetEnPassantBB();
@@ -96,7 +96,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
 }
 void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
 {
-    BitBoard pawns = pos_.GetSpecificPieces<loc::BLACK,loc::PAWN>();
+    BitBoard pawns = pos_.GetSpecificPieces<false,loc::PAWN>();
     if(!pawns) return;
     BitBoard pawn_move{0};
     const BitBoard capturable_squares = pos_.GetPieces<true>() | pos_.GetEnPassantBB();

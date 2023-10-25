@@ -34,7 +34,7 @@ namespace Magics
 
 #ifdef __GNUG__
     //finds least significant 1 bit and returns the position of it
-    constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 65);}
+    constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 0);}
 #else
     //finds least significant 1 bit and returns the position of it
     constexpr Sq FindLS1B(BitBoard bb){return std::countr_zero(bb);}
