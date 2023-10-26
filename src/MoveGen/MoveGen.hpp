@@ -160,81 +160,145 @@ class MoveGen
 {
 public:
     MoveGen();
-    
-    void GenerateAllMoves(const BB::Position&, MoveList& ml);
-    
-    BitBoard GenerateAllWhiteMoves(const BB::Position&, MoveList& ml);
 
-    BitBoard GenerateAllBlackMoves(const BB::Position&, MoveList& ml);
+    [[nodiscard]] constexpr BitBoard GenerateAllWhiteAttacks(const BB::Position& pos) const
+    {
+        BitBoard attacks{0ull};
+        
+        const BitBoard us = pos.GetPieces<true>();
+        const BitBoard them = pos.GetPieces<false>();
+
+        //King
+        attacks |=  Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos.GetSpecificPieces<true, loc::KING>())] 
+                    & (~pos.GetPieces<true>());
+        //Sliding
+        BitBoard bishop_queen = pos.GetSpecificPieces<true, loc::QUEEN>() | pos.GetSpecificPieces<true, loc::BISHOP>();
+        while (bishop_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(bishop_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            bishop_queen = Magics::PopLS1B(bishop_queen);
+        }
+        BitBoard rook_queen = pos.GetSpecificPieces<true, loc::QUEEN>() | pos.GetSpecificPieces<true, loc::ROOK>();
+        while(rook_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(rook_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            rook_queen = Magics::PopLS1B(rook_queen);
+        }
+        //knights
+        BitBoard knights = pos.GetSpecificPieces<true, loc::KNIGHT>();
+        while(knights)
+        {
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos.GetPieces<true>();
+            knights = Magics::PopLS1B(knights);
+        }
+        //pawns
+        const BitBoard pawns = pos.GetSpecificPieces<true, loc::PAWN>();
+        attacks |= Magics::Shift<MD::NORTH_EAST>(pawns) & them;
+        attacks |= Magics::Shift<MD::NORTH_WEST>(pawns) & them;
+        return attacks;
+    }  
+
+    [[nodiscard]] constexpr BitBoard GenerateAllBlackAttacks(const BB::Position& pos) const
+    {
+        BitBoard attacks{0ull};
+        
+        const BitBoard us = pos.GetPieces<false>();
+        const BitBoard them = pos.GetPieces<true>();
+        
+        //King
+        attacks |=  Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos.GetSpecificPieces<false, loc::KING>())] 
+                    & (~pos.GetPieces<false>());
+        //Sliding
+        BitBoard bishop_queen = pos.GetSpecificPieces<false, loc::QUEEN>() | pos.GetSpecificPieces<false, loc::BISHOP>();
+        while (bishop_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(bishop_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            bishop_queen = Magics::PopLS1B(bishop_queen);
+        }
+        BitBoard rook_queen = pos.GetSpecificPieces<false, loc::QUEEN>() | pos.GetSpecificPieces<false, loc::ROOK>();
+        while(rook_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(rook_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                    attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
+
+            rook_queen = Magics::PopLS1B(rook_queen);
+        }
+        //knights
+        BitBoard knights = pos.GetSpecificPieces<false, loc::KNIGHT>();
+        while(knights)
+        {
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos.GetPieces<false>();
+            knights = Magics::PopLS1B(knights);
+        }
+        //pawns
+        const BitBoard pawns = pos.GetSpecificPieces<false, loc::PAWN>();
+        attacks |= Magics::Shift<MD::SOUTH_EAST>(pawns) & them;
+        attacks |= Magics::Shift<MD::SOUTH_WEST>(pawns) & them;
+        return attacks;
+    }
 
     template<bool is_white>
     void GenerateLegalMoves(const BB::Position& pos, MoveList& ml)
     {
-        /*
-        
-        -Gen pseudo legal
-            -ez
-            
-        -Gen next bitboard after each move, regen attacks bitboard, see if legal
-            -possibly store attacks bitboard? for less overhead?
-
-        */
         pos_ = pos;
+        
+        //pseudo legal
         MoveList pseudo_legal_ml;
-        //Pseudo legal:
-        Castling<is_white>(pseudo_legal_ml);
-        attacks_ = 0;
         KingMoves<is_white>(pseudo_legal_ml);
         QueenMoves<is_white>(pseudo_legal_ml);
         BishopMoves<is_white>(pseudo_legal_ml);
         KnightMoves<is_white>(pseudo_legal_ml);
         RookMoves<is_white>(pseudo_legal_ml);
         (is_white ? WhitePawnMoves(pseudo_legal_ml) : BlackPawnMoves(pseudo_legal_ml));
-
-        //regen attacks   
-        BitBoard king = pos_.GetSpecificPieces<is_white, loc::KING>();
-        uint8_t king_square = Magics::FindLS1B(king);
-        bool regen_bishop = false;
-        bool regen_rook = false;
-        bool regen_queen = false;
-
-        const BitBoard rook_attacks = Magics::SLIDING_ATTACKS_MASK[king_square][0] | Magics::SLIDING_ATTACKS_MASK[king_square][1];
-        const BitBoard bishop_attacks = Magics::SLIDING_ATTACKS_MASK[king_square][2] | Magics::SLIDING_ATTACKS_MASK[king_square][3];
-        if(rook_attacks & pos_.GetSpecificPieces<is_white, loc::ROOK>()){regen_rook = true;}
-        if(bishop_attacks & pos_.GetSpecificPieces<is_white, loc::BISHOP>()){regen_bishop = true;}
-        if((rook_attacks | bishop_attacks) & pos_.GetSpecificPieces<is_white, loc::QUEEN>()){regen_queen = true;}
+        Castling<is_white>(pseudo_legal_ml, is_white ? GenerateAllBlackAttacks(pos) : GenerateAllWhiteAttacks(pos));
         
+        //filtering
         for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
         {
             pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
-            BitBoard attackBB = 0; 
 
-            if(regen_bishop)
-            {
-                attackBB |= BishopAttacks<!is_white>();
-            }
-            if(regen_rook)
-            {
-                attackBB |= RookAttacks<!is_white>();
-            }
-            if(regen_queen)
-            {
-                attackBB |= QueenAttacks<!is_white>();
-            }
-
-            if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & attackBB))
+            if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
             }
+
             pos_.UnmakeMove();
         }
 
-    }
-
-    template<bool is_white> 
-    constexpr bool InCheck()
-    {
-        return pos_.GetSpecificPieces<is_white, loc::KING>() & (attacks_);
     }
     
     template<D direction>
@@ -277,14 +341,12 @@ private:
             for(uint8_t i{0}; i < move->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
             }
             
             const move_info* move1 = GetMovesForSliding<D::ADIAG>(bishop_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(uint8_t i{0}; i < move1->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::BISHOP>(move1->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move1->encoded_move[i]));
             }
             
             bishops = Magics::PopLS1B(bishops);
@@ -383,14 +445,12 @@ private:
             for(uint8_t i{0}; i < move->count; ++i)
             {
                 ml.add(Moves::SetColour<is_white>(move->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
             }
 
             const move_info* move1 = GetMovesForSliding<D::RANK>(rook_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(uint8_t i{0}; i < move1->count; ++i)
             {
                 ml.add(Moves::SetColour<is_white>(move1->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move1->encoded_move[i]));
             }
             rooks = Magics::PopLS1B(rooks);
         }
@@ -404,13 +464,12 @@ private:
         while(knights)
         {
             const uint8_t knight_index = Magics::FindLS1B(knights);
-            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & (pos_.GetEmptySquares() | pos_.GetPieces<!is_white>());
+            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~pos_.GetPieces<is_white>();
             while(possible_move)
             {
                 const uint8_t attack_index = Magics::FindLS1B(possible_move);
                 ml.add((is_white ?   Moves::EncodeMove(knight_index,attack_index,Moves::KNIGHT,1)
                                     :Moves::EncodeMove(knight_index,attack_index,Moves::KNIGHT,0)));
-                attacks_ |= Magics::IndexToBB(attack_index);
                 possible_move = Magics::PopLS1B(possible_move);
             }
             knights = Magics::PopLS1B(knights);
@@ -431,28 +490,24 @@ private:
             for(uint8_t i{0}; i < move->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
             }
 
             const move_info* move1 = GetMovesForSliding<D::RANK>(queen_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(uint8_t i{0}; i < move1->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move1->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move1->encoded_move[i]));
             }
 
             const move_info* move2 = GetMovesForSliding<D::DIAG>(queen_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(uint8_t i{0}; i < move2->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move2->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move2->encoded_move[i]));
             }
 
             const move_info* move3 = GetMovesForSliding<D::ADIAG>(queen_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(uint8_t i{0}; i < move3->count; ++i)
             {
                 ml.add(Moves::SetPieceTypeAndColour<is_white, Moves::QUEEN>(move3->encoded_move[i]));
-                attacks_ |= Magics::IndexToBB(Moves::GetTargetIndex(move3->encoded_move[i]));
             }
             queens = Magics::PopLS1B(queens);
         }
@@ -462,20 +517,19 @@ private:
     void KingMoves(MoveList& ml) noexcept
     {
         const uint8_t king_index = Magics::FindLS1B(pos_.GetSpecificPieces<is_white, loc::KING>());
-        BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & (pos_.GetEmptySquares() | pos_.GetPieces<!is_white>());
+        BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & ~pos_.GetPieces<is_white>();
         while(king_attacks)
         {
             ml.add(Moves::EncodeMove(king_index, Magics::FindLS1B(king_attacks), Moves::KING, (is_white ? 1 : 0)));
-            attacks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }
     }
 
     template<bool is_white>
-    constexpr void Castling(MoveList& ml) noexcept
+    constexpr void Castling(MoveList& ml, BitBoard attacks) noexcept
     {   
         if(!((is_white ? 0x0C : 0x03) & pos_.info_.castling_rights_)) {return;} //checks for castling rights
-        if(InCheck<is_white>()) {return;}
+        if(pos_.GetSpecificPieces<is_white, loc::KING>() & attacks) {return;}
 
         BitBoard king_attacks = 0;
         const BitBoard whole_board = pos_.GetPieces<true>() | pos_.GetPieces<false>();
@@ -488,7 +542,7 @@ private:
             &&
             !(rank_looked_at & 0x60) // not blocked
             &&
-            !(0xFF & (attacks_ >> 56) & 0x60) // not under attack by enemy
+            !(0xFF & (attacks >> 56) & 0x60) // not under attack by enemy
         )
         {
             king_attacks |= (is_white ? Magics::IndexToBB<6>() : Magics::IndexToBB<62>());
@@ -499,7 +553,7 @@ private:
             && 
             !(rank_looked_at & 0x0E) // not blocked
             && 
-            !(0xFF & (attacks_ >> 56) & 0x0C) // not under attack by enemy
+            !(0xFF & (attacks >> 56) & 0x0C) // not under attack by enemy
         )
         {
             king_attacks |= (is_white ? Magics::IndexToBB<2>() : Magics::IndexToBB<58>());
@@ -508,7 +562,7 @@ private:
         while(king_attacks)
         {
             ml.add(Moves::EncodeMove(king_index, Magics::FindLS1B(king_attacks), Moves::KING, (is_white ? 1 : 0)));
-            attacks_  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
+            attacks  |= Magics::IndexToBB(Magics::FindLS1B(king_attacks));
             king_attacks = Magics::PopLS1B(king_attacks);
         }
     }
@@ -517,7 +571,6 @@ public:
     constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:
     BB::Position pos_;
-    BitBoard attacks_;
 };
 
 #endif // #ifndef MOVEGEN_HPP

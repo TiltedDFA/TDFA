@@ -75,6 +75,8 @@ public:
 
     void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true>(depth, pos);}
 
+    uint64_t GetNodes() const {return total_nodes_;}
+
     void PrintData()
     {
         std::cout << std::format("\nTotal: {}\n", total_nodes_);
