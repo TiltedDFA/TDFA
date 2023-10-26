@@ -69,9 +69,9 @@ constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info
 class PerftHandler
 {
 public:
-    PerftHandler():perft_data_({}),idx_(0),total_nodes_(0){}
+    PerftHandler():perft_data_({}),total_nodes_(0){}
 
-    void ResetData(){perft_data_ = std::array<std::string, 20>{}; idx_ = total_nodes_ = 0;}
+    void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
     void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true>(depth, pos);}
 
@@ -109,7 +109,7 @@ private:
                 nodes += cnt;
                 total_nodes_ += cnt;
                 pos.UnmakeMove();
-                perft_data_[idx_++] = std::format("{}: {}\n", UCI::move(ml[i]), cnt);
+                perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
             } 
             else
             {
@@ -122,8 +122,7 @@ private:
     }
 
 private:
-    std::array<std::string, 20> perft_data_;
-    size_t idx_;
+    std::vector<std::string> perft_data_;
     uint64_t total_nodes_;
 };
 

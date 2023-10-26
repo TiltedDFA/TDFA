@@ -138,9 +138,22 @@ namespace BB
             info_.en_passant_target_sq_ = en_passant_index;
         }
 
-        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
-        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
-
+        if(fen_sections.at(4) == "")
+        {
+            info_.half_moves_ = 0;
+        }
+        else
+        {
+            std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
+        }
+        if(fen_sections.at(4) == "")
+        {
+            full_moves_ = 0;
+        }
+        else
+        {
+            std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
+        }
         return true;
     }
 }
