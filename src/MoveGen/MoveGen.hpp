@@ -12,7 +12,7 @@
 #include <iostream>
 
 
-consteval std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
@@ -529,7 +529,7 @@ private:
     constexpr void Castling(MoveList& ml, BitBoard attacks) noexcept
     {   
         if(!((is_white ? 0x0C : 0x03) & pos_.info_.castling_rights_)) {return;} //checks for castling rights
-        if(pos_.GetSpecificPieces<is_white, loc::KING>() & attacks) {return;}
+        if(pos_.GetSpecificPieces<is_white, loc::KING>() & attacks) {return;} //checks if king under attack
 
         BitBoard king_attacks = 0;
         const BitBoard whole_board = pos_.GetPieces<true>() | pos_.GetPieces<false>();
@@ -540,9 +540,9 @@ private:
         (
             (pos_.info_.castling_rights_ & (is_white ? 0x08 : 0x02)) // has rights
             &&
-            !(rank_looked_at & 0x60) // not blocked
+            !(rank_looked_at & 0x60) // not blocked 01100000 10010001
             &&
-            !(0xFF & (attacks >> 56) & 0x60) // not under attack by enemy
+            !(0xFF & (is_white ? attacks : attacks >> 56) & 0x60) // not under attack by enemy
         )
         {
             king_attacks |= (is_white ? Magics::IndexToBB<6>() : Magics::IndexToBB<62>());
@@ -553,7 +553,7 @@ private:
             && 
             !(rank_looked_at & 0x0E) // not blocked
             && 
-            !(0xFF & (attacks >> 56) & 0x0C) // not under attack by enemy
+            !(0xFF & (is_white ? attacks : attacks >> 56) & 0x0C) // not under attack by enemy
         )
         {
             king_attacks |= (is_white ? Magics::IndexToBB<2>() : Magics::IndexToBB<58>());
@@ -568,7 +568,7 @@ private:
     }
     
 public:    
-    constexpr static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    inline static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:
     BB::Position pos_;
 };
