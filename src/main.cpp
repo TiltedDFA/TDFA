@@ -24,12 +24,12 @@ int main(void)
 //    PRINTNL(CALC(60,62)); 
     PerftHandler perft;
     {
-        BB::Position pos("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
+        BB::Position pos(PERFTPOS2);
         uint64_t time {1};
         for(int i = 0; i < 10; ++i)
         {
             time = 1;
-            pos.ImportFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
+            pos.ImportFen(PERFTPOS2);
             {
                 Timer<std::chrono::microseconds> t(&time);
                 perft.RunPerft(i, pos);

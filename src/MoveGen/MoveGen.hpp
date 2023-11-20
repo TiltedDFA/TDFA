@@ -206,13 +206,13 @@ public:
         BitBoard knights = pos.GetSpecificPieces<true, loc::KNIGHT>();
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos.GetPieces<true>();
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~us;
             knights = Magics::PopLS1B(knights);
         }
         //pawns
         const BitBoard pawns = pos.GetSpecificPieces<true, loc::PAWN>();
-        attacks |= Magics::Shift<MD::NORTH_EAST>(pawns) & them;
-        attacks |= Magics::Shift<MD::NORTH_WEST>(pawns) & them;
+        attacks |= Magics::Shift<MD::NORTH_EAST>(pawns) & ~us;
+        attacks |= Magics::Shift<MD::NORTH_WEST>(pawns) & ~us;
         return attacks;
     }  
 
@@ -261,16 +261,87 @@ public:
         BitBoard knights = pos.GetSpecificPieces<false, loc::KNIGHT>();
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos.GetPieces<false>();
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~us;
             knights = Magics::PopLS1B(knights);
         }
         //pawns
         const BitBoard pawns = pos.GetSpecificPieces<false, loc::PAWN>();
-        attacks |= Magics::Shift<MD::SOUTH_EAST>(pawns) & them;
-        attacks |= Magics::Shift<MD::SOUTH_WEST>(pawns) & them;
+        attacks |= Magics::Shift<MD::SOUTH_EAST>(pawns) & ~us;
+        attacks |= Magics::Shift<MD::SOUTH_WEST>(pawns) & ~us;
         return attacks;
     }
 
+    template<bool is_white>
+    bool InCheck(const BB::Position& pos)
+    {
+        const BitBoard our_king = pos.GetSpecificPieces<is_white, loc::KING>();
+        // us, them are variables used for sliding move gen with titboards.
+        //since we want to generate moves for the opponent and see if they attack
+        //our king we want the us and them variables to be inverted from our king in colour
+        const BitBoard us = pos.GetPieces<!is_white>();
+        const BitBoard them = pos.GetPieces<is_white>();
+
+        //Bishop and half queen
+        BitBoard bishop_queen = pos.GetSpecificPieces<!is_white, loc::QUEEN>() | pos.GetSpecificPieces<!is_white, loc::BISHOP>();
+        while (bishop_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(bishop_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                if(our_king & Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]))) return true;
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                if(our_king & Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]))) return true;
+
+            bishop_queen = Magics::PopLS1B(bishop_queen);
+        }
+        
+        //rook and other half of queen
+        BitBoard rook_queen = pos.GetSpecificPieces<!is_white, loc::QUEEN>() | pos.GetSpecificPieces<!is_white, loc::ROOK>();
+        while(rook_queen)
+        {
+            const Sq piece_index = Magics::FindLS1B(rook_queen);
+
+            move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                if(our_king & Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]))) return true;
+
+            move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
+            for(uint8_t i{0}; i < move->count; ++i)
+                if(our_king & Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]))) return true;
+
+            rook_queen = Magics::PopLS1B(rook_queen);
+        }
+
+        //knights
+        BitBoard knights = pos.GetSpecificPieces<!is_white, loc::KNIGHT>();
+        while(knights)
+        {
+            if(our_king & Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)]) return true;
+            knights = Magics::PopLS1B(knights);
+        }
+
+        //pawns
+        const BitBoard them_pawns = pos.GetSpecificPieces<!is_white, loc::PAWN>();
+        if (is_white)
+        {
+            if(our_king & Magics::Shift<MD::NORTH_EAST>(them_pawns) & ~us) return true;
+            if(our_king & Magics::Shift<MD::NORTH_WEST>(them_pawns) & ~us) return true;
+        }
+        else
+        {
+            if(our_king & Magics::Shift<MD::SOUTH_EAST>(them_pawns) & ~us) return true;
+            if(our_king & Magics::Shift<MD::SOUTH_WEST>(them_pawns) & ~us) return true;
+        }
+
+        // king attacks
+        if(our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos.GetSpecificPieces<!is_white, loc::KING>())])
+            return true;
+                    
+        return false;
+    }
     template<bool is_white>
     void GenerateLegalMoves(const BB::Position& pos, MoveList& ml)
     {
@@ -291,14 +362,13 @@ public:
         {
             pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
 
+            // if(InCheck<is_white>(pos_))
             if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
             }
-
             pos_.UnmakeMove();
         }
-
     }
     
     template<D direction>
