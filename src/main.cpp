@@ -30,14 +30,14 @@ int main(void)
     Debug::PrintBB(Magics::Shift<MD::NORTH_EAST>(0xFF));
     PerftHandler perft;
     {
-        BB::Position pos("rnbqkbnr/1ppppppp/p7/8/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 2");
+        BB::Position pos(START_FEN);
 
         Debug::PrintBoardState(pos);
         uint64_t time {1};
         for(int i =0 ; i < 10; ++i)
         {
             time = 1;
-            pos.ImportFen("rnbqkbnr/1ppppppp/p7/8/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 2");
+            pos.ImportFen(START_FEN);
             {
                 Timer<std::chrono::microseconds> t(&time);
                 perft.RunPerft(i, pos);
