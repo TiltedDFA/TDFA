@@ -362,8 +362,8 @@ public:
         {
             pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
 
-            // if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
-            if(!InCheck<is_white>(pos_))
+            if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
+            // if(!InCheck<is_white>(pos_))
             // if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
