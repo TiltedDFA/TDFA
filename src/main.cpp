@@ -28,20 +28,21 @@ int main(void)
 //    PRINTNL(CALC(60,62)); 
     PerftHandler perft;
     {
-        BB::Position pos(TEST3);
+        BB::Position pos(PERFTPOS2);
 
         Debug::PrintBoardState(pos);
         uint64_t time {1};
+        for(int i =0 ; i < 10; ++i)
         {
             time = 1;
-            pos.ImportFen(TEST3);
+            pos.ImportFen(PERFTPOS2);
             {
                 Timer<std::chrono::microseconds> t(&time);
-                perft.RunPerft(1, pos);
+                perft.RunPerft(i, pos);
             } 
             perft.PrintData();
             pos.ResetBoard();
-            std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", 1, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
+            std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", i, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
         }
     }
     // for(int i = 0; i < 64;++i)

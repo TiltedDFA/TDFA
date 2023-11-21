@@ -7,7 +7,13 @@ set(CXX_STANDARD_REQUIRED true)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_COMPILER "g++-13")
+if(UNIX)
+    set(CMAKE_CXX_COMPILER "g++-13")
+endif(UNIX)
+
+if(WIN32)
+    set(CMAKE_CXX_COMPILER "g++")
+endif(WIN32)
 
 file(GLOB_RECURSE MY_SOURCES "src/**.cpp")
 
