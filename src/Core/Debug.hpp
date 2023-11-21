@@ -39,7 +39,8 @@ namespace Debug
     //More detailed version of the print bitboard function, can be used to 
     //print 2 bitboards worth of pieces
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false);
-
+    
+    void PrintUsThemBlank(BitBoard us, BitBoard them, bool mirrored = false);
     //Prints out the attack squares of the moves stored in a move_info as a bitboard
     void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored = false);
 

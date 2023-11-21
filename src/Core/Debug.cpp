@@ -53,13 +53,39 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
+    void PrintUsThemBlank(BitBoard us, BitBoard them, bool mirrored)
+    {
+        std::string output{},current_line{};
+        for(int row{0}; row < 8; ++row)
+        {
+            for(int col{0}; col < 8; ++col)
+            {
+                const int current_index = (col + row * 8);
+                if(((us >> current_index)) & 1ull)
+                {
+                    current_line = mirrored ?   current_line + "UU " : "UU " + current_line;
+                }
+                else if (((them >> current_index)) & 1ull)
+                {
+                    current_line = mirrored ?   current_line + "TT " : "TT " + current_line;
+                }
+                else
+                {
+                    current_line = mirrored ?  (current_line + std::string("00") + std::string(" ")) : ("00" + std::string(" ")  + current_line);
+                }
+            }
+            current_line += "|" + std::to_string(row + 1) + " \n";
+            output = current_line + output;
+            current_line = "";
+        }                    
+        output += "------------------------\n";
+        output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
+        PRINTNL(output);
+    }
     void PrintBoardState(const BB::Position& pos)
     {
-        PRINTNL("White's side: ");
-        Debug::PrintBB(pos.GetPieces<true>());
-        PRINTNL("Black's side: ");
-        Debug::PrintBB(pos.GetPieces<false>());
-        
+        pos.whites_turn_ ?  Debug::PrintUsThemBlank(pos.GetPieces<true>(), pos.GetPieces<false>(), true) :
+                            Debug::PrintUsThemBlank(pos.GetPieces<false>(), pos.GetPieces<true>(), true);
         {
             std::string prnt{"Castiling rights: "};
             if(pos.info_.castling_rights_ & 0x08) prnt += "Wk";

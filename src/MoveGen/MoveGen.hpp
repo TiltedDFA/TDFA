@@ -327,13 +327,13 @@ public:
         const BitBoard them_pawns = pos.GetSpecificPieces<!is_white, loc::PAWN>();
         if (is_white)
         {
-            if(our_king & Magics::Shift<MD::NORTH_EAST>(them_pawns) & ~us) return true;
-            if(our_king & Magics::Shift<MD::NORTH_WEST>(them_pawns) & ~us) return true;
+            if(our_king & Magics::Shift<MD::NORTH_EAST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::NORTH_WEST>(them_pawns)) return true;
         }
         else
         {
-            if(our_king & Magics::Shift<MD::SOUTH_EAST>(them_pawns) & ~us) return true;
-            if(our_king & Magics::Shift<MD::SOUTH_WEST>(them_pawns) & ~us) return true;
+            if(our_king & Magics::Shift<MD::SOUTH_EAST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::SOUTH_WEST>(them_pawns)) return true;
         }
 
         // king attacks
@@ -362,8 +362,9 @@ public:
         {
             pos_.MakeMove(pseudo_legal_ml[i], PromType::NOPROMO);
 
-            // if(InCheck<is_white>(pos_))
-            if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
+            // if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
+            if(!InCheck<is_white>(pos_))
+            // if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
             }

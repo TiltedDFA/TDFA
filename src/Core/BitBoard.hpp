@@ -242,7 +242,6 @@ namespace BB
             return (info_.en_passant_target_sq_) ? Magics::IndexToBB(info_.en_passant_target_sq_) : 0ull;
         }
 
-
         /*
             This function is used in makemove to quickly find which piece is being attacked(which is necessary
             as different types of pieces are stored sperately) and removes the attacked piece from its given board.
