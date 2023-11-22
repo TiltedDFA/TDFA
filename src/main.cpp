@@ -27,45 +27,51 @@ int main(void)
 //    PRINTNL(CALC(60,58)); 
 //    PRINTNL(CALC(60,62)); 
 
-    // PerftHandler perft;
-    // {
-    //     BB::Position pos(START_FEN);
-
-    //     uint64_t time {1};
-    //     for(int i =0 ; i < 10; ++i)
-    //     {
-    //         time = 1;
-    //         pos.ImportFen(START_FEN);
-    //         {
-    //             Timer<std::chrono::microseconds> t(&time);
-    //             perft.RunPerft(i, pos);
-    //         } 
-    //         perft.PrintData();
-    //         pos.ResetBoard();
-    //         std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", i, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
-    //     }
-    // }
-
-    const Sq depth = 1;
-    // const std::string FEN("rnbqkbnr/p1pppppp/8/Pp6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 2");
-    const std::string FEN("rnb1kbnr/pppp1ppp/4pq2/8/8/PP6/R1PPPPPP/1NBQKBNR b Kkq - 0 3");
     PerftHandler perft;
     {
-        BB::Position pos(FEN);
+        BB::Position pos(START_FEN);
 
         uint64_t time {1};
+        for(int i =0 ; i < 10; ++i)
         {
             time = 1;
-            pos.ImportFen(FEN);
+            pos.ImportFen(START_FEN);
             {
                 Timer<std::chrono::microseconds> t(&time);
-                perft.RunPerft(depth, pos);
+                perft.RunPerft(i, pos);
             } 
             perft.PrintData();
             pos.ResetBoard();
-            std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", depth, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
+            std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", i, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
         }
     }
+
+    // BB::Position pos("rnb1kbnr/pppp1ppp/4pq2/8/8/PP6/R1PPPPPP/1NBQKBNR b Kkq - 0 3");
+    // MoveGen gen;
+    // MoveList ml;
+    // gen.GenerateLegalMoves<false>(pos,ml);
+    // ml.print();
+
+    // const Sq depth = 2;
+    // // const std::string FEN("rnbqkbnr/p1pppppp/8/Pp6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 2");
+    // const std::string FEN("rnbqkbnr/2pppppp/p7/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 3");
+    // PerftHandler perft;
+    // {
+    //     BB::Position pos(FEN);
+
+    //     uint64_t time {1};
+    //     {
+    //         time = 1;
+    //         pos.ImportFen(FEN);
+    //         {
+    //             Timer<std::chrono::microseconds> t(&time);
+    //             perft.RunPerft(depth, pos);
+    //         } 
+    //         perft.PrintData();
+    //         pos.ResetBoard();
+    //         std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", depth, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
+    //     }
+    // }
 
 
     // for(int i = 0; i < 64;++i)

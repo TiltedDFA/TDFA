@@ -50,7 +50,7 @@ namespace Magics
     constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
 
     //Returns whether the index provided is inbounds of the board
-    constexpr bool IndexInBounds(int index) {return index > 0 && index < 64;}
+    constexpr bool IndexInBounds(int index) {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
     constexpr BitBoard IndexToBB(Sq index){return 1ull << index;}

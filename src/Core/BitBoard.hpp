@@ -128,7 +128,22 @@ namespace BB
             //updates en passant state
             if(p_type == Moves::PAWN) 
             {
-                if (std::abs(target - start) == 16)
+                //remove en pessant taken piece
+                if(target == info_.en_passant_target_sq_)
+                {
+                    info_.en_passant_target_sq_ = 0; 
+                    pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target); // move our pawn
+                    if(is_white)
+                    {
+                        RemoveIntersectingPiece<false>(Magics::IndexToBB(target-8));
+                    }
+                    else
+                    {
+                        RemoveIntersectingPiece<true>(Magics::IndexToBB(target+8));
+                    }
+                    return;
+                }
+                else if (std::abs(target - start) == 16)
                 {
                     info_.en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
                 }       
