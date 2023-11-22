@@ -45,7 +45,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
     BitBoard pawns = pos_.GetSpecificPieces<false,loc::PAWN>();
     if(!pawns) return;
     BitBoard pawn_move{0};
-    const BitBoard capturable_squares = pos_.GetPieces<true>() | (pos_.GetEnPassantBB() & ~Magics::RANK_5BB);
+    const BitBoard capturable_squares = pos_.GetPieces<true>() | (pos_.GetEnPassantBB() & ~Magics::RANK_6BB);
 
     pawn_move = Shift<MD::SOUTH>(pawns) & pos_.GetEmptySquares();
     for(int index = Magics::FindLS1B(pawn_move); index < 64; ++index)

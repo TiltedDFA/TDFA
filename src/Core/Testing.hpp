@@ -110,6 +110,7 @@ private:
                 const auto cnt = Perft<false>(depth - 1, pos);
                 nodes += cnt;
                 total_nodes_ += cnt;
+                // PRINTNL("ROOT\n");
                 pos.UnmakeMove();
                 perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
             } 
@@ -120,6 +121,7 @@ private:
                 pos.UnmakeMove();
             }
         }
+        // ml.print();
         return nodes;
     }
 

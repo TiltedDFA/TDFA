@@ -327,13 +327,13 @@ public:
         const BitBoard them_pawns = pos.GetSpecificPieces<!is_white, loc::PAWN>();
         if (is_white)
         {
-            if(our_king & Magics::Shift<MD::NORTH_EAST>(them_pawns)) return true;
-            if(our_king & Magics::Shift<MD::NORTH_WEST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::SOUTH_EAST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::SOUTH_WEST>(them_pawns)) return true;
         }
         else
         {
-            if(our_king & Magics::Shift<MD::SOUTH_EAST>(them_pawns)) return true;
-            if(our_king & Magics::Shift<MD::SOUTH_WEST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::NORTH_EAST>(them_pawns)) return true;
+            if(our_king & Magics::Shift<MD::NORTH_WEST>(them_pawns)) return true;
         }
 
         // king attacks

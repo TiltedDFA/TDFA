@@ -130,8 +130,12 @@ namespace BB
             {
                 if (std::abs(target - start) == 16)
                 {
-                  info_.en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
-                }             
+                    info_.en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
+                }       
+                else
+                {
+                    info_.en_passant_target_sq_ = 0;
+                }      
                 info_.half_moves_ = 0;
             }
             else
