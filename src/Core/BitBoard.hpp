@@ -92,7 +92,7 @@ namespace BB
         //returns true/false depending on success of fen importing
         [[maybe_unused]]bool ImportFen(std::string_view fen);
 
-        void MakeMove(Move m, PromType promotion)
+        void MakeMove(Move m)
         {
             previous_pos_info.push(*this);
             //switch turns
@@ -102,15 +102,15 @@ namespace BB
             Sq start;
             Sq target;
             PieceType p_type;
-            bool is_white;
-            Moves::DecodeMove(m, start, target, p_type, is_white);
+            const bool is_white{!whites_turn_};
+            Moves::DecodeMove(m, start, target, p_type);
             
             full_moves_ += !is_white;
 
-            if((uint8_t)promotion) //if not NOPROMO
+            if(Moves::IsPromotionMove(m)) //if not NOPROMO
             {
                 pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
-                pieces_[is_white][(uint8_t)promotion] |= Magics::IndexToBB(target);
+                pieces_[is_white][p_type - 7] |= Magics::IndexToBB(target);
                 info_.half_moves_ = 0;
                 return;
             }
