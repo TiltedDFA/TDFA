@@ -73,6 +73,7 @@ int main(void)
         }
     }
 
+    Debug::PrintBB(262272);
 
     // for(int i = 0; i < 64;++i)
     // {

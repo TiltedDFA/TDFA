@@ -110,7 +110,8 @@ namespace BB
             if(Moves::IsPromotionMove(m)) //if not NOPROMO
             {
                 pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
-                pieces_[is_white][p_type - 7] |= Magics::IndexToBB(target);
+                is_white ? RemoveIntersectingPiece<false>(Magics::IndexToBB(target)) 
+                         : RemoveIntersectingPiece<true>(Magics::IndexToBB(target));
                 info_.half_moves_ = 0;
                 return;
             }

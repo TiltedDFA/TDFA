@@ -8,6 +8,7 @@
 #include "../Core/MagicConstants.hpp"
 #include "../Core/BitBoard.hpp"
 #include "../Core/Move.hpp"
+#include "../Core/Debug.hpp"
 #include "MoveList.hpp"
 #include <iostream>
 
@@ -360,7 +361,17 @@ public:
         //filtering
         for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
         {
+            // PRINTNL("Depth:" + std::to_string(i));
+            // PRINTNL("Current pos: ");
+            // Debug::PrintUsThemBlank(pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
+            // PRINTNL("Move considered: " + UCI::move(pseudo_legal_ml[i]));
+
             pos_.MakeMove(pseudo_legal_ml[i]);
+
+            // PRINTNL("Postion after move made: ");
+            // Debug::PrintUsThemBlank(pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
+            // PRINTNL("");
+            // PRINTNL("");
 
             if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
             // if(!InCheck<is_white>(pos_))
