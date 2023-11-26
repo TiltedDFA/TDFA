@@ -58,6 +58,10 @@ namespace Moves
     
     constexpr bool IsPromotionMove(const Move move) {return move & 0x8000;}
 
+    constexpr PieceType GetTypePromotingTo(const Move move)
+    {
+        return GetPieceType(move) - 7;
+    }
     template<PieceType type>
     constexpr Move SetPieceType(const Move move)
     {

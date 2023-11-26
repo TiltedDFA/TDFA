@@ -112,6 +112,7 @@ namespace BB
                 pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
                 is_white ? RemoveIntersectingPiece<false>(Magics::IndexToBB(target)) 
                          : RemoveIntersectingPiece<true>(Magics::IndexToBB(target));
+                pieces_[is_white][Moves::GetTypePromotingTo(m)] |= Magics::IndexToBB(target);
                 info_.half_moves_ = 0;
                 return;
             }
