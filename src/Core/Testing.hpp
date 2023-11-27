@@ -106,7 +106,7 @@ private:
         {
             if constexpr(is_root)
             {
-                pos.MakeMove(ml[i], PromType::NOPROMO);
+                pos.MakeMove(ml[i]);
                 const auto cnt = Perft<false>(depth - 1, pos);
                 nodes += cnt;
                 total_nodes_ += cnt;
@@ -116,7 +116,7 @@ private:
             } 
             else
             {
-                pos.MakeMove(ml[i], PromType::NOPROMO);
+                pos.MakeMove(ml[i]);
                 nodes += Perft<false>(depth - 1, pos);
                 pos.UnmakeMove();
             }

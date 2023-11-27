@@ -80,7 +80,7 @@ namespace BB
             for(uint8_t i = 0; i < 2; ++i)
                     for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
 
-            info_.castling_rights_ = 0x0F;
+            info_.castling_rights_ = 0x00;
             whites_turn_ = true;
             info_.en_passant_target_sq_ = 0;
             info_.half_moves_ = 0;
@@ -92,7 +92,7 @@ namespace BB
         //returns true/false depending on success of fen importing
         [[maybe_unused]]bool ImportFen(std::string_view fen);
 
-        void MakeMove(Move m, PromType promotion)
+        void MakeMove(Move m)
         {
             previous_pos_info.push(*this);
             //switch turns
@@ -102,25 +102,55 @@ namespace BB
             Sq start;
             Sq target;
             PieceType p_type;
-            bool is_white;
-            Moves::DecodeMove(m, start, target, p_type, is_white);
+            const bool is_white{!whites_turn_};
+            Moves::DecodeMove(m, start, target, p_type);
+            
+            const BitBoard target_bb{Magics::IndexToBB(target)};
             
             full_moves_ += !is_white;
 
-            if((uint8_t)promotion) //if not NOPROMO
+            if(Moves::IsPromotionMove(m)) //if not NOPROMO
             {
                 pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
-                pieces_[is_white][(uint8_t)promotion] |= Magics::IndexToBB(target);
+
+                if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
+                {
+                    is_white ? RemoveIntersectingPiece<false>(target_bb) 
+                            : RemoveIntersectingPiece<true>(target_bb);
+                }
+                pieces_[is_white][Moves::GetTypePromotingTo(m)] |= target_bb;
                 info_.half_moves_ = 0;
                 return;
             }
             
             //removes the piece we take
-            if((is_white ? GetPieces<false>() : GetPieces<true>()) & Magics::IndexToBB(target))
+            if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
             {
+                //if removed piece is a rook
+                if(target_bb & (Magics::IndexToBB<0>()  | Magics::IndexToBB<7>() | 
+                                Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
+                {
+                    switch(target)
+                    {
+                    case 0:
+                        info_.castling_rights_ &= 0x0B;
+                        break;
+                    case 7: 
+                        info_.castling_rights_ &= 0x07;
+                        break;
+                    case 63:
+                        info_.castling_rights_ &= 0x0D;
+                        break;
+                    case 56:
+                        info_.castling_rights_ &= 0x0E;
+                        break;
+                    default:
+                        break;
+                    }
+                }
                 info_.half_moves_ = 0;
-                is_white ? RemoveIntersectingPiece<false>(Magics::IndexToBB(target)) 
-                         : RemoveIntersectingPiece<true>(Magics::IndexToBB(target));
+                is_white ? RemoveIntersectingPiece<false>(target_bb) 
+                         : RemoveIntersectingPiece<true>(target_bb);
             }
             else
                 ++info_.half_moves_;
@@ -132,7 +162,7 @@ namespace BB
                 if(target == info_.en_passant_target_sq_)
                 {
                     info_.en_passant_target_sq_ = 0; 
-                    pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target); // move our pawn
+                    pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb; // move our pawn
                     if(is_white)
                     {
                         RemoveIntersectingPiece<false>(Magics::IndexToBB(target-8));
@@ -205,7 +235,7 @@ namespace BB
                     break;
                 }
             }
-            pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
+            pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb;
         }
         
         void UnmakeMove(/*Move m, PromType promotion*/)
