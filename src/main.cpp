@@ -52,9 +52,9 @@ int main(void)
     // gen.GenerateLegalMoves<false>(pos,ml);
     // ml.print();
 
-    const Sq depth = 6;
+    const Sq depth = 5;
     // const std::string FEN("rnbqkbnr/p1pppppp/8/Pp6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 2");
-    const std::string FEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    const std::string FEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
     PerftHandler perft;
     {
         BB::Position pos(FEN);
