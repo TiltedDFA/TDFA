@@ -34,7 +34,7 @@ if(UNIX)
         add_compile_options(-std=c++20 -g -gdwarf-5 -ggdb -C -O0 -Wall -Wextra -Wpedantic -save-temps -s -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647 -fsanitize=undefined)
         add_link_options(-fsanitize=undefined)
     else()
-        add_compile_options(-std=c++20 -O3 -march=native -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647 -funroll-loops)
+        add_compile_options(-std=c++20 -O3 -march=native -g -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647 -funroll-loops)
     endif()
 endif(UNIX)
 
