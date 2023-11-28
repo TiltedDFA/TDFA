@@ -78,17 +78,25 @@ namespace Magics
         b |= b >>  8;
         return b & 0xFF;
     }
+    // //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
+    // static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
+    // {
+    //     b |= b >>  4;
+    //     b |= b >>  2;
+    //     b |= b >>  1;
+    //     b &= FILE_ABB;
+    //     b |= b >>  7;
+    //     b |= b >> 14;
+    //     b |= b >> 28;
+    //     return b & 0xFF;
+    // }
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
     static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
     {
-        b |= b >>  4;
-        b |= b >>  2;
-        b |= b >>  1;
-        b &= FILE_ABB;
-        b |= b >>  7;
-        b |= b >> 14;
-        b |= b >> 28;
-        return b & 0xFF;
+        b |= b >> 4;
+        b |= b >> 2;
+        b |= b >> 1;
+        return ((b & FILE_ABB)* ANTI_CROSS_DIAG) >> 56;
     }
     constexpr BitBoard PopMS1B(const BitBoard board)
     {

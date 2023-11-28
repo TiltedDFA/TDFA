@@ -13,7 +13,7 @@
 #include <iostream>
 
 
-static std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
@@ -343,6 +343,7 @@ public:
                     
         return false;
     }
+    
     template<bool is_white>
     void GenerateLegalMoves(const BB::Position& pos, MoveList& ml)
     {
@@ -571,7 +572,7 @@ private:
     }
     
 public:    
-    inline static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 private:
     BB::Position pos_;
 };
