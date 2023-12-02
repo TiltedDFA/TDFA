@@ -27,25 +27,25 @@ int main(void)
 //    PRINTNL(CALC(60,58)); 
 //    PRINTNL(CALC(60,62)); 
 
-    PerftHandler perft;
-    {
-        BB::Position pos(START_FEN);
+    // PerftHandler perft;
+    // {
+    //     BB::Position pos(START_FEN);
 
-        uint64_t time {1};
-        for(int i = 0 ; i < 7; ++i)
-        {
-            time = 1;
-            pos.ImportFen(START_FEN);
-            {
-                Timer<std::chrono::microseconds> t(&time);
-                perft.RunPerft(i, pos);
-            } 
-            perft.PrintData();
-            pos.ResetBoard();
-            std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", i, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
-        }
-    }
-
+    //     uint64_t time {1};
+    //     for(int i = 0 ; i < 7; ++i)
+    //     {
+    //         time = 1;
+    //         pos.ImportFen(START_FEN);
+    //         {
+    //             Timer<std::chrono::microseconds> t(&time);
+    //             perft.RunPerft<true>(i, pos);
+    //         } 
+    //         perft.PrintData();
+    //         pos.ResetBoard();
+    //         std::cout << std::format("Depth: {}, nodes per second: {:.0f}, Time: {}\n", i, static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time), time);    
+    //     }
+    // }
+    RunBenchmark<false>();
     // BB::Position pos("rnb1kbnr/pppp1ppp/4pq2/8/8/PP6/R1PPPPPP/1NBQKBNR b Kkq - 0 3");
     // MoveGen gen;
     // MoveList ml;

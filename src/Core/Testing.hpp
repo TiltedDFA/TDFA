@@ -13,6 +13,7 @@
 #include "../MoveGen/MoveGen.hpp"
 #include "../MoveGen/MoveList.hpp"
 #include "Uci.hpp"
+#include "Timer.hpp"
 
 //white pawn move gen tests
 #define TESTFEN1 "8/8/8/4pP2/8/8/8/8 w - e6 0 1"     //checks left capturing en passant
@@ -26,7 +27,12 @@
 #define TESTFEN9 "R7/P5k1/8/8/8/6P1/6K1/r7 w - - 0 1" //another pawn endgame with 1 possible pawn moves for white
 #define TESTFEN10 "rnbq1rk1/pp2ppbp/6p1/2pp4/2PPnB2/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 8" //very complicated position taken from queens gambit opening with many possible white pawn moves
 
-#define PERFTPOS2 "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - "
+#define STARTPOS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define KIWIPETE "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -"
+#define PERFTPOS3 "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -"
+#define PERFTPOS4 "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
+#define PERFTPOS5 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
+#define PERFTPOS6 "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
 
 template<D direction>
 constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info)
@@ -39,24 +45,24 @@ constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info
     const bool us_is_white = Magics::IndexToBB(sq) & pos.GetPieces<true>();
     if(us_is_white)
     {
-        p1 = Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+        p1 = Magics::base_2_to_3_us    [(direction == D::RANK) ? Magics::FileOf(sq)
                                                             : Magics::RankOf(sq)]
                                     [(direction == D::RANK) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
-        p2 = 2 * Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+        p2 = 2 * Magics::base_2_to_3_us    [(direction == D::RANK) ? Magics::FileOf(sq)
                                                             : Magics::RankOf(sq)]
                                         [(direction == D::RANK) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
     }
     else
     {
-        p1 = Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+        p1 = Magics::base_2_to_3_us    [(direction == D::RANK) ? Magics::FileOf(sq)
                                                             : Magics::RankOf(sq)]
                                     [(direction == D::RANK) ? Magics::CollapsedFilesIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<false>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
 
-        p2 = 2 * Magics::base_2_to_3    [(direction == D::RANK) ? Magics::FileOf(sq)
+        p2 = 2 * Magics::base_2_to_3_us    [(direction == D::RANK) ? Magics::FileOf(sq)
                                                             : Magics::RankOf(sq)]
                                         [(direction == D::RANK) ? Magics::CollapsedFilesIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])
                                                             : Magics::CollapsedRanksIndex(pos.GetPieces<true>() & Magics::SLIDING_ATTACKS_MASK[sq][static_cast<uint8_t>(direction)])];
@@ -75,7 +81,8 @@ public:
 
     void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
-    void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true>(depth, pos);}
+    template<bool output_perft_paths>
+    void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
 
     uint64_t GetNodes() const {return total_nodes_;}
 
@@ -87,7 +94,7 @@ public:
             std::cout << i;
     }
 private:
-    template<bool is_root>
+    template<bool is_root, bool output_perft_paths>
     uint64_t Perft(int depth, BB::Position& pos)
     {
         if(!depth) return 1ull;
@@ -107,17 +114,17 @@ private:
             if constexpr(is_root)
             {
                 pos.MakeMove(ml[i]);
-                const auto cnt = Perft<false>(depth - 1, pos);
-                nodes += cnt;
+                const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
+                if constexpr(output_perft_paths) nodes += cnt;
                 total_nodes_ += cnt;
                 // PRINTNL("ROOT\n");
                 pos.UnmakeMove();
-                perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
+                if constexpr(output_perft_paths) perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
             } 
             else
             {
                 pos.MakeMove(ml[i]);
-                nodes += Perft<false>(depth - 1, pos);
+                nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 pos.UnmakeMove();
             }
         }
@@ -130,4 +137,44 @@ private:
     uint64_t total_nodes_;
 };
 
+//returns nps
+template<bool output_perft_paths>
+uint64_t TestPerft(unsigned depth, uint64_t expected_nodes, uint16_t test_number, const std::string& fen)
+{
+    PerftHandler perft;
+    BB::Position pos(fen);
+    uint64_t time {1};
+    
+    {
+        Timer<std::chrono::microseconds> t(&time);
+        perft.RunPerft<output_perft_paths>(depth, pos);
+    }
+
+    const uint64_t nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);
+
+    if(expected_nodes == perft.GetNodes())
+    {
+        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+    }
+    else
+    {
+        std::cout << std::format("Test {} *FAILED*.", test_number) << std::endl;
+    }
+    return nps;
+}
+
+template<bool output_perft_paths>
+void RunBenchmark()
+{
+    uint64_t mean_nps{0};
+
+    mean_nps += TestPerft<output_perft_paths>(6, 119060324, 1, STARTPOS);
+    mean_nps += TestPerft<output_perft_paths>(5, 193690690, 2, KIWIPETE);
+    mean_nps += TestPerft<output_perft_paths>(7, 178633661, 3, PERFTPOS3);
+    mean_nps += TestPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
+    mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
+    mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
+
+    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+}
 #endif // #ifndef TESTING_HPP

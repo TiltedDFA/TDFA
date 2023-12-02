@@ -68,8 +68,8 @@ static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                             break;
                         }
                     }
-                    uint16_t p1 = Magics::base_2_to_3[fileofsq][us & ~Magics::BBFileOf(sq)];
-                    uint16_t p2 = 2 * Magics::base_2_to_3[fileofsq][them];
+                    uint16_t p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
+                    uint16_t p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
                     result.at(sq).at((uint8_t)D::RANK).at(p1 + p2) = rank_attack_moves;      
                 }
                
@@ -144,8 +144,8 @@ static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
                         anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(anti_diag_attacks),Moves::BISHOP));
                         anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                     }
-                    uint16_t p1 = Magics::base_2_to_3[rankofsq][us & ~Magics::BBRankOf(sq)];
-                    uint16_t p2 = 2 * Magics::base_2_to_3[rankofsq][them];
+                    uint16_t p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
+                    uint16_t p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
 
                     result.at(sq).at((uint8_t)D::FILE).at(p1 + p2) = file_attack_moves;
                     result.at(sq).at((uint8_t)D::DIAG).at(p1 + p2) = diagonal_attack_moves;
@@ -388,19 +388,28 @@ public:
     static constexpr const move_info* GetMovesForSliding(uint8_t piece_sq, BitBoard us, BitBoard them) noexcept
     {
         const uint16_t index = 
-                //us
-                (Magics::base_2_to_3
-                [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
-                : Magics::RankOf(piece_sq)]
-                [(direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
-                : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
-                +
-                //them
-                (2 * Magics::base_2_to_3
-                [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
-                : Magics::RankOf(piece_sq)]
-                [(direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
-                : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])]);
+            Magics::GetBaseThreeUsThem
+            (
+                (direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                 : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
+                (direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                 : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
+                (direction == D::RANK) ? Magics::FileOf(piece_sq)  : Magics::RankOf(piece_sq)
+            );
+
+                // //us
+                // (Magics::base_2_to_3
+                // [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
+                // : Magics::RankOf(piece_sq)]
+                // [(direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                // : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])])
+                // +
+                // //them
+                // (2 * Magics::base_2_to_3
+                // [(direction == D::RANK) ? Magics::FileOf(piece_sq) 
+                // : Magics::RankOf(piece_sq)]
+                // [(direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
+                // : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])]);
 
         return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(static_cast<int>(direction)).at(index);
     }

@@ -149,19 +149,28 @@ namespace Magics
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
+    template<bool gen_us>
     static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
     {
         std::array<std::array<uint16_t,256>,8> result{};
-        for(uint8_t missed_file = 0; missed_file < 8;++missed_file)
+        for(uint8_t missed_file = 0; missed_file < 8; ++missed_file)
         {
-            for(uint16_t i = 0; i < 256;++i)
+            for(uint16_t i = 0; i < 256; ++i)
             {
-                for(int j = 0; j < 8;++j)
+                for(int j = 0; j < 8; ++j)
                 {
                     if(j == missed_file) continue;
-                    result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
+                    
+                    if constexpr(gen_us)
+                    {
+                        result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
+                    }
+                    else
+                    {
+                        result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? (2 * pow(3,j)) : (2 * pow(3,j-1)));
+                    }
                 }
-                    assert(result.at(missed_file).at(i) < 1094);
+                    //assert(result.at(missed_file).at(i) < 1094);
             }
         }
         return result;
@@ -208,7 +217,14 @@ namespace Magics
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3 = compute_base_2_to_3();
+    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3_us = compute_base_2_to_3<true>();
+
+    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3_them = compute_base_2_to_3<false>();
+
+    static constexpr uint16_t GetBaseThreeUsThem(uint8_t us, uint8_t them, Sq piece_square)
+    {
+        return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
+    }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
     static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
