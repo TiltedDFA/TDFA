@@ -3,8 +3,7 @@
 using Magics::Shift;
 
 
-MoveGen::MoveGen() 
-    :pos_(){}
+MoveGen::MoveGen(BB::Position& current_pos):pos_(current_pos){};
 void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
 {
     BitBoard pawns = pos_.GetSpecificPieces<true, loc::PAWN>();

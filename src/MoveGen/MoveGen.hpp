@@ -12,8 +12,11 @@
 #include "MoveList.hpp"
 #include <iostream>
 
-
+#if CONSTEVAL_TIT == 1
 static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+#else
+static inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+#endif
 {
     std::array<std::array<std::array<move_info,2187>,4>,64> result{};
     for(uint8_t sq = 0; sq < 64; ++sq)
@@ -160,7 +163,7 @@ static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> Precomp
 class MoveGen
 {
 public:
-    MoveGen();
+    MoveGen(BB::Position& current_pos);
 
     [[nodiscard]] constexpr BitBoard GenerateAllWhiteAttacks(const BB::Position& pos) const
     {
@@ -374,8 +377,8 @@ public:
             // PRINTNL("");
             // PRINTNL("");
 
-            if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
-            // if(!InCheck<is_white>(pos_))
+            // if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
+            if(!InCheck<is_white>(pos_))
             // if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
@@ -581,9 +584,15 @@ private:
     }
     
 public:    
+#if CONSTEVAL_TIT == 1
     static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+#else
+    inline static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+#endif
+
+
 private:
-    BB::Position pos_;
+    BB::Position& pos_;
 };
 
 #endif // #ifndef MOVEGEN_HPP

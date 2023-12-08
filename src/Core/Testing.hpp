@@ -102,7 +102,7 @@ private:
         MoveList ml{};
         uint64_t nodes{0};
         
-        MoveGen gen{};
+        MoveGen gen(pos);
 
         if(pos.whites_turn_)
             gen.GenerateLegalMoves<true>(pos,ml);

@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <array>
 
+#define CONSTEVAL_TIT 0
+
 using Move      = uint16_t;
 using BitBoard  = uint64_t;
 using PieceType = uint8_t;

@@ -115,6 +115,27 @@ namespace BB
 
                 if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
                 {
+                    if(target_bb & (Magics::IndexToBB<0>()  | Magics::IndexToBB<7>() | 
+                                Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
+                    {
+                        switch(target)
+                        {
+                        case 0:
+                            info_.castling_rights_ &= 0x0B;
+                            break;
+                        case 7: 
+                            info_.castling_rights_ &= 0x07;
+                            break;
+                        case 63:
+                            info_.castling_rights_ &= 0x0D;
+                            break;
+                        case 56:
+                            info_.castling_rights_ &= 0x0E;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
                     is_white ? RemoveIntersectingPiece<false>(target_bb) 
                             : RemoveIntersectingPiece<true>(target_bb);
                 }
