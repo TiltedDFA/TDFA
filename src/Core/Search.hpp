@@ -11,13 +11,18 @@
 class Search
 {
 public:
-    Search();
+    Search()=delete;
+    
+    Search(BB::Position& pos);
+
+
+
+    void SetPos(BB::Position& pos);
 
     Score GoSearch(uint16_t depth);
 private:
+    BB::Position& pos_;
     MoveGen generator_;
-    BB::Position pos_;
-
 };
 
 

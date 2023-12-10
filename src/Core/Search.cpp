@@ -1,5 +1,11 @@
 #include "Search.hpp"
 
+Search::Search(BB::Position& pos):pos_(pos),generator_(pos_){}
+
+void Search::SetPos(BB::Position& pos)
+{
+    pos_ = pos;
+}
 Score Search::GoSearch(uint16_t depth)
 {
     if(depth == 0) return Evaluate(this->pos_);
@@ -20,7 +26,7 @@ Score Search::GoSearch(uint16_t depth)
     {
         this->pos_.MakeMove(list[i]);
 
-        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(this->pos_) : MoveGen::InCheck<true>(this->pos_)))
+        if(!(this->pos_.whites_turn_ ? MoveGen::InCheck<false>(this->pos_) : MoveGen::InCheck<true>(this->pos_)))
         {
             Score eval = -GoSearch(depth-1);
 
