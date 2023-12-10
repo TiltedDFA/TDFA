@@ -46,7 +46,10 @@ int main(void)
     //     }
     // }
     // TestPerft<true>(5, 193690690, 2, KIWIPETE);
+    PRINTNL("Old perft \n");
     RunBenchmark<false>();
+    PRINTNL("New perft \n");
+    RunAltBenchmark<false>();
     // BB::Position pos("rnb1kbnr/pppp1ppp/4pq2/8/8/PP6/R1PPPPPP/1NBQKBNR b Kkq - 0 3");
     // MoveGen gen;
     // MoveList ml;

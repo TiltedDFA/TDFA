@@ -5,6 +5,7 @@
 #include <array>
 #include <bitset>
 #include <cmath>
+#include <bit>
 #include <cassert>
 
 namespace Magics
@@ -35,9 +36,13 @@ namespace Magics
 #ifdef __GNUG__
     //finds least significant 1 bit and returns the position of it
     constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 0);}
+    //returns the number of 1 bits in the board
+    constexpr uint8_t PopCnt(BitBoard bb) {return __builtin_popcountll(bb);}
 #else
     //finds least significant 1 bit and returns the position of it
     constexpr Sq FindLS1B(BitBoard bb){return std::countr_zero(bb);}
+    //returns the number of 1 bits in the board
+    constexpr uint8_t PopCnt(BitBoard bb) {return std::popcount(bb);}
 #endif
     //returns (x^y). compile time friendly.
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}

@@ -84,6 +84,9 @@ public:
     template<bool output_perft_paths>
     void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
 
+    template<bool output_perft_paths>
+    void RunFastPerft(int depth, BB::Position& pos){ResetData(); FastPerft<true, output_perft_paths>(depth, pos);}
+
     uint64_t GetNodes() const {return total_nodes_;}
 
     void PrintData()
@@ -132,6 +135,52 @@ private:
         return nodes;
     }
 
+    template<bool is_root, bool output_perft_paths>
+    uint64_t FastPerft(int depth, BB::Position& pos)
+    {
+        if(!depth) return 1ull;
+
+        MoveList ml{};
+        uint64_t nodes{0};
+        
+        MoveGen gen(pos);
+
+        if(pos.whites_turn_)
+            gen.GeneratePseudoLegalMoves<true>(pos,ml);
+        else
+            gen.GeneratePseudoLegalMoves<false>(pos,ml);
+        
+        for(size_t i = 0; i < ml.len(); ++i)
+        {
+            if constexpr(is_root)
+            {
+                pos.MakeMove(ml[i]);
+                
+                if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                {
+                    const auto cnt = FastPerft<false, output_perft_paths>(depth - 1, pos);
+                    if constexpr(output_perft_paths) nodes += cnt;
+                    total_nodes_ += cnt;
+                    // PRINTNL("ROOT\n");
+                    if constexpr(output_perft_paths) perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
+                }
+                
+                pos.UnmakeMove();
+            } 
+            else
+            {
+                pos.MakeMove(ml[i]);
+                if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                {
+                    nodes += FastPerft<false, output_perft_paths>(depth - 1, pos);
+                }
+                pos.UnmakeMove();
+            }
+        }
+        // ml.print();
+        return nodes;
+    }
+
 private:
     std::vector<std::string> perft_data_;
     uint64_t total_nodes_;
@@ -162,7 +211,30 @@ uint64_t TestPerft(unsigned depth, uint64_t expected_nodes, uint16_t test_number
     }
     return nps;
 }
+template<bool output_perft_paths>
+uint64_t TestFastPerft(unsigned depth, uint64_t expected_nodes, uint16_t test_number, const std::string& fen)
+{
+    PerftHandler perft;
+    BB::Position pos(fen);
+    uint64_t time {1};
+    
+    {
+        Timer<std::chrono::microseconds> t(&time);
+        perft.RunFastPerft<output_perft_paths>(depth, pos);
+    }
 
+    const uint64_t nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);
+
+    if(expected_nodes == perft.GetNodes())
+    {
+        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+    }
+    else
+    {
+        std::cout << std::format("Test {} *FAILED*.", test_number) << std::endl;
+    }
+    return nps;
+}
 template<bool output_perft_paths>
 void RunBenchmark()
 {
@@ -174,6 +246,20 @@ void RunBenchmark()
     mean_nps += TestPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
     mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
     mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
+
+    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+}
+template<bool output_perft_paths>
+void RunAltBenchmark()
+{
+    uint64_t mean_nps{0};
+
+    mean_nps += TestFastPerft<output_perft_paths>(6, 119060324, 1, STARTPOS);
+    mean_nps += TestFastPerft<output_perft_paths>(5, 193690690, 2, KIWIPETE);
+    mean_nps += TestFastPerft<output_perft_paths>(7, 178633661, 3, PERFTPOS3);
+    mean_nps += TestFastPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
+    mean_nps += TestFastPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
+    mean_nps += TestFastPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
     std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
 }

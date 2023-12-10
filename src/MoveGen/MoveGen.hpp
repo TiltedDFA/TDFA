@@ -276,7 +276,7 @@ public:
     }
 
     template<bool is_white>
-    bool InCheck(const BB::Position& pos)
+    static bool InCheck(const BB::Position& pos)
     {
         const BitBoard our_king = pos.GetSpecificPieces<is_white, loc::KING>();
         // us, them are variables used for sliding move gen with titboards.
@@ -346,6 +346,18 @@ public:
                     
         return false;
     }
+
+    template<bool is_white>
+    void GeneratePseudoLegalMoves(const BB::Position& pos, MoveList& ml)
+    {
+        KingMoves<is_white>(ml);
+        QueenMoves<is_white>(ml);
+        BishopMoves<is_white>(ml);
+        KnightMoves<is_white>(ml);
+        RookMoves<is_white>(ml);
+        (is_white ? WhitePawnMoves(ml) : BlackPawnMoves(ml));
+        Castling<is_white>(ml, is_white ? GenerateAllBlackAttacks(pos) : GenerateAllWhiteAttacks(pos));
+    }
     
     template<bool is_white>
     void GenerateLegalMoves(const BB::Position& pos, MoveList& ml)
@@ -354,32 +366,14 @@ public:
         
         //pseudo legal
         MoveList pseudo_legal_ml;
-        KingMoves<is_white>(pseudo_legal_ml);
-        QueenMoves<is_white>(pseudo_legal_ml);
-        BishopMoves<is_white>(pseudo_legal_ml);
-        KnightMoves<is_white>(pseudo_legal_ml);
-        RookMoves<is_white>(pseudo_legal_ml);
-        (is_white ? WhitePawnMoves(pseudo_legal_ml) : BlackPawnMoves(pseudo_legal_ml));
-        Castling<is_white>(pseudo_legal_ml, is_white ? GenerateAllBlackAttacks(pos) : GenerateAllWhiteAttacks(pos));
+        GeneratePseudoLegalMoves<is_white>(pos, pseudo_legal_ml);
         
         //filtering
         for(uint8_t i = 0; i < pseudo_legal_ml.len(); ++i)
         {
-            // PRINTNL("Depth:" + std::to_string(i));
-            // PRINTNL("Current pos: ");
-            // Debug::PrintUsThemBlank(pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
-            // PRINTNL("Move considered: " + UCI::move(pseudo_legal_ml[i]));
-
             pos_.MakeMove(pseudo_legal_ml[i]);
 
-            // PRINTNL("Postion after move made: ");
-            // Debug::PrintUsThemBlank(pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
-            // PRINTNL("");
-            // PRINTNL("");
-
-            // if(!(pos_.GetPieces<true>() & pos_.GetPieces<false>()) && !InCheck<is_white>(pos_))
             if(!InCheck<is_white>(pos_))
-            // if(!(pos_.GetSpecificPieces<is_white, loc::KING>() & (is_white ? GenerateAllBlackAttacks(pos_) : GenerateAllWhiteAttacks(pos_))))
             { 
                 ml.add(pseudo_legal_ml[i]);
             }
