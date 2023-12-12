@@ -13,7 +13,7 @@ using PieceType = uint8_t;
 using Sq        = uint8_t;
 using Castling  = uint8_t;
 
-constexpr std::size_t MAX_MOVES = 256;
+constexpr std::size_t MAX_MOVES = 218;
 
 enum class MD : uint8_t
 {

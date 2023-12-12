@@ -10,8 +10,13 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 
+#if DEVELOPER_MODE == 1
 #define PRINT(x) std::cout << (x)
 #define PRINTNL(x) std::cout << (x) << std::endl
+#else
+#define PRINT(x)
+#define PRINTNL(x)
+#endif
 
 namespace Debug
 {

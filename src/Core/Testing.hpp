@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 #include <format>
+#include <fstream>
 #include "../MoveGen/MoveGen.hpp"
 #include "../MoveGen/MoveList.hpp"
 #include "Uci.hpp"
@@ -172,7 +173,7 @@ uint64_t TestPerft(unsigned depth, uint64_t expected_nodes, uint16_t test_number
     }
     else
     {
-        std::cout << std::format("Test {} *FAILED*.", test_number) << std::endl;
+        std::cout << std::format("Test {} *FAILED*. Exp {}, was {}.", test_number, expected_nodes, perft.GetNodes()) << std::endl;
     }
     return nps;
 }
@@ -189,5 +190,56 @@ void RunBenchmark()
     mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
     std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+}
+std::vector<std::string> split(const std::string& line, const std::string& delimiter)
+{
+    std::vector<std::string> tmp{};
+    size_t pos = 0;
+    std::string s{line};
+
+    while ((pos = s.find(delimiter)) != std::string::npos) 
+    {
+        tmp.push_back(s.substr(0, pos));
+        s.erase(0, pos + delimiter.length());
+    }
+    return tmp;
+}
+template<bool output_perft_paths>
+void RunPerftSuite()
+{
+    std::fstream perft_file("perftsuite.epd", std::ios::in);
+
+    if(!perft_file.is_open()){PRINTNL("FAILED TO OPEN FILE\n"); return;}
+
+    PRINTNL("SUCCESS");
+
+    std::string line;
+
+    uint32_t current_perft{1};
+
+    PRINTNL("SUCCESS");
+    while(std::getline(perft_file, line))
+    {
+        if(line[0] == '#') continue;
+        
+        std::vector<std::string> chunks = split(line, ";");
+        const std::string& fen = chunks[0];
+        unsigned depth{999999};
+        uint64_t expected_nodes{0};
+
+        for(int i = chunks.size() - 1; i > 0 ;--i)
+        {
+            if(std::stoull(chunks[i].substr(3)) > 100'000'000) continue;
+            depth = chunks[i][2] - '0';
+            expected_nodes = std::stoull(chunks[i].substr(3));
+            break;
+        }
+        assert(depth != 999999);
+        const auto i = TestPerft<output_perft_paths>(depth, expected_nodes, current_perft, fen);
+    PRINTNL("SUCCESS");
+        ++current_perft;
+    }
+
+    perft_file.close();
 }
 #endif // #ifndef TESTING_HPP

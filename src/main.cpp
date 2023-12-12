@@ -12,12 +12,12 @@
 int main(void)
 {
     // RunBenchmark<false>();
+    RunPerftSuite<false>();
+    // Zobrist::Init();
 
-    Zobrist::Init();
-
-    for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
-    PRINTNL("------------------");
-    for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
+    // for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
+    // PRINTNL("------------------");
+    // for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
 
     // BB::Position pos(STARTPOS);
     // MoveGen generator(pos);

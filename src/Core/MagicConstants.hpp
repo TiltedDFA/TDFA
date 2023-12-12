@@ -76,30 +76,10 @@ namespace Magics
 
     constexpr uint8_t BBRankOf(Sq square){return 1 << RankOf(square);}
     
-    // static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
-    // {
-    //     b |= b >> 32;
-    //     b |= b >> 16;
-    //     b |= b >>  8;
-    //     return b & 0xFF;
-    // }
-
     static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
     {
         return (b * FILE_ABB) >> 56;
     }
-    // //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
-    // static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
-    // {
-    //     b |= b >>  4;
-    //     b |= b >>  2;
-    //     b |= b >>  1;
-    //     b &= FILE_ABB;
-    //     b |= b >>  7;
-    //     b |= b >> 14;
-    //     b |= b >> 28;
-    //     return b & 0xFF;
-    // }
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
     static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
     {
