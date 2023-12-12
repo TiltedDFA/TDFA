@@ -33,7 +33,7 @@
 #define PERFTPOS4 "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
 #define PERFTPOS5 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
 #define PERFTPOS6 "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
-
+#define TRICKYENDGAMEPOS "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1"
 template<D direction>
 constexpr void RunTitBoardTest(uint8_t sq, std::string_view fen, move_info& info)
 {
@@ -121,10 +121,14 @@ private:
                 if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
-                    if constexpr(output_perft_paths) nodes += cnt;
+
+                    if constexpr(output_perft_paths) 
+                        nodes += cnt;
+
                     total_nodes_ += cnt;
-                    // PRINTNL("ROOT\n");
-                    if constexpr(output_perft_paths) perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
+
+                    if constexpr(output_perft_paths) 
+                        perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
                 }
                 
                 pos.UnmakeMove();
@@ -139,7 +143,7 @@ private:
                 pos.UnmakeMove();
             }
         }
-        // ml.print();
+
         return nodes;
     }
 private:

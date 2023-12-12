@@ -11,15 +11,15 @@
 class Search
 {
 public:
+    static inline uint64_t nodes_{0};
+public:
     Search()=delete;
     
     Search(BB::Position& pos);
 
-
-
     void SetPos(BB::Position& pos);
 
-    Score GoSearch(uint16_t depth);
+    Score GoSearch(uint16_t depth, Score a, Score b);
 private:
     BB::Position& pos_;
     MoveGen generator_;

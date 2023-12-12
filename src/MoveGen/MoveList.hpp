@@ -23,6 +23,7 @@ public:
 
     constexpr bool contains(const Move m){return std::find(data_.cbegin(),data_.cend(),m) != data_.cend();}
 
+    //A debugging utility
     void print()
     {
         std::vector<std::string> moves{};

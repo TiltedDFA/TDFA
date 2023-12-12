@@ -5,11 +5,13 @@
 #include <array>
 
 #define CONSTEVAL_TIT 0
+#define DEVELOPER_MODE 1
 
 using Move      = uint16_t;
 using BitBoard  = uint64_t;
 using PieceType = uint8_t;
 using Sq        = uint8_t;
+using Castling  = uint8_t;
 
 constexpr std::size_t MAX_MOVES = 256;
 
@@ -61,5 +63,9 @@ enum class D : uint8_t
     DIAG,
     ADIAG
 };
-
+template<typename T>
+float F_Div(T dividend, T divisor)
+{
+    return static_cast<double>(dividend) / static_cast<double>(divisor);
+}
 #endif //#ifndef TYPES_HPP

@@ -6,9 +6,10 @@ void Search::SetPos(BB::Position& pos)
 {
     pos_ = pos;
 }
-Score Search::GoSearch(uint16_t depth)
+Score Search::GoSearch(uint16_t depth, Score a, Score b)
 {
-    if(depth == 0) return Evaluate(this->pos_);
+    ++nodes_;
+    if(depth == 0) return Eval::Evaluate(this->pos_);
 
     MoveList list;
     if(this->pos_.whites_turn_)
@@ -20,7 +21,12 @@ Score Search::GoSearch(uint16_t depth)
         generator_.GeneratePseudoLegalMoves<false>(this->pos_, list);
     }
 
-    Score max = NEG_INF;
+    if(list.len() == 0)
+    {
+        if(this->pos_.whites_turn_ ? MoveGen::InCheck<false>(pos_) : MoveGen::InCheck<true>(pos_))
+            return Eval::NEG_INF;
+        return 0;
+    }
     
     for(size_t i = 0; i < list.len(); ++i)
     {
@@ -28,12 +34,15 @@ Score Search::GoSearch(uint16_t depth)
 
         if(!(this->pos_.whites_turn_ ? MoveGen::InCheck<false>(this->pos_) : MoveGen::InCheck<true>(this->pos_)))
         {
-            Score eval = -GoSearch(depth-1);
+            Score eval = -GoSearch(depth - 1, -b, -a);
 
-            if(eval > max) max = eval;
+            this->pos_.UnmakeMove();
+
+            if(eval >= b) {return b;}
+
+            a = std::max(a, eval);
         }
-
-        this->pos_.UnmakeMove();
+        else {this->pos_.UnmakeMove();}
     }
-    return max;
+    return a;
 }
