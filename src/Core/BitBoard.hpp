@@ -263,26 +263,6 @@ namespace BB
         {
             *this = previous_pos_info.top();
             previous_pos_info.pop();
-
-            // info_ = previous_pos_info.top();
-            // previous_pos_info.pop();
-
-            // whites_turn_ = !whites_turn_;
-
-            // uint8_t start;
-            // uint8_t target;
-            // PieceType p_type;
-            // bool is_white;
-            // Moves::DecodeMove(m, start, target, p_type, is_white);
-
-            // if((uint8_t)promotion) //if not NOPROMO
-            // {
-            //     pieces_[is_white][loc::PAWN] |= ~Magics::IndexToBB(start);
-            //     pieces_[is_white][(uint8_t)promotion] &= Magics::IndexToBB(target);
-            //     return;
-            // }
-
-            // pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
        
         template<bool is_white>
@@ -297,10 +277,17 @@ namespace BB
                 pieces_[is_white ? loc::WHITE : loc::BLACK][loc::PAWN];
         }
         
-        template<bool is_white, uint8_t piecetype>
+        template<bool is_white, PieceType type>
         constexpr BitBoard GetSpecificPieces()const
         {
-            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][piecetype];
+            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][type];
+        }
+        constexpr BitBoard GetSpecificPieces(bool is_white, PieceType type)const
+        {
+#if DEVELOPER_MODE == 1
+            assert(type < 6);
+#endif
+            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][type];
         }
         constexpr BitBoard GetEmptySquares()const
         {
@@ -310,6 +297,14 @@ namespace BB
         constexpr BitBoard GetEnPassantBB()const
         {
             return (info_.en_passant_target_sq_) ? Magics::IndexToBB(info_.en_passant_target_sq_) : 0ull;
+        }
+        constexpr Sq GetEnPassantSq()const
+        {
+            return info.en_passant_target_sq_;
+        }
+        constexpr uint8_t GetRawCastling()const
+        {
+            return info.castling_rights_;
         }
 
         /*
@@ -330,7 +325,7 @@ namespace BB
         BitBoard pieces_[2][6];
         PosInfo info_;
         bool whites_turn_;
-        uint16_t full_moves_;
+        int16_t full_moves_;
         static std::stack<Position> previous_pos_info;
     };
 }

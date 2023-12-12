@@ -211,13 +211,10 @@ void RunPerftSuite()
 
     if(!perft_file.is_open()){PRINTNL("FAILED TO OPEN FILE\n"); return;}
 
-    PRINTNL("SUCCESS");
-
     std::string line;
 
     uint32_t current_perft{1};
 
-    PRINTNL("SUCCESS");
     while(std::getline(perft_file, line))
     {
         if(line[0] == '#') continue;
@@ -230,13 +227,12 @@ void RunPerftSuite()
         for(int i = chunks.size() - 1; i > 0 ;--i)
         {
             if(std::stoull(chunks[i].substr(3)) > 100'000'000) continue;
-            depth = chunks[i][2] - '0';
+            depth = (chunks[i])[1] - '0';
             expected_nodes = std::stoull(chunks[i].substr(3));
             break;
         }
-        assert(depth != 999999);
-        const auto i = TestPerft<output_perft_paths>(depth, expected_nodes, current_perft, fen);
-    PRINTNL("SUCCESS");
+        assert(depth < 7);
+        TestPerft<output_perft_paths>(depth, expected_nodes, current_perft, fen);
         ++current_perft;
     }
 
