@@ -300,11 +300,11 @@ namespace BB
         }
         constexpr Sq GetEnPassantSq()const
         {
-            return info.en_passant_target_sq_;
+            return info_.en_passant_target_sq_;
         }
         constexpr uint8_t GetRawCastling()const
         {
-            return info.castling_rights_;
+            return info_.castling_rights_;
         }
 
         /*

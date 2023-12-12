@@ -7,7 +7,7 @@
 #include "MagicConstants.hpp"
 #include <array>
 #include <cassert>
-#include <BitBoard.hpp>
+#include "BitBoard.hpp"
 
 using ZobristKey = uint64_t;
 using PieceZobArr = std::array<std::array<std::array<ZobristKey, 64>,6>,2>;

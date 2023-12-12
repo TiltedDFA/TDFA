@@ -4,6 +4,21 @@
 #include <chrono>
 #include <iostream>
 
+using MiliSeconds = uint64_t;
+
+class Clock
+{
+public:
+    Clock()
+        :start_(std::chrono::high_resolution_clock::now()){}
+
+    MiliSeconds GetElapsed()
+    {
+        return static_cast<MiliSeconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_).count());
+    }
+private:
+    const std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+};
 template<typename T>
 class Timer
 {
