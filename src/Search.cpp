@@ -6,7 +6,7 @@ void Search::SetPos(BB::Position& pos)
 {
     pos_ = pos;
 }
-Score Search::GoSearch(uint16_t depth, Score a, Score b)
+Score Search::GoSearch(U16 depth, Score a, Score b)
 {
     ++nodes_;
     if(depth == 0) return Eval::Evaluate(this->pos_);

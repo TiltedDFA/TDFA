@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "Core/MagicConstants.hpp"
-#include "MoveGen/MoveList.hpp"
-#include "MoveGen/MoveGen.hpp"
-#include "Core/Testing.hpp"
-#include "Core/Debug.hpp"
-#include "Core/Search.hpp"
-#include "Core/Timer.hpp"
-#include "Core/ZobristConstants.hpp"
+#include "MagicConstants.hpp"
+#include "MoveList.hpp"
+#include "MoveGen.hpp"
+#include "Testing.hpp"
+#include "Debug.hpp"
+#include "Search.hpp"
+#include "Timer.hpp"
+#include "ZobristConstants.hpp"
 
 int main(void)
 {

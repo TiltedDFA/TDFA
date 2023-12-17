@@ -197,12 +197,12 @@ namespace Debug
 
         BitBoard combined_board{0ull};
 
-        for(uint8_t i = 0; i < move.count; ++i)
+        for(U8 i = 0; i < move.count; ++i)
             combined_board |= 1ull << Moves::GetTargetIndex(move.encoded_move[i]);
         
         PrintBB(combined_board, mirrored);
     }
-    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored)
+    void PrintU8BB(U8 bb, U8 board_center, bool mirrored)
     {
         std::string output{},current_line{};
 

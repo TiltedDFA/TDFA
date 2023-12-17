@@ -4,7 +4,7 @@
 #include <chrono>
 #include <iostream>
 
-using MiliSeconds = uint64_t;
+using MiliSeconds = U64;
 
 class Clock
 {
@@ -26,7 +26,7 @@ public:
     constexpr Timer()
     :start_(std::chrono::high_resolution_clock::now()), time_out(nullptr){}
     
-    constexpr Timer(uint64_t* ptr)
+    constexpr Timer(U64* ptr)
     :start_(std::chrono::high_resolution_clock::now()), time_out(ptr) {}
 
     constexpr ~Timer()
@@ -34,7 +34,7 @@ public:
         const std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
         if(time_out)
         {
-            *time_out = static_cast<uint64_t>(std::chrono::duration_cast<T>(end-start_).count());
+            *time_out = static_cast<U64>(std::chrono::duration_cast<T>(end-start_).count());
         }
         else
         {
@@ -43,7 +43,7 @@ public:
     }
 private:
     const std::chrono::time_point<std::chrono::high_resolution_clock> start_;
-    uint64_t* time_out;
+    U64* time_out;
 };
 
 #endif // #ifndef TIMER_HPP

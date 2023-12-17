@@ -37,7 +37,7 @@ namespace Magics
     //finds least significant 1 bit and returns the position of it
     constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 0);}
     //returns the number of 1 bits in the board
-    constexpr uint8_t PopCnt(BitBoard bb) {return __builtin_popcountll(bb);}
+    constexpr U8 PopCnt(BitBoard bb) {return __builtin_popcountll(bb);}
 #else
     //finds least significant 1 bit and returns the position of it
     constexpr Sq FindLS1B(BitBoard bb){return std::countr_zero(bb);}
@@ -65,23 +65,23 @@ namespace Magics
     consteval BitBoard IndexToBB(){return 1ull << N;}
     
     //returns the file of an index/square
-    constexpr Sq FileOf(uint8_t index){return index & 7;}
+    constexpr Sq FileOf(U8 index){return index & 7;}
 
     //returns the rank of an index/square
-    constexpr Sq RankOf(uint8_t index){return index >> 3;}
+    constexpr Sq RankOf(U8 index){return index >> 3;}
 
     //finds the file of the square/index and returns a bitboard containing a 1 bit
     // in the square specified
-    constexpr uint8_t BBFileOf(Sq square){return 1 << FileOf(square);}
+    constexpr U8 BBFileOf(Sq square){return 1 << FileOf(square);}
 
-    constexpr uint8_t BBRankOf(Sq square){return 1 << RankOf(square);}
+    constexpr U8 BBRankOf(Sq square){return 1 << RankOf(square);}
     
-    static constexpr uint8_t CollapsedFilesIndex(BitBoard b) 
+    static constexpr U8 CollapsedFilesIndex(BitBoard b) 
     {
         return (b * FILE_ABB) >> 56;
     }
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
-    static constexpr uint8_t CollapsedRanksIndex(BitBoard b) 
+    static constexpr U8 CollapsedRanksIndex(BitBoard b) 
     {
         b |= b >> 4;
         b |= b >> 2;
@@ -122,7 +122,7 @@ namespace Magics
         std::array<BitBoard, 64> temp_array{};
         constexpr BitBoard knight_attack_template = IndexToBB<1>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
                                                     IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
-        for(uint8_t i{0}; i < 64;++i)
+        for(U8 i{0}; i < 64;++i)
         {
             if(i % 8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)))
                                             & (~Magics::FILE_GBB & ~FILE_HBB);
@@ -135,12 +135,12 @@ namespace Magics
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
     template<bool gen_us>
-    static consteval std::array<std::array<uint16_t,256>,8> compute_base_2_to_3()
+    static consteval std::array<std::array<U16,256>,8> compute_base_2_to_3()
     {
-        std::array<std::array<uint16_t,256>,8> result{};
-        for(uint8_t missed_file = 0; missed_file < 8; ++missed_file)
+        std::array<std::array<U16,256>,8> result{};
+        for(U8 missed_file = 0; missed_file < 8; ++missed_file)
         {
-            for(uint16_t i = 0; i < 256; ++i)
+            for(U16 i = 0; i < 256; ++i)
             {
                 for(int j = 0; j < 8; ++j)
                 {
@@ -148,11 +148,11 @@ namespace Magics
                     
                     if constexpr(gen_us)
                     {
-                        result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? pow(3,j) : pow(3,j-1));
+                        result.at(missed_file).at(i) += ((i >> j) & 1) * ((j < missed_file) ? pow(3, j) : pow(3, j - 1));
                     }
                     else
                     {
-                        result.at(missed_file).at(i) += ((i>>j)&1) * ((j < missed_file) ? (2 * pow(3,j)) : (2 * pow(3,j-1)));
+                        result.at(missed_file).at(i) += ((i >> j) & 1) * ((j < missed_file) ? (2 * pow(3, j)) : (2 * pow(3, j - 1)));
                     }
                 }
                     //assert(result.at(missed_file).at(i) < 1094);
@@ -164,17 +164,17 @@ namespace Magics
     static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
     {
         std::array<std::array<BitBoard,4>,64> r_val{};
-        for(uint8_t i = 0; i < 64;++i)
+        for(U8 i = 0; i < 64; ++i)
         {
-            uint8_t rank = Magics::RankOf(i);
-            uint8_t file = Magics::FileOf(i);
+            U8 rank = Magics::RankOf(i);
+            U8 file = Magics::FileOf(i);
             BitBoard cross_attacks{0ull};
             BitBoard anti_cross_attacks{0ull};
 
-            for(int8_t r = rank + 1, f = file + 1; r < 8 && f < 8; ++r, ++f)     cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r * 8 + f));
-            for(int8_t r = rank - 1, f = file - 1; r >= 0 && f >= 0; --r, --f)   cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r * 8 + f));
-            for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r * 8 +f));
-            for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<uint8_t>(r * 8 +f));
+            for(int8_t r = rank + 1, f = file + 1; r < 8 && f < 8; ++r, ++f)     cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 + f));
+            for(int8_t r = rank - 1, f = file - 1; r >= 0 && f >= 0; --r, --f)   cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 + f));
+            for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
+            for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
             
             r_val[i][static_cast<int>(D::FILE)] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
             r_val[i][static_cast<int>(D::RANK)] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
@@ -190,7 +190,7 @@ namespace Magics
         constexpr BitBoard king_attack_template =   IndexToBB<0>() | IndexToBB<1>() | IndexToBB<2>() |
                                                     IndexToBB<8>() | IndexToBB<10>()|
                                                     IndexToBB<16>()| IndexToBB<17>()| IndexToBB<18>();
-        for(uint8_t i{0}; i < 64;++i)
+        for(U8 i{0}; i < 64;++i)
         {
             if(i%8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
                                             & ~FILE_HBB;
@@ -202,11 +202,11 @@ namespace Magics
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3_us = compute_base_2_to_3<true>();
+    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_us = compute_base_2_to_3<true>();
 
-    static constexpr std::array<std::array<uint16_t,256>,8> base_2_to_3_them = compute_base_2_to_3<false>();
+    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_them = compute_base_2_to_3<false>();
 
-    static constexpr uint16_t GetBaseThreeUsThem(uint8_t us, uint8_t them, Sq piece_square)
+    static constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square)
     {
         return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
     }

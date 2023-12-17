@@ -32,8 +32,8 @@ namespace Moves
     constexpr uint32_t END_SQ_MASK      = 0x00000FC0;
     constexpr uint32_t PIECE_TYPE_MASK  = 0x0000F000;
     constexpr uint32_t COLOUR_MASK      = 0x00008000;
-    constexpr uint16_t END_SQ_SHIFT     = 6;
-    constexpr uint16_t PIECE_TYPE_SHIFT = 12;
+    constexpr U16 END_SQ_SHIFT     = 6;
+    constexpr U16 PIECE_TYPE_SHIFT = 12;
 
     [[nodiscard]] constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const PieceType piece_type)
     {
@@ -52,16 +52,14 @@ namespace Moves
 
     constexpr PieceType GetPieceType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}
     
-    constexpr uint8_t GetTargetIndex(const Move move)     {return(move & END_SQ_MASK) >> END_SQ_SHIFT;}
+    constexpr U8 GetTargetIndex(const Move move)     {return(move & END_SQ_MASK) >> END_SQ_SHIFT;}
 
-    constexpr uint8_t GetStartIndex(const Move move)      {return move & START_SQ_MASK;}
+    constexpr U8 GetStartIndex(const Move move)      {return move & START_SQ_MASK;}
     
     constexpr bool IsPromotionMove(const Move move) {return move & 0x8000;}
 
-    constexpr PieceType GetTypePromotingTo(const Move move)
-    {
-        return GetPieceType(move) - 7;
-    }
+    constexpr PieceType GetTypePromotingTo(const Move move) {return GetPieceType(move) - 7;}
+    
     template<PieceType type>
     constexpr Move SetPieceType(const Move move)
     {

@@ -7,10 +7,9 @@
 #include <iostream>
 #include <string_view>
 #include <stack>
+
 namespace BB
 {
-    //This namespace is used to contain the accessing indexes for the pieces in 
-    //the pieces array
     struct PosInfo
     {
     public:
@@ -26,9 +25,9 @@ namespace BB
     public: 
         // top 4 bits are ignored XXXX WkWqBkBq where Wx and Bx represents sides and colours
         // 1 = can castle 0 = can't castle
-        uint8_t castling_rights_;
-        uint8_t half_moves_;
-        uint8_t en_passant_target_sq_;
+        U8 castling_rights_;
+        U8 half_moves_;
+        U8 en_passant_target_sq_;
     };
     struct Position
     {
@@ -39,8 +38,8 @@ namespace BB
             whites_turn_(true),
             full_moves_(0)
         {
-            for(uint8_t i = 0; i < 2; ++i)
-                for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
+            for(U8 i = 0; i < 2; ++i)
+                for(U8 j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
         }
         
         Position(std::string_view fen)
@@ -77,8 +76,8 @@ namespace BB
         
         void ResetBoard()
         {
-            for(uint8_t i = 0; i < 2; ++i)
-                    for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
+            for(U8 i = 0; i < 2; ++i)
+                    for(U8 j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
 
             info_.castling_rights_ = 0x00;
             whites_turn_ = true;
@@ -259,7 +258,7 @@ namespace BB
             pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb;
         }
         
-        void UnmakeMove(/*Move m, PromType promotion*/)
+        void UnmakeMove()
         {
             *this = previous_pos_info.top();
             previous_pos_info.pop();
@@ -302,7 +301,7 @@ namespace BB
         {
             return info_.en_passant_target_sq_;
         }
-        constexpr uint8_t GetRawCastling()const
+        constexpr U8 GetRawCastling()const
         {
             return info_.castling_rights_;
         }

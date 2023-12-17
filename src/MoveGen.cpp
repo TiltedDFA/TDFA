@@ -3,7 +3,7 @@
 using Magics::Shift;
 
 
-MoveGen::MoveGen(BB::Position& current_pos):pos_(current_pos){};
+MoveGen::MoveGen(BB::Position& current_pos): pos_(current_pos){};
 
 void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
 {
@@ -165,11 +165,11 @@ BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
         const Sq piece_index = Magics::FindLS1B(bishop_queen);
 
         move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         bishop_queen = Magics::PopLS1B(bishop_queen);
@@ -180,11 +180,11 @@ BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
         const Sq piece_index = Magics::FindLS1B(rook_queen);
 
         move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         rook_queen = Magics::PopLS1B(rook_queen);
@@ -219,11 +219,11 @@ BitBoard MoveGen::GenerateAllBlackAttacks(const BB::Position& pos)
         const Sq piece_index = Magics::FindLS1B(bishop_queen);
 
         move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         bishop_queen = Magics::PopLS1B(bishop_queen);
@@ -234,11 +234,11 @@ BitBoard MoveGen::GenerateAllBlackAttacks(const BB::Position& pos)
         const Sq piece_index = Magics::FindLS1B(rook_queen);
 
         move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
-        for(uint8_t i{0}; i < move->count; ++i)
+        for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
         rook_queen = Magics::PopLS1B(rook_queen);

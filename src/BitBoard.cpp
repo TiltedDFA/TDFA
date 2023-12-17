@@ -16,8 +16,8 @@ static inline void Split(std::string_view fen, std::array<std::string_view,6>& f
 {
     int start = 0;
     int end = -1;
-    uint8_t current_fen_section = 0;
-    while(static_cast<uint64_t>(++end) < fen.size())
+    U8 current_fen_section = 0;
+    while(static_cast<U64>(++end) < fen.size())
     {
         if(fen.at(end) == ' ')
         {
@@ -41,8 +41,8 @@ namespace BB
         std::array<std::string_view,6> fen_sections;
         Split(fen,fen_sections);
 
-        uint8_t current_row = 7;
-        uint8_t current_col = 0;
+        U8 current_row = 7;
+        U8 current_col = 0;
         for(const char i : fen_sections[0])
         {
             if(isdigit(i))
@@ -132,7 +132,7 @@ namespace BB
             if(fen_sections.at(3).at(0) < 'a' || fen_sections.at(3).at(0) > 'h') return false;
             if(fen_sections.at(3).at(1) != '3' && fen_sections.at(3).at(1) != '6') return false;
 
-            uint8_t en_passant_index = 0;
+            U8 en_passant_index = 0;
             en_passant_index += (fen_sections.at(3).at(0)) - 'a';
             en_passant_index += (fen_sections.at(3).at(1) - '1') * 8;
             info_.en_passant_target_sq_ = en_passant_index;

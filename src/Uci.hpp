@@ -1,9 +1,9 @@
 #ifndef UCI_HPP
 #define UCI_HPP
 
-#include "../Core/Move.hpp"
-#include "../Core/Types.hpp"
-#include "../Core/MagicConstants.hpp"
+#include "Move.hpp"
+#include "Types.hpp"
+#include "MagicConstants.hpp"
 
 namespace UCI
 {

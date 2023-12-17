@@ -7,15 +7,20 @@
 #define CONSTEVAL_TIT 0
 #define DEVELOPER_MODE 1
 
-using Move      = uint16_t;
-using BitBoard  = uint64_t;
-using PieceType = uint8_t;
-using Sq        = uint8_t;
-using Castling  = uint8_t;
+using U8  = unsigned char;
+using U16 = unsigned short;
+using U32 = unsigned int;
+using U64 = unsigned long long;
+
+using Move      = U16;
+using BitBoard  = U64;
+using PieceType = U8;
+using Sq        = U8;
+using Castling  = U8;
 
 constexpr std::size_t MAX_MOVES = 218;
 
-enum class MD : uint8_t
+enum class MD : U8
 {
     NORTH,
     NORTH_EAST,
@@ -34,20 +39,20 @@ struct move_info
     constexpr move_info():encoded_move(), count(0){}
     constexpr void add_move(Move m){encoded_move.at(count) = m; ++count;}
     std::array<Move, 7> encoded_move;
-    uint16_t count;
+    U16 count;
 };
 namespace loc
 {
-    constexpr uint8_t BLACK = 0;
-    constexpr uint8_t WHITE = 1;
-    constexpr uint8_t KING  = 0;
-    constexpr uint8_t QUEEN = 1;
-    constexpr uint8_t BISHOP= 2;
-    constexpr uint8_t KNIGHT= 3;
-    constexpr uint8_t ROOK  = 4;
-    constexpr uint8_t PAWN  = 5; 
+    constexpr U8 BLACK = 0;
+    constexpr U8 WHITE = 1;
+    constexpr U8 KING  = 0;
+    constexpr U8 QUEEN = 1;
+    constexpr U8 BISHOP= 2;
+    constexpr U8 KNIGHT= 3;
+    constexpr U8 ROOK  = 4;
+    constexpr U8 PAWN  = 5; 
 }
-enum class PromType : uint8_t
+enum class PromType : U8
 {
     NOPROMO,
     QUEEN,
@@ -56,7 +61,7 @@ enum class PromType : uint8_t
     ROOK
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
-enum class D : uint8_t
+enum class D : U8
 {
     FILE,
     RANK,
@@ -64,7 +69,7 @@ enum class D : uint8_t
     ADIAG
 };
 template<typename T>
-float F_Div(T dividend, T divisor)
+float FloatDiv(T dividend, T divisor)
 {
     return static_cast<double>(dividend) / static_cast<double>(divisor);
 }

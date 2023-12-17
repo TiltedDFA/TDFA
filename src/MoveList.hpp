@@ -1,9 +1,9 @@
 #ifndef MOVELIST_HPP
 #define MOVELIST_HPP
 
-#include "../Core/Types.hpp"
-#include "../Core/Move.hpp"
-#include "../Core/Uci.hpp"
+#include "Types.hpp"
+#include "Move.hpp"
+#include "Uci.hpp"
 #include <algorithm>
 #include <array>
 #include <vector>

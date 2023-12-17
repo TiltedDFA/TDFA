@@ -3,7 +3,7 @@
 
 #include "Types.hpp"
 #include "Evaluate.hpp"
-#include "../MoveGen/MoveGen.hpp"
+#include "MoveGen.hpp"
 #include <limits>
 
 
@@ -11,7 +11,7 @@
 class Search
 {
 public:
-    static inline uint64_t nodes_{0};
+    static inline U64 nodes_{0};
 public:
     Search()=delete;
     
@@ -19,7 +19,7 @@ public:
 
     void SetPos(BB::Position& pos);
 
-    Score GoSearch(uint16_t depth, Score a, Score b);
+    Score GoSearch(U16 depth, Score a, Score b);
 private:
     BB::Position& pos_;
     MoveGen generator_;

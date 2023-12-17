@@ -4,7 +4,7 @@
 #include "Types.hpp"
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
-using Score = int64_t;
+using Score = U64;
 
 namespace Eval
 {
