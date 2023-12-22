@@ -283,10 +283,14 @@ public:
         const U16 index = 
             Magics::GetBaseThreeUsThem
             (
-                (direction == D::RANK) ? Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
-                 : Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
-                (direction == D::RANK) ? Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)])
-                 : Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
+                (direction == D::RANK) ? 
+                Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]):
+                Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
+
+                (direction == D::RANK) ? 
+                Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]):
+                Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][static_cast<int>(direction)]),
+
                 (direction == D::RANK) ? Magics::FileOf(piece_sq)  : Magics::RankOf(piece_sq)
             );
         return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(static_cast<int>(direction)).at(index);

@@ -11,17 +11,17 @@
 class MoveList
 {
 public:
-    constexpr MoveList():data_({}),idx_(0ull){}
+    constexpr MoveList():data_({}), idx_(0ull){}
 
     constexpr void add(const Move m) noexcept  {data_[idx_++] = m;}
 
     constexpr Move operator[](size_t index) const noexcept {return data_[index];}
 
-    constexpr const std::array<Move,MAX_MOVES>& all() const noexcept {return data_;}
+    constexpr const std::array<Move, MAX_MOVES>& all() const noexcept {return data_;}
 
-    constexpr size_t len()const noexcept{return idx_;}
+    constexpr size_t len()const noexcept {return idx_;}
 
-    constexpr bool contains(const Move m){return std::find(data_.cbegin(),data_.cend(),m) != data_.cend();}
+    constexpr bool contains(const Move m) {return std::find(data_.cbegin(),data_.cend(),m) != data_.cend();}
 
     //A debugging utility
     void print()
@@ -32,7 +32,7 @@ public:
         {
             moves.push_back(UCI::move(data_[i]));
         }
-        std::sort(moves.begin(),moves.end());
+        std::sort(moves.begin(), moves.end());
         for(size_t i = 0; i < idx_; ++i)
         {
             std::cout << std::to_string(i+1) << '\t' << moves[i] << '\n';

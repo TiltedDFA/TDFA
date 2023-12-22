@@ -11,14 +11,15 @@
 
 int main(void)
 {
-    RunBenchmark<false>();
+    // RunBenchmark<false>();
     // RunPerftSuite<false>();
-    // Zobrist::Init();
+    Zobrist::Init();
 
-    // for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
-    // PRINTNL("------------------");
-    // for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
+    for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
+    PRINTNL("------------------");
+    for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
 
+    PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
     // BB::Position pos(STARTPOS);
     // MoveGen generator(pos);
     // MoveList ml;
