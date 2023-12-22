@@ -97,7 +97,9 @@ namespace Debug
 
         PRINTNL("Half moves: " + std::to_string(pos.info_.half_moves_)); 
         PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_target_sq_)); 
+#if DEVELOPER_MODE == 1
         pos.whites_turn_ ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
+#endif
         PRINTNL("Full moves: " + std::to_string(pos.full_moves_)); 
     }
     void PrintInduvidualPieces(const BitBoard (&board)[2][6])

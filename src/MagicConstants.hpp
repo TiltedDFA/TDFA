@@ -48,11 +48,18 @@ namespace Magics
     static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
     //Returns the index of the most significant 1 bit.
-    constexpr int FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
+    constexpr Sq FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
 
     //Returns the number without the least significant 1 bit. 
     //Not protected against 0 inputs
-    constexpr BitBoard PopLS1B(BitBoard board) {return (board& (board-1));}
+    constexpr BitBoard PopLS1B(BitBoard board) {return (board & (board - 1));}
+
+    constexpr Sq PopNRetLS1B(BitBoard& board) 
+    {
+        const Sq lsb = FindLS1B(board);
+        board &= board -1;
+        return lsb;
+    }
 
     //Returns whether the index provided is inbounds of the board
     constexpr bool IndexInBounds(int index) {return index >= 0 && index < 64;}
@@ -86,7 +93,7 @@ namespace Magics
         b |= b >> 4;
         b |= b >> 2;
         b |= b >> 1;
-        return ((b & FILE_ABB)* ANTI_CROSS_DIAG) >> 56;
+        return ((b & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
     }
     constexpr BitBoard PopMS1B(const BitBoard board)
     {

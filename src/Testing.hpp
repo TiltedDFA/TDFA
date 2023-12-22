@@ -183,7 +183,7 @@ void RunPerftSuite()
         unsigned depth{999999};
         U64 expected_nodes{0};
 
-        for(int i = chunks.size() - 1; i > 0 ;--i)
+        for(int i = chunks.size() - 1; i > 0 ; --i)
         {
             if(std::stoull(chunks[i].substr(3)) > 100'000'000) continue;
             depth = (chunks[i])[1] - '0';

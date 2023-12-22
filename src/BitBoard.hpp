@@ -17,9 +17,9 @@ namespace BB
             castling_rights_(0xF), half_moves_(0), en_passant_target_sq_(0){}
         constexpr PosInfo& operator=(const PosInfo& p)
         {
-            this->castling_rights_ = p.castling_rights_;
-            this->half_moves_ = p.half_moves_;
-            this->en_passant_target_sq_ = p.en_passant_target_sq_;
+            castling_rights_ = p.castling_rights_;
+            half_moves_ = p.half_moves_;
+            en_passant_target_sq_ = p.en_passant_target_sq_;
             return *this;
         }
     public: 
@@ -49,28 +49,28 @@ namespace BB
         
         constexpr Position(const Position& p)
         {
-            for(int i = 0 ; i < 2;++i)
-                for(int j = 0; j < 6;++j)    
-                    this->pieces_[i][j] = p.pieces_[i][j];
+            for(int i = 0 ; i < 2; ++i)
+                for(int j = 0; j < 6; ++j)    
+                    pieces_[i][j] = p.pieces_[i][j];
 
-            this->whites_turn_ = p.whites_turn_;
-            this->full_moves_ = p.full_moves_;
-            this->info_.castling_rights_ = p.info_.castling_rights_;
-            this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
-            this->info_.half_moves_ = p.info_.half_moves_;
+            whites_turn_ = p.whites_turn_;
+            full_moves_ = p.full_moves_;
+            info_.castling_rights_ = p.info_.castling_rights_;
+            info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
+            info_.half_moves_ = p.info_.half_moves_;
         }
         
         constexpr Position& operator=(const Position& p)
         {
             for(int i = 0; i < 2; ++i)
                 for(int j = 0; j < 6; ++j)    
-                    this->pieces_[i][j] = p.pieces_[i][j];
+                    pieces_[i][j] = p.pieces_[i][j];
 
-            this->whites_turn_ = p.whites_turn_;
-            this->full_moves_ = p.full_moves_;
-            this->info_.castling_rights_ = p.info_.castling_rights_;
-            this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
-            this->info_.half_moves_ = p.info_.half_moves_;
+            whites_turn_ = p.whites_turn_;
+            full_moves_ = p.full_moves_;
+            info_.castling_rights_ = p.info_.castling_rights_;
+            info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
+            info_.half_moves_ = p.info_.half_moves_;
             return *this;
         }
         
@@ -314,11 +314,11 @@ namespace BB
         template<bool is_white>
         constexpr void RemoveIntersectingPiece(BitBoard attacked_sq)
         {
-            if(pieces_[is_white][loc::PAWN] & attacked_sq)          pieces_[is_white][loc::PAWN] ^= attacked_sq;
-            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
+            if (pieces_[is_white][loc::QUEEN] & attacked_sq)        pieces_[is_white][loc::QUEEN] ^= attacked_sq;
             else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] ^= attacked_sq;
             else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
-            else pieces_[is_white][loc::QUEEN] ^= attacked_sq;
+            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
+            else                                                    pieces_[is_white][loc::PAWN] ^= attacked_sq;
         }
     public:
         BitBoard pieces_[2][6];

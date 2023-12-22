@@ -11,8 +11,8 @@
 
 int main(void)
 {
-    // RunBenchmark<false>();
-    RunPerftSuite<false>();
+    RunBenchmark<false>();
+    // RunPerftSuite<false>();
     // Zobrist::Init();
 
     // for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);

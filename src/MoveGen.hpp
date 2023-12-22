@@ -185,7 +185,7 @@ public:
         BitBoard bishop_queen = pos.GetSpecificPieces<!is_white, loc::QUEEN>() | pos.GetSpecificPieces<!is_white, loc::BISHOP>();
         while (bishop_queen)
         {
-            const Sq piece_index = Magics::FindLS1B(bishop_queen);
+            const Sq piece_index = Magics::PopNRetLS1B(bishop_queen);
 
             move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
             for(U8 i{0}; i < move->count; ++i)
@@ -309,15 +309,11 @@ private:
 
             const move_info* move = GetMovesForSliding<D::DIAG>(bishop_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(U8 i{0}; i < move->count; ++i)
-            {
                 ml.add(move->encoded_move[i]);
-            }
             
             const move_info* move1 = GetMovesForSliding<D::ADIAG>(bishop_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
             for(U8 i{0}; i < move1->count; ++i)
-            {
                 ml.add(move1->encoded_move[i]);
-            }
             
             bishops = Magics::PopLS1B(bishops);
         }
@@ -333,12 +329,12 @@ private:
             const U8 rook_index = Magics::FindLS1B(rooks);
 
             const move_info* move = GetMovesForSliding<D::FILE>(rook_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
-            for(U8 i{0}; i < move->count; ++i)
+            for(U8 i{0}; i < move->count; ++i) 
                 ml.add(move->encoded_move[i]);
             
 
             const move_info* move1 = GetMovesForSliding<D::RANK>(rook_index, pos_.GetPieces<is_white>(), pos_.GetPieces<!is_white>());
-            for(U8 i{0}; i < move1->count; ++i)
+            for(U8 i{0}; i < move1->count; ++i) 
                 ml.add(move1->encoded_move[i]);
             
             rooks = Magics::PopLS1B(rooks);
@@ -357,8 +353,8 @@ private:
             while(possible_move)
             {
                 const U8 attack_index = Magics::FindLS1B(possible_move);
-                ml.add((is_white ?   Moves::EncodeMove(knight_index, attack_index, Moves::KNIGHT)
-                                    :Moves::EncodeMove(knight_index, attack_index, Moves::KNIGHT)));
+                ml.add(is_white ?   Moves::EncodeMove(knight_index, attack_index, Moves::KNIGHT)
+                                    :Moves::EncodeMove(knight_index, attack_index, Moves::KNIGHT));
                 possible_move = Magics::PopLS1B(possible_move);
             }
             knights = Magics::PopLS1B(knights);

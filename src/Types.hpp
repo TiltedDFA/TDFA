@@ -5,7 +5,7 @@
 #include <array>
 
 #define CONSTEVAL_TIT 0
-#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 0
 
 using U8  = unsigned char;
 using U16 = unsigned short;
@@ -37,9 +37,9 @@ enum class MD : U8
 struct move_info
 {
     constexpr move_info():encoded_move(), count(0){}
-    constexpr void add_move(Move m){encoded_move.at(count) = m; ++count;}
+    constexpr void add_move(Move m){encoded_move.at(count++) = m;}
     std::array<Move, 7> encoded_move;
-    U16 count;
+    U8 count;
 };
 namespace loc
 {
