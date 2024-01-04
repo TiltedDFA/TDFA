@@ -12,7 +12,7 @@ static constexpr std::string_view RemoveWhiteSpace(std::string_view str)
     while(str.at(--end_index) == ' '){}
     return std::string_view(str.begin() + start_index, str.begin() + end_index + 1);
 }
-static inline void Split(std::string_view fen, std::array<std::string_view,6>& fen_sections)
+static inline void SplitFen(std::string_view fen, std::array<std::string_view,6>& fen_sections)
 {
     int start = 0;
     int end = -1;
@@ -39,7 +39,7 @@ namespace BB
         ResetBoard();
         fen = RemoveWhiteSpace(fen);
         std::array<std::string_view,6> fen_sections;
-        Split(fen,fen_sections);
+        SplitFen(fen, fen_sections);
 
         U8 current_row = 7;
         U8 current_col = 0;

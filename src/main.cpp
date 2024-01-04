@@ -7,6 +7,7 @@
 #include "Debug.hpp"
 #include "Search.hpp"
 #include "Timer.hpp"
+#include "Uci.hpp"
 #include "ZobristConstants.hpp"
 
 int main(void)

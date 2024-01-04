@@ -5,6 +5,10 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 #include "Debug.hpp"
+#include "BitBoard.hpp"
+#include "Testing.hpp"
+#include "Search.hpp"
+#include "MoveGen.hpp"
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -25,9 +29,12 @@ namespace UCI
         {"setoption", 7}
     };
     
+    static BB::Position pos(STARTPOS);
+    static MoveGen generator(pos);
+    static Search search(pos);
+    
+    
     void loop();
-    std::string square(Sq sq);
-    std::string move(Move m);
 
     void HandleUci();
     void HandleIsReady();

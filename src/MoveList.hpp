@@ -3,7 +3,7 @@
 
 #include "Types.hpp"
 #include "Move.hpp"
-#include "Uci.hpp"
+#include "Util.hpp"
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -21,7 +21,7 @@ public:
 
     constexpr size_t len()const noexcept {return idx_;}
 
-    constexpr bool contains(const Move m) {return std::find(data_.cbegin(),data_.cend(),m) != data_.cend();}
+    constexpr bool contains(const Move m) {return std::find(data_.cbegin(), data_.cend(), m) != data_.cend();}
 
     //A debugging utility
     void print()
@@ -30,7 +30,7 @@ public:
         moves.reserve(len());
         for(size_t i = 0; i < idx_; ++i)
         {
-            moves.push_back(UCI::move(data_[i]));
+            moves.push_back(UTIL::MoveToStr(data_[i]));
         }
         std::sort(moves.begin(), moves.end());
         for(size_t i = 0; i < idx_; ++i)

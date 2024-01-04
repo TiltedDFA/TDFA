@@ -13,7 +13,7 @@
 #include <fstream>
 #include "MoveGen.hpp"
 #include "MoveList.hpp"
-#include "Uci.hpp"
+#include "Util.hpp"
 #include "Timer.hpp"
 
 //white pawn move gen tests
@@ -88,7 +88,7 @@ private:
                     total_nodes_ += cnt;
 
                     if constexpr(output_perft_paths) 
-                        perft_data_.push_back(std::format("{} : {}\n", UCI::move(ml[i]), cnt));
+                        perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 
                 pos.UnmakeMove();
@@ -150,7 +150,7 @@ void RunBenchmark()
 
     std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
 }
-std::vector<std::string> split(const std::string& line, const std::string& delimiter)
+static std::vector<std::string> Split(const std::string& line, const std::string& delimiter)
 {
     std::vector<std::string> tmp{};
     size_t pos = 0;
@@ -178,7 +178,7 @@ void RunPerftSuite()
     {
         if(line[0] == '#') continue;
         
-        std::vector<std::string> chunks = split(line, ";");
+        std::vector<std::string> chunks = Split(line, ";");
         const std::string& fen = chunks[0];
         unsigned depth{999999};
         U64 expected_nodes{0};
