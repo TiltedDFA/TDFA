@@ -10,8 +10,10 @@
 
 class Search
 {
+#if DEVELOPER_MODE == 1
 public:
     static inline U64 nodes_{0};
+#endif
 public:
     Search()=delete;
     

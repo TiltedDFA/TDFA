@@ -5,7 +5,7 @@
 #include <array>
 
 #define CONSTEVAL_TIT 0
-#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 0
 
 using U8  = unsigned char;
 using U16 = unsigned short;
