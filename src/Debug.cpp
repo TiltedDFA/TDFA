@@ -166,7 +166,7 @@ namespace Debug
     }
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored)
     {
-        std::string output{},current_line{};
+        std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
         {
             for(int col{0}; col < 8; ++col)

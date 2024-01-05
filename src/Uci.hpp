@@ -12,13 +12,16 @@
 #include <unordered_map>
 #include <string>
 #include <iostream>
+#include <vector>
+#include <string_view>
 
-using uci_map = std::unordered_map<std::string, U8>;
+using CmdMap = std::unordered_map<std::string_view, U8>;
+using ArgList = std::vector<std::string_view>;
 namespace UCI
 {
     constexpr const char* ENGINE_NAME = "TDFA V1";
     constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
-    static inline const uci_map INIT_VALUES = 
+    static inline const CmdMap INIT_VALUES = 
     {
         {"uci", 1},
         {"isready", 2},
@@ -39,9 +42,9 @@ namespace UCI
     void HandleUci();
     void HandleIsReady();
     void HandleGo();
-    void HandlePosition(const std::string& str);
+    void HandlePosition(const ArgList&);
     void HandleStop();
     void HandleNewGame();
-    void HandleSetOption(const std::string& str);
+    void HandleSetOption(const ArgList&);
 }
 #endif // #ifndef UCI_HPP

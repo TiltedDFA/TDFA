@@ -17,7 +17,7 @@ static inline void SplitFen(std::string_view fen, std::array<std::string_view,6>
     int start = 0;
     int end = -1;
     U8 current_fen_section = 0;
-    while(static_cast<U64>(++end) < fen.size())
+    while(static_cast<std::size_t>(++end) < fen.size())
     {
         if(fen.at(end) == ' ')
         {
@@ -31,7 +31,7 @@ static inline void SplitFen(std::string_view fen, std::array<std::string_view,6>
     fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (++end - 1));
     ++current_fen_section;
 }
-static constexpr bool isdigit(const char i) {return i <= '9' && i >= '0';}
+static constexpr bool IsDigit(const char i) {return i <= '9' && i >= '0';}
 namespace BB
 {
     bool Position::ImportFen(std::string_view fen)
@@ -45,7 +45,7 @@ namespace BB
         U8 current_col = 0;
         for(const char i : fen_sections[0])
         {
-            if(isdigit(i))
+            if(IsDigit(i))
             {
                 current_col += i - '0';
                 if(current_col > '7') return false; 
