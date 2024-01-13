@@ -10,18 +10,18 @@
 
 class Search
 {
-#if DEVELOPER_MODE == 1
-public:
-    static inline U64 nodes_{0};
-#endif
 public:
     Search()=delete;
     
     Search(BB::Position& pos);
 
+    void init(BB::Position& pos);
+
     void SetPos(BB::Position& pos);
 
-    Score GoSearch(U16 depth, Score a, Score b);
+    Score GoSearch(U16 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+
+
 private:
     BB::Position& pos_;
     MoveGen generator_;

@@ -4,7 +4,7 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 #include "Move.hpp"
-
+#include "BitBoard.hpp"
 
 namespace UTIL
 {
@@ -32,6 +32,35 @@ namespace UTIL
     {
         return (Moves::IsPromotionMove(m) ? (Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)) + PromotionChar(Moves::GetPieceType(m))) :
                                             Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)));
+    }
+    static Move UciToMove(const std::string_view str, const BB::Position& pos)
+    {
+        const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
+        const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;
+        if(str.length() == 5)
+        {
+            switch(str[4])
+            {
+            case 'q':
+                return Moves::EncodeMove(from, to, Moves::PROM_QUEEN);
+            case 'r':
+                return Moves::EncodeMove(from, to, Moves::PROM_ROOK);
+            case 'b':
+                return Moves::EncodeMove(from, to, Moves::PROM_BISHOP);
+            case 'n':
+                return Moves::EncodeMove(from, to, Moves::PROM_KNIGHT);
+            default:
+                return Moves::EncodeMove(from, to, Moves::BAD_MOVE);
+            }
+        }
+        
+        PieceType type;
+        if(pos.whites_turn_)
+            type = pos.GetTypeAtSq<true>(from);
+        else
+            type = pos.GetTypeAtSq<false>(from);
+
+        return Moves::EncodeMove(from, to, type);
     }
 }
 

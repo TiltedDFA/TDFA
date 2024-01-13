@@ -6,11 +6,12 @@ void Search::SetPos(BB::Position& pos)
 {
     pos_ = pos;
 }
+void Search::init(BB::Position& pos)
+{
+    pos_ = pos;
+}
 Score Search::GoSearch(U16 depth, Score a, Score b)
 {
-#if DEVELOPER_MODE == 1
-    ++nodes_;
-#endif
     if(depth == 0) return Eval::Evaluate(this->pos_);
 
     MoveList list;

@@ -305,6 +305,16 @@ namespace BB
         {
             return info_.castling_rights_;
         }
+        template<bool is_white>
+        constexpr PieceType GetTypeAtSq(Sq sq)const
+        {
+            if      (pieces_[is_white][loc::QUEEN] & sq)   return Moves::QUEEN;
+            else if (pieces_[is_white][loc::BISHOP] & sq)  return Moves::BISHOP;
+            else if (pieces_[is_white][loc::KNIGHT] & sq)  return Moves::KNIGHT;
+            else if (pieces_[is_white][loc::ROOK] & sq)    return Moves::ROOK;
+            else if (pieces_[is_white][loc::PAWN] & sq)    return Moves::PAWN;
+            else                                           return Moves::KING;
+        }
 
         /*
             This function is used in makemove to quickly find which piece is being attacked(which is necessary

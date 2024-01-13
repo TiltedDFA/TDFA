@@ -2,6 +2,7 @@
 #define MOVE_HPP
 #include <cstdint>
 #include <algorithm>
+#include <limits>
 
 #include "Types.hpp"
 #include "MagicConstants.hpp"
@@ -34,6 +35,8 @@ namespace Moves
     constexpr uint32_t COLOUR_MASK      = 0x00008000;
     constexpr U16 END_SQ_SHIFT     = 6;
     constexpr U16 PIECE_TYPE_SHIFT = 12;
+
+    constexpr PieceType BAD_MOVE = std::numeric_limits<PieceType>::max();
 
     [[nodiscard]] constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const PieceType piece_type)
     {

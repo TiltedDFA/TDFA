@@ -22,37 +22,39 @@ int main(void)
 
     // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
 
-    UCI::loop();
-    // BB::Position pos(STARTPOS);
-    // MoveGen generator(pos);
-    // MoveList ml;
-    // Search finder(pos);
+    // UCI::loop();
+    BB::Position pos(STARTPOS);
+    MoveGen generator(pos);
+    MoveList ml;
+    Search finder(pos);
 
-    // generator.GenerateLegalMoves<true>(pos, ml);
+    // std::cout << finder.GoSearch(5, Eval::NEG_INF, Eval::POS_INF) << '\n';
+    // std::cout << finder.GoSearch(5, Eval::POS_INF, Eval::NEG_INF) << '\n';
+    // std::string tmp;
+    // std::cin >> tmp;
+    generator.GenerateLegalMoves<true>(pos, ml);
 
-    // uint64_t all_time{0};
-    // const int search_depth{8};
-    // {
-    //     Timer<std::chrono::milliseconds> all_timer(&all_time);
-    //     for(size_t i = 0; i < ml.len(); ++i)
-    //     {
-    //         pos.MakeMove(ml[i]);
+    uint64_t all_time{0};
+    const int search_depth{8};
+    {
+        Timer<std::chrono::milliseconds> all_timer(&all_time);
+        for(size_t i = 0; i < ml.len(); ++i)
+        {
+            pos.MakeMove(ml[i]);
 
-    //         Score eval{0};
-    //         uint64_t time;
+            Score eval{0};
+            uint64_t time;
 
-    //         finder.SetPos(pos);
-    //         {
-    //             Timer<std::chrono::microseconds> timer(&time);
-    //             eval = finder.GoSearch(search_depth, Eval::NEG_INF, Eval::POS_INF);
-    //             // eval = finder.GoSearch(search_depth);
-    //         }
-    //         PRINTNL(std::format("Depth: {}, Move: {}, Score: {},\t Time: {:.3f}s", search_depth, UCI::move(ml[i]), eval, static_cast<double>(time)/ 1'000'000.0));
+            finder.SetPos(pos);
+            {
+                Timer<std::chrono::microseconds> timer(&time);
+                eval = finder.GoSearch(search_depth);
+            }
+            PRINTNL(std::format("Depth: {}, Move: {}, Score: {},\t Time: {:.3f}s", search_depth, UTIL::MoveToStr(ml[i]), eval, static_cast<double>(time)/ 1'000'000.0));
 
-    //         pos.UnmakeMove();
-    //     }
-    // }
-    // PRINTNL(all_time);
-    // PRINTNL(std::format("It considered: {} nodes, with {:.2f} nps", finder.nodes_, F_Div(finder.nodes_, all_time)*1000));
+            pos.UnmakeMove();
+        }
+    }
+    PRINTNL(all_time);
     return 0;
 }

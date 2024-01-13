@@ -5,12 +5,13 @@
 #include <array>
 
 #define CONSTEVAL_TIT 0
-#define DEVELOPER_MODE 0
+#define DEVELOPER_MODE 1
 
 using U8  = unsigned char;
 using U16 = unsigned short;
 using U32 = unsigned int;
 using U64 = unsigned long long;
+using I64 = long long;
 
 using Move      = U16;
 using BitBoard  = U64;

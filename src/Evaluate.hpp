@@ -4,12 +4,12 @@
 #include "Types.hpp"
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
-using Score = U64;
+using Score = I64;
 
 namespace Eval
 {
-    constexpr Score POS_INF = 9223372036854775800;
-    constexpr Score NEG_INF = -9223372036854775800;
+    constexpr Score POS_INF = 9223372036854700800u;
+    constexpr Score NEG_INF = -POS_INF;
 
     constexpr Score PAWN_VAL    = 100;
     constexpr Score KNIGHT_VAL  = 300;

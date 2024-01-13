@@ -29,6 +29,16 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
+    void PrintPiecesOnBoard(const BB::Position& pos)
+    {
+        char pieces[64];
+        for(char& i : pieces){i = ' ';}
+        BitBoard current_pieces{0};
+        for(U8 i = loc::KING; i <= loc::PAWN; ++i)
+        {
+            // current_pieces = 
+        }
+    }
     void PrintBB(BitBoard board, bool mirrored)
     {
         std::string output{}, current_line{};

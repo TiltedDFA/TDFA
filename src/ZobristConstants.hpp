@@ -5,6 +5,7 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 #include <array>
+#include <random>
 #include <cassert>
 #include "BitBoard.hpp"
 #include <limits>
@@ -20,8 +21,11 @@ namespace Zobrist
     static std::array<ZobristKey, 16> CAST_ARR;
     static ZobristKey WHITE_TO_MOVE;
 
-    static std::mt19937 rng(std::random_device{}());
-    static std::uniform_int_distribution<ZobristKey> rnd_val(std::numeric_limits<ZobristKey>::min(), std::numeric_limits<ZobristKey>::max());
+    static std::mt19937 rng{std::random_device{}()};
+    static std::uniform_int_distribution<U64> rng_gen(
+                                                        std::numeric_limits<U64>::min(),
+                                                        std::numeric_limits<U64>::max()
+                                                     );
 
     #if DEVELOPER_MODE == 1
     static bool HAS_BEEN_INITED{false};
@@ -32,18 +36,17 @@ namespace Zobrist
     #if DEVELOPER_MODE == 1
         assert(!HAS_BEEN_INITED);
     #endif
-        std::srand(187697591);
 
         for(int clr = 0; clr < 2; ++clr)
             for(int pt = 0; pt < 6; ++pt)
                 for(int sq = 0; sq < 64; ++sq)
-                    PIECES_ARR[clr][pt][sq] = rnd_val(rng);
+                    PIECES_ARR[clr][pt][sq] = rng_gen(rng);
             
-        for(int i = 0; i < 64; ++i) EN_PASSANT_ARR[i] = rnd_val(rng);
+        for(int i = 0; i < 64; ++i) EN_PASSANT_ARR[i] = rng_gen(rng);
 
-        for(int i = 0; i < 16; ++i) CAST_ARR[i] = rnd_val(rng);
+        for(int i = 0; i < 16; ++i) CAST_ARR[i] = rng_gen(rng);
 
-        WHITE_TO_MOVE = rnd_val(rng);
+        WHITE_TO_MOVE = rng_gen(rng);
     }
     ZobristKey GetHash(const BB::Position& pos)
     {

@@ -1,9 +1,9 @@
 #include "Uci.hpp"
 ArgList SplitArgs(std::string_view inp)
 {
-    ArgList ret{};
+    ArgList ret;
 
-    if(inp.size() == 0 ) return ret;
+    if(inp.size() == 0 ) return {""};
 
     std::size_t start{0}, end{0};
 
@@ -11,7 +11,7 @@ ArgList SplitArgs(std::string_view inp)
     {
         if(inp[end++] == ' ')
         {
-            ret.push_back(inp.substr(start, end - start));
+            ret.push_back(inp.substr(start, end - start - 1));
             start = end;
         }
     }
@@ -42,6 +42,24 @@ void UCI::HandlePosition(const ArgList& args)
             constructed_fen += std::string(args[i]) + ' ';
         constructed_fen += std::string(args[7]);
         pos.ImportFen(constructed_fen);
+        Debug::PrintBoardState(pos);
+    }
+    else if (args[1] == "startpos")
+    {
+        pos.ImportFen(STARTPOS);
+        Debug::PrintBoardState(pos);
+    }
+
+    ArgList::const_iterator it;
+    if((it = std::find(args.cbegin(), args.cend(), "moves")) == args.cend()) return;
+    
+    for(++it ;it != args.end(); ++it)
+    {
+        const Move move = UTIL::UciToMove(*it, pos);
+#if DEVELOPER_MODE == 1
+        if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
+#endif
+        pos.MakeMove(move);
     }
 }
 void UCI::HandleStop()
@@ -50,11 +68,11 @@ void UCI::HandleStop()
 }
 void UCI::HandleNewGame()
 {
-
+    pos = BB::Position(STARTPOS);
 }
 void UCI::HandleSetOption(const ArgList& args)
 {
-
+    //there are no options to set as of this version
 }
 void UCI::loop()
 {
@@ -66,7 +84,9 @@ void UCI::loop()
         ArgList args = SplitArgs(input);
 
         const auto it = INIT_VALUES.find(args[0]);
+
         if(it == INIT_VALUES.end()) continue;
+        
         switch (it->second)
         {
         case 1:
@@ -79,7 +99,7 @@ void UCI::loop()
             HandleGo();
             break;
         case 4:
-            HandlePosition(input);
+            HandlePosition(args);
             break;
         case 5:
             HandleStop();
@@ -88,7 +108,7 @@ void UCI::loop()
             HandleNewGame();
             break;
         case 7:
-            HandleSetOption(input);
+            HandleSetOption(args);
             break;
         default:
             break;
