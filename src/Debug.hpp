@@ -10,8 +10,13 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 
+#if DEVELOPER_MODE == 1
 #define PRINT(x) std::cout << (x)
 #define PRINTNL(x) std::cout << (x) << std::endl
+#else
+#define PRINT(x)
+#define PRINTNL(x)
+#endif
 
 namespace Debug
 {
@@ -36,6 +41,8 @@ namespace Debug
     //Prints an encoded move's data out in it's encoded binary form
     void PrintEncodedMoveBin(Move move);
 
+    void PrintPiecesOnBoard(const BB::Position& pos);
+
     //More detailed version of the print bitboard function, can be used to 
     //print 2 bitboards worth of pieces
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false);
@@ -45,7 +52,7 @@ namespace Debug
     void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored = false);
 
     //Prints out a uint8_t's pieces
-    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored = false);
+    void PrintU8BB(U8 bb, U8 board_center, bool mirrored = false);
 }
 
 #endif // #ifndef DEBUG_HPP

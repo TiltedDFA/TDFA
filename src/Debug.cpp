@@ -29,6 +29,16 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
+    void PrintPiecesOnBoard(const BB::Position& pos)
+    {
+        char pieces[64];
+        for(char& i : pieces){i = ' ';}
+        BitBoard current_pieces{0};
+        for(U8 i = loc::KING; i <= loc::PAWN; ++i)
+        {
+            // current_pieces = 
+        }
+    }
     void PrintBB(BitBoard board, bool mirrored)
     {
         std::string output{}, current_line{};
@@ -97,7 +107,9 @@ namespace Debug
 
         PRINTNL("Half moves: " + std::to_string(pos.info_.half_moves_)); 
         PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_target_sq_)); 
+#if DEVELOPER_MODE == 1
         pos.whites_turn_ ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
+#endif
         PRINTNL("Full moves: " + std::to_string(pos.full_moves_)); 
     }
     void PrintInduvidualPieces(const BitBoard (&board)[2][6])
@@ -156,7 +168,7 @@ namespace Debug
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
         move_str += std::string("T: ") + PieceTypeToStr(Moves::GetPieceType(move)) + comma;
         move_str += "\n";
-        PRINT(move_str);
+        PRINTNL(move_str);
     }
     void PrintEncodedMoveBin(Move move)
     {
@@ -164,7 +176,7 @@ namespace Debug
     }
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored)
     {
-        std::string output{},current_line{};
+        std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
         {
             for(int col{0}; col < 8; ++col)
@@ -197,12 +209,12 @@ namespace Debug
 
         BitBoard combined_board{0ull};
 
-        for(uint8_t i = 0; i < move.count; ++i)
+        for(U8 i = 0; i < move.count; ++i)
             combined_board |= 1ull << Moves::GetTargetIndex(move.encoded_move[i]);
         
         PrintBB(combined_board, mirrored);
     }
-    void PrintU8BB(uint8_t bb, uint8_t board_center, bool mirrored)
+    void PrintU8BB(U8 bb, U8 board_center, bool mirrored)
     {
         std::string output{},current_line{};
 

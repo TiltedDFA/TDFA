@@ -7,10 +7,9 @@
 #include <iostream>
 #include <string_view>
 #include <stack>
+
 namespace BB
 {
-    //This namespace is used to contain the accessing indexes for the pieces in 
-    //the pieces array
     struct PosInfo
     {
     public:
@@ -18,17 +17,17 @@ namespace BB
             castling_rights_(0xF), half_moves_(0), en_passant_target_sq_(0){}
         constexpr PosInfo& operator=(const PosInfo& p)
         {
-            this->castling_rights_ = p.castling_rights_;
-            this->half_moves_ = p.half_moves_;
-            this->en_passant_target_sq_ = p.en_passant_target_sq_;
+            castling_rights_ = p.castling_rights_;
+            half_moves_ = p.half_moves_;
+            en_passant_target_sq_ = p.en_passant_target_sq_;
             return *this;
         }
     public: 
         // top 4 bits are ignored XXXX WkWqBkBq where Wx and Bx represents sides and colours
         // 1 = can castle 0 = can't castle
-        uint8_t castling_rights_;
-        uint8_t half_moves_;
-        uint8_t en_passant_target_sq_;
+        U8 castling_rights_;
+        U8 half_moves_;
+        U8 en_passant_target_sq_;
     };
     struct Position
     {
@@ -39,8 +38,8 @@ namespace BB
             whites_turn_(true),
             full_moves_(0)
         {
-            for(uint8_t i = 0; i < 2; ++i)
-                for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
+            for(U8 i = 0; i < 2; ++i)
+                for(U8 j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
         }
         
         Position(std::string_view fen)
@@ -50,35 +49,35 @@ namespace BB
         
         constexpr Position(const Position& p)
         {
-            for(int i = 0 ; i < 2;++i)
-                for(int j = 0; j < 6;++j)    
-                    this->pieces_[i][j] = p.pieces_[i][j];
+            for(int i = 0 ; i < 2; ++i)
+                for(int j = 0; j < 6; ++j)    
+                    pieces_[i][j] = p.pieces_[i][j];
 
-            this->whites_turn_ = p.whites_turn_;
-            this->full_moves_ = p.full_moves_;
-            this->info_.castling_rights_ = p.info_.castling_rights_;
-            this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
-            this->info_.half_moves_ = p.info_.half_moves_;
+            whites_turn_ = p.whites_turn_;
+            full_moves_ = p.full_moves_;
+            info_.castling_rights_ = p.info_.castling_rights_;
+            info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
+            info_.half_moves_ = p.info_.half_moves_;
         }
         
         constexpr Position& operator=(const Position& p)
         {
             for(int i = 0; i < 2; ++i)
                 for(int j = 0; j < 6; ++j)    
-                    this->pieces_[i][j] = p.pieces_[i][j];
+                    pieces_[i][j] = p.pieces_[i][j];
 
-            this->whites_turn_ = p.whites_turn_;
-            this->full_moves_ = p.full_moves_;
-            this->info_.castling_rights_ = p.info_.castling_rights_;
-            this->info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
-            this->info_.half_moves_ = p.info_.half_moves_;
+            whites_turn_ = p.whites_turn_;
+            full_moves_ = p.full_moves_;
+            info_.castling_rights_ = p.info_.castling_rights_;
+            info_.en_passant_target_sq_ = p.info_.en_passant_target_sq_;
+            info_.half_moves_ = p.info_.half_moves_;
             return *this;
         }
         
         void ResetBoard()
         {
-            for(uint8_t i = 0; i < 2; ++i)
-                    for(uint8_t j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
+            for(U8 i = 0; i < 2; ++i)
+                    for(U8 j = 0; j < 6; ++j) pieces_[i][j] = 0ull;
 
             info_.castling_rights_ = 0x00;
             whites_turn_ = true;
@@ -115,6 +114,27 @@ namespace BB
 
                 if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
                 {
+                    if(target_bb & (Magics::IndexToBB<0>()  | Magics::IndexToBB<7>() | 
+                                Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
+                    {
+                        switch(target)
+                        {
+                        case 0:
+                            info_.castling_rights_ &= 0x0B;
+                            break;
+                        case 7: 
+                            info_.castling_rights_ &= 0x07;
+                            break;
+                        case 63:
+                            info_.castling_rights_ &= 0x0D;
+                            break;
+                        case 56:
+                            info_.castling_rights_ &= 0x0E;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
                     is_white ? RemoveIntersectingPiece<false>(target_bb) 
                             : RemoveIntersectingPiece<true>(target_bb);
                 }
@@ -238,30 +258,10 @@ namespace BB
             pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb;
         }
         
-        void UnmakeMove(/*Move m, PromType promotion*/)
+        void UnmakeMove()
         {
             *this = previous_pos_info.top();
             previous_pos_info.pop();
-
-            // info_ = previous_pos_info.top();
-            // previous_pos_info.pop();
-
-            // whites_turn_ = !whites_turn_;
-
-            // uint8_t start;
-            // uint8_t target;
-            // PieceType p_type;
-            // bool is_white;
-            // Moves::DecodeMove(m, start, target, p_type, is_white);
-
-            // if((uint8_t)promotion) //if not NOPROMO
-            // {
-            //     pieces_[is_white][loc::PAWN] |= ~Magics::IndexToBB(start);
-            //     pieces_[is_white][(uint8_t)promotion] &= Magics::IndexToBB(target);
-            //     return;
-            // }
-
-            // pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | Magics::IndexToBB(target);
         }
        
         template<bool is_white>
@@ -276,10 +276,17 @@ namespace BB
                 pieces_[is_white ? loc::WHITE : loc::BLACK][loc::PAWN];
         }
         
-        template<bool is_white, uint8_t piecetype>
+        template<bool is_white, PieceType type>
         constexpr BitBoard GetSpecificPieces()const
         {
-            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][piecetype];
+            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][type];
+        }
+        constexpr BitBoard GetSpecificPieces(bool is_white, PieceType type)const
+        {
+#if DEVELOPER_MODE == 1
+            assert(type < 6);
+#endif
+            return pieces_[(is_white ? loc::WHITE : loc::BLACK)][type];
         }
         constexpr BitBoard GetEmptySquares()const
         {
@@ -290,6 +297,24 @@ namespace BB
         {
             return (info_.en_passant_target_sq_) ? Magics::IndexToBB(info_.en_passant_target_sq_) : 0ull;
         }
+        constexpr Sq GetEnPassantSq()const
+        {
+            return info_.en_passant_target_sq_;
+        }
+        constexpr U8 GetRawCastling()const
+        {
+            return info_.castling_rights_;
+        }
+        template<bool is_white>
+        constexpr PieceType GetTypeAtSq(Sq sq)const
+        {
+            if      (pieces_[is_white][loc::QUEEN] &    Magics::IndexToBB(sq))   return Moves::QUEEN;
+            else if (pieces_[is_white][loc::BISHOP] &   Magics::IndexToBB(sq))  return Moves::BISHOP;
+            else if (pieces_[is_white][loc::KNIGHT] &   Magics::IndexToBB(sq))  return Moves::KNIGHT;
+            else if (pieces_[is_white][loc::ROOK] &     Magics::IndexToBB(sq))    return Moves::ROOK;
+            else if (pieces_[is_white][loc::PAWN] &     Magics::IndexToBB(sq))    return Moves::PAWN;
+            else                                           return Moves::KING;
+        }
 
         /*
             This function is used in makemove to quickly find which piece is being attacked(which is necessary
@@ -299,17 +324,17 @@ namespace BB
         template<bool is_white>
         constexpr void RemoveIntersectingPiece(BitBoard attacked_sq)
         {
-            if(pieces_[is_white][loc::PAWN] & attacked_sq)          pieces_[is_white][loc::PAWN] ^= attacked_sq;
-            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
+            if (pieces_[is_white][loc::QUEEN] & attacked_sq)        pieces_[is_white][loc::QUEEN] ^= attacked_sq;
             else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] ^= attacked_sq;
             else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
-            else pieces_[is_white][loc::QUEEN] ^= attacked_sq;
+            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
+            else                                                    pieces_[is_white][loc::PAWN] ^= attacked_sq;
         }
     public:
         BitBoard pieces_[2][6];
         PosInfo info_;
         bool whites_turn_;
-        uint16_t full_moves_;
+        int16_t full_moves_;
         static std::stack<Position> previous_pos_info;
     };
 }
