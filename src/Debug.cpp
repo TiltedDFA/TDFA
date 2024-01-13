@@ -168,7 +168,7 @@ namespace Debug
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
         move_str += std::string("T: ") + PieceTypeToStr(Moves::GetPieceType(move)) + comma;
         move_str += "\n";
-        PRINT(move_str);
+        PRINTNL(move_str);
     }
     void PrintEncodedMoveBin(Move move)
     {

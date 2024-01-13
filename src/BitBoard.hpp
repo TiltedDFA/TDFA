@@ -308,11 +308,11 @@ namespace BB
         template<bool is_white>
         constexpr PieceType GetTypeAtSq(Sq sq)const
         {
-            if      (pieces_[is_white][loc::QUEEN] & sq)   return Moves::QUEEN;
-            else if (pieces_[is_white][loc::BISHOP] & sq)  return Moves::BISHOP;
-            else if (pieces_[is_white][loc::KNIGHT] & sq)  return Moves::KNIGHT;
-            else if (pieces_[is_white][loc::ROOK] & sq)    return Moves::ROOK;
-            else if (pieces_[is_white][loc::PAWN] & sq)    return Moves::PAWN;
+            if      (pieces_[is_white][loc::QUEEN] &    Magics::IndexToBB(sq))   return Moves::QUEEN;
+            else if (pieces_[is_white][loc::BISHOP] &   Magics::IndexToBB(sq))  return Moves::BISHOP;
+            else if (pieces_[is_white][loc::KNIGHT] &   Magics::IndexToBB(sq))  return Moves::KNIGHT;
+            else if (pieces_[is_white][loc::ROOK] &     Magics::IndexToBB(sq))    return Moves::ROOK;
+            else if (pieces_[is_white][loc::PAWN] &     Magics::IndexToBB(sq))    return Moves::PAWN;
             else                                           return Moves::KING;
         }
 

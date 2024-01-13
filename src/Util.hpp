@@ -5,7 +5,7 @@
 #include "MagicConstants.hpp"
 #include "Move.hpp"
 #include "BitBoard.hpp"
-
+#include "Debug.hpp"
 namespace UTIL
 {
     static std::string Square(Sq sq)
@@ -37,6 +37,7 @@ namespace UTIL
     {
         const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
         const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;
+
         if(str.length() == 5)
         {
             switch(str[4])
@@ -53,14 +54,16 @@ namespace UTIL
                 return Moves::EncodeMove(from, to, Moves::BAD_MOVE);
             }
         }
-        
+
         PieceType type;
         if(pos.whites_turn_)
             type = pos.GetTypeAtSq<true>(from);
         else
             type = pos.GetTypeAtSq<false>(from);
 
-        return Moves::EncodeMove(from, to, type);
+        const Move constructed_move = Moves::EncodeMove(from, to, type);
+        Debug::PrintEncodedMoveStr(constructed_move);
+        return constructed_move;
     }
 }
 

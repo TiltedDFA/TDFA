@@ -31,7 +31,46 @@ void UCI::HandleIsReady()
 }
 void UCI::HandleGo()
 {
+    MoveList ml;
 
+    if(pos.whites_turn_)
+    {
+        generator.GeneratePseudoLegalMoves<true>(pos, ml);
+    }
+    else
+    {
+        generator.GeneratePseudoLegalMoves<false>(pos, ml);
+    }
+    
+    Move best_move{0};
+    Score best_eval = (pos.whites_turn_ ? Eval::NEG_INF : Eval::POS_INF);
+
+    for(size_t i{0}; i < ml.len(); ++i)
+    {
+        pos.MakeMove(ml[i]);
+        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        {
+            Score eval = search.GoSearch(6);
+            if(pos.whites_turn_)
+            {
+                if(eval < best_eval) 
+                {
+                    best_eval = eval;
+                    best_move = ml[i];
+                }
+            }
+            else
+            {
+                if(eval > best_eval) 
+                {
+                    best_eval = eval;
+                    best_move = ml[i];
+                }
+            }
+        }
+        pos.UnmakeMove();
+    }
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(best_move));
 }
 void UCI::HandlePosition(const ArgList& args)
 {
@@ -47,7 +86,6 @@ void UCI::HandlePosition(const ArgList& args)
     else if (args[1] == "startpos")
     {
         pos.ImportFen(STARTPOS);
-        Debug::PrintBoardState(pos);
     }
 
     ArgList::const_iterator it;
@@ -60,6 +98,8 @@ void UCI::HandlePosition(const ArgList& args)
         if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
 #endif
         pos.MakeMove(move);
+        Debug::PrintBoardState(pos);
+
     }
 }
 void UCI::HandleStop()
