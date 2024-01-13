@@ -42,8 +42,21 @@ void UCI::HandleGo()
         generator.GeneratePseudoLegalMoves<false>(pos, ml);
     }
     
-    Move best_move{0};
+    Move best_move;
     Score best_eval = (pos.whites_turn_ ? Eval::NEG_INF : Eval::POS_INF);
+
+    {
+        MoveList tmp_ml;
+        if(pos.whites_turn_)
+        {
+            generator.GenerateLegalMoves<true>(pos, ml);
+        }
+        else
+        {
+            generator.GenerateLegalMoves<false>(pos, ml);
+        }
+        best_move = tmp_ml[0];
+    }
 
     for(size_t i{0}; i < ml.len(); ++i)
     {
