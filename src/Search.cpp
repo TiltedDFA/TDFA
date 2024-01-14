@@ -1,51 +1,79 @@
 #include "Search.hpp"
 
-Search::Search(BB::Position& pos):pos_(pos),generator_(pos_){}
-
-void Search::SetPos(BB::Position& pos)
+Score Search::GoSearch(BB::Position& pos, U16 depth, Score a, Score b)
 {
-    pos_ = pos;
-}
-void Search::init(BB::Position& pos)
-{
-    pos_ = pos;
-}
-Score Search::GoSearch(U16 depth, Score a, Score b)
-{
-    if(depth == 0) return Eval::Evaluate(this->pos_);
+    if(depth == 0) return Eval::Evaluate(pos);
 
     MoveList list;
-    if(this->pos_.whites_turn_)
+    if(pos.whites_turn_)
     {
-        generator_.GeneratePseudoLegalMoves<true>(this->pos_, list);
+        MoveGen::GeneratePseudoLegalMoves<true>(pos, list);
     }
     else
     {
-        generator_.GeneratePseudoLegalMoves<false>(this->pos_, list);
+        MoveGen::GeneratePseudoLegalMoves<false>(pos, list);
     }
 
     if(list.len() == 0)
     {
-        if(this->pos_.whites_turn_ ? MoveGen::InCheck<false>(pos_) : MoveGen::InCheck<true>(pos_))
+        if(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos))
             return Eval::NEG_INF;
         return 0;
     }
     
     for(size_t i = 0; i < list.len(); ++i)
     {
-        this->pos_.MakeMove(list[i]);
+        pos.MakeMove(list[i]);
 
-        if(!(this->pos_.whites_turn_ ? MoveGen::InCheck<false>(this->pos_) : MoveGen::InCheck<true>(this->pos_)))
+        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
         {
-            Score eval = -GoSearch(depth - 1, -b, -a);
+            Score eval = -GoSearch(pos, depth - 1, -b, -a);
 
-            this->pos_.UnmakeMove();
+            pos.UnmakeMove();
 
             if(eval >= b) {return b;}
 
             a = std::max(a, eval);
         }
-        else {this->pos_.UnmakeMove();}
+        else {pos.UnmakeMove();}
     }
     return a;
+}
+Move Search::FindBestMove(BB::Position& pos)
+{
+    MoveList ml;
+
+    if(pos.whites_turn_)
+    {
+        MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
+    }
+    else
+    {
+        MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
+    }
+
+    const bool calculate_for_white {pos.whites_turn_};
+
+    Move best_move = std::numeric_limits<Move>::max();
+    Score best_eval = Eval::NEG_INF;
+
+    for(size_t i{0}; i < ml.len(); ++i)
+    {
+        pos.MakeMove(ml[i]);
+        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        {
+            if(best_move == std::numeric_limits<Move>::max()) best_move = ml[i];
+
+            const Score eval = -GoSearch(pos, SEARCH_DEPTH);
+
+            // if(Eval::GetBestScore(calculate_for_white, eval, best_eval))
+            if(eval > best_eval)
+            {
+                best_eval = eval;
+                best_move = ml[i];
+            }
+        }
+        pos.UnmakeMove();
+    }
+    return best_move;
 }

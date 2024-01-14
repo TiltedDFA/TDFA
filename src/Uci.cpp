@@ -31,46 +31,7 @@ void UCI::HandleIsReady()
 }
 void UCI::HandleGo()
 {
-    MoveList ml;
-
-    if(pos.whites_turn_)
-    {
-        generator.GeneratePseudoLegalMoves<true>(pos, ml);
-    }
-    else
-    {
-        generator.GeneratePseudoLegalMoves<false>(pos, ml);
-    }
-    
-    Move best_move{0};
-    Score best_eval = (pos.whites_turn_ ? Eval::NEG_INF : Eval::POS_INF);
-
-    for(size_t i{0}; i < ml.len(); ++i)
-    {
-        pos.MakeMove(ml[i]);
-        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
-        {
-            Score eval = search.GoSearch(6);
-            if(pos.whites_turn_)
-            {
-                if(eval < best_eval) 
-                {
-                    best_eval = eval;
-                    best_move = ml[i];
-                }
-            }
-            else
-            {
-                if(eval > best_eval) 
-                {
-                    best_eval = eval;
-                    best_move = ml[i];
-                }
-            }
-        }
-        pos.UnmakeMove();
-    }
-    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(best_move));
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(pos)));
 }
 void UCI::HandlePosition(const ArgList& args)
 {

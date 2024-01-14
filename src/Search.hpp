@@ -6,25 +6,13 @@
 #include "MoveGen.hpp"
 #include <limits>
 
+inline constexpr U8 SEARCH_DEPTH = 6; 
 
-
-class Search
+namespace Search
 {
-public:
-    Search()=delete;
-    
-    Search(BB::Position& pos);
+    Score GoSearch(BB::Position& pos, U16 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
 
-    void init(BB::Position& pos);
-
-    void SetPos(BB::Position& pos);
-
-    Score GoSearch(U16 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
-
-
-private:
-    BB::Position& pos_;
-    MoveGen generator_;
+    Move FindBestMove(BB::Position& pos);
 };
 
 

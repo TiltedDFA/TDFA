@@ -24,38 +24,21 @@ int main(void)
 
     UCI::loop();
 
-    // BB::Position pos(STARTPOS);
-    // MoveGen generator(pos);
     // MoveList ml;
-    // Search finder(pos);
 
-    // // std::cout << finder.GoSearch(5, Eval::NEG_INF, Eval::POS_INF) << '\n';
-    // // std::cout << finder.GoSearch(5, Eval::POS_INF, Eval::NEG_INF) << '\n';
-    // // std::string tmp;
-    // // std::cin >> tmp;
-    // generator.GenerateLegalMoves<true>(pos, ml);
+    // BB::Position pos("1r3k1b/5p1p/4pPpQ/p5P1/B1pP4/2p5/PP5R/R5K1 b - - 1 30");
+    // // BB::Position pos("1r3k1b/5p1p/4pPp1/p5P1/B1pP4/2p4Q/PP5R/R5K1 w - - 0 30");
 
-    // uint64_t all_time{0};
-    // const int search_depth{8};
+    // MoveGen::GenerateLegalMoves<false>(pos, ml);
+
+    // for(size_t i{0}; i < ml.len(); ++i)
     // {
-    //     Timer<std::chrono::milliseconds> all_timer(&all_time);
-    //     for(size_t i = 0; i < ml.len(); ++i)
-    //     {
-    //         pos.MakeMove(ml[i]);
+    //     pos.MakeMove(ml[i]);
 
-    //         Score eval{0};
-    //         uint64_t time;
-
-    //         finder.SetPos(pos);
-    //         {
-    //             Timer<std::chrono::microseconds> timer(&time);
-    //             eval = finder.GoSearch(search_depth);
-    //         }
-    //         PRINTNL(std::format("Depth: {}, Move: {}, Score: {},\t Time: {:.3f}s", search_depth, UTIL::MoveToStr(ml[i]), eval, static_cast<double>(time)/ 1'000'000.0));
-
-    //         pos.UnmakeMove();
-    //     }
+    //     Score eval = Search::GoSearch(pos, SEARCH_DEPTH);
+        
+    //     pos.UnmakeMove();
+    //     PRINTNL(std::format("{}. Move: {}, Score: {}", i+1, UTIL::MoveToStr(ml[i]), eval));
     // }
-    // PRINTNL(all_time);
     return 0;
 }

@@ -28,6 +28,18 @@ namespace Eval
         material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::QUEEN>())    * QUEEN_VAL;
         return material;
     }
+    
+    constexpr bool GetBestScore(bool for_white, Score a, Score b)
+    {
+        if (for_white)
+        {
+            return (a > b);
+        }
+        else
+        {
+            return (a < b);
+        }
+    }
 
     constexpr Score Evaluate(const BB::Position& pos)
     {
