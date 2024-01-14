@@ -1,6 +1,6 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(BB::Position& pos, U16 depth, Score a, Score b)
+Score Search::GoSearch(BB::Position& pos, U8 depth, Score a, Score b)
 {
     if(depth == 0) return Eval::Evaluate(pos);
 
@@ -52,9 +52,7 @@ Move Search::FindBestMove(BB::Position& pos)
         MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
     }
 
-    const bool calculate_for_white {pos.whites_turn_};
-
-    Move best_move = std::numeric_limits<Move>::max();
+    Move best_move = Moves::NULL_MOVE;
     Score best_eval = Eval::NEG_INF;
 
     for(size_t i{0}; i < ml.len(); ++i)
@@ -62,11 +60,10 @@ Move Search::FindBestMove(BB::Position& pos)
         pos.MakeMove(ml[i]);
         if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
         {
-            if(best_move == std::numeric_limits<Move>::max()) best_move = ml[i];
+            if(best_move == Moves::NULL_MOVE) best_move = ml[i];
 
             const Score eval = -GoSearch(pos, SEARCH_DEPTH);
 
-            // if(Eval::GetBestScore(calculate_for_white, eval, best_eval))
             if(eval > best_eval)
             {
                 best_eval = eval;

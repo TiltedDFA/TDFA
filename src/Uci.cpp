@@ -38,11 +38,13 @@ void UCI::HandlePosition(const ArgList& args)
     if(args[1] == "fen")
     {
         std::string constructed_fen{""};
-        for(std::size_t i{2};i < 6; ++i)
+
+        for(std::size_t i{2};i < 7; ++i)
             constructed_fen += std::string(args[i]) + ' ';
+
         constructed_fen += std::string(args[7]);
+
         pos.ImportFen(constructed_fen);
-        Debug::PrintBoardState(pos);
     }
     else if (args[1] == "startpos")
     {
@@ -55,12 +57,12 @@ void UCI::HandlePosition(const ArgList& args)
     for(++it ;it != args.end(); ++it)
     {
         const Move move = UTIL::UciToMove(*it, pos);
+
 #if DEVELOPER_MODE == 1
         if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
 #endif
         pos.MakeMove(move);
         Debug::PrintBoardState(pos);
-
     }
 }
 void UCI::HandleStop()

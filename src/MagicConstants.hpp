@@ -162,7 +162,6 @@ namespace Magics
                         result.at(missed_file).at(i) += ((i >> j) & 1) * ((j < missed_file) ? (2 * pow(3, j)) : (2 * pow(3, j - 1)));
                     }
                 }
-                    //assert(result.at(missed_file).at(i) < 1094);
             }
         }
         return result;
@@ -199,19 +198,19 @@ namespace Magics
                                                     IndexToBB<16>()| IndexToBB<17>()| IndexToBB<18>();
         for(U8 i{0}; i < 64;++i)
         {
-            if(i%8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+            if(i % 8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)))
                                             & ~FILE_HBB;
-            else if(i%8 > 6)temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+            else if(i % 8 > 6) temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)))
                                             & ~FILE_ABB;
-            else temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)));
+            else temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)));
         }
         return temp_array;
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_us = compute_base_2_to_3<true>();
+    static constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_us = compute_base_2_to_3<true>();
 
-    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_them = compute_base_2_to_3<false>();
+    static constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
 
     static constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square)
     {

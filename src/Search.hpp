@@ -10,7 +10,7 @@ inline constexpr U8 SEARCH_DEPTH = 6;
 
 namespace Search
 {
-    Score GoSearch(BB::Position& pos, U16 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+    Score GoSearch(BB::Position& pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
 
     Move FindBestMove(BB::Position& pos);
 };

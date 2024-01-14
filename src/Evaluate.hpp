@@ -13,7 +13,7 @@ namespace Eval
 
     constexpr Score PAWN_VAL    = 100;
     constexpr Score KNIGHT_VAL  = 300;
-    constexpr Score BISHOP_VAL  = 300;
+    constexpr Score BISHOP_VAL  = 350;
     constexpr Score ROOK_VAL    = 500;
     constexpr Score QUEEN_VAL   = 900;
 
@@ -21,24 +21,12 @@ namespace Eval
     constexpr Score CountMaterial(const BB::Position& pos)
     {
         Score material{0};
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::PAWN>())     * PAWN_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::KNIGHT>())   * KNIGHT_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::BISHOP>())   * BISHOP_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::ROOK>())     * ROOK_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white,loc::QUEEN>())    * QUEEN_VAL;
+        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::PAWN>())     * PAWN_VAL;
+        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::KNIGHT>())   * KNIGHT_VAL;
+        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::BISHOP>())   * BISHOP_VAL;
+        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::ROOK>())     * ROOK_VAL;
+        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::QUEEN>())    * QUEEN_VAL;
         return material;
-    }
-    
-    constexpr bool GetBestScore(bool for_white, Score a, Score b)
-    {
-        if (for_white)
-        {
-            return (a > b);
-        }
-        else
-        {
-            return (a < b);
-        }
     }
 
     constexpr Score Evaluate(const BB::Position& pos)
