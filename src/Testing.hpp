@@ -64,13 +64,11 @@ private:
 
         MoveList ml{};
         U64 nodes{0};
-        
-        MoveGen gen(pos);
 
         if(pos.whites_turn_)
-            gen.GeneratePseudoLegalMoves<true>(pos,ml);
+            MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
         else
-            gen.GeneratePseudoLegalMoves<false>(pos,ml);
+            MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {

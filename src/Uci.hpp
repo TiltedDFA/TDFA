@@ -19,8 +19,8 @@ using CmdMap = std::unordered_map<std::string_view, U8>;
 using ArgList = std::vector<std::string_view>;
 namespace UCI
 {
-    constexpr const char* ENGINE_NAME = "TDFA V1";
-    constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
+    static constexpr const char* ENGINE_NAME = "TDFA V1";
+    static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     static inline const CmdMap INIT_VALUES = 
     {
         {"uci", 1},
@@ -32,10 +32,7 @@ namespace UCI
         {"setoption", 7}
     };
     
-    static BB::Position pos(STARTPOS);
-    static MoveGen generator(pos);
-    static Search search(pos);
-    
+    static BB::Position pos(STARTPOS);    
     
     void loop();
 

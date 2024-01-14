@@ -2,17 +2,14 @@
 #include <algorithm>
 using Magics::Shift;
 
-
-MoveGen::MoveGen(BB::Position& current_pos): pos_(current_pos){};
-
-void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
+void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
 {
-    BitBoard pawns = pos_.GetSpecificPieces<true, loc::PAWN>();
+    BitBoard pawns = pos.GetSpecificPieces<true, loc::PAWN>();
     if(!pawns) return;
     BitBoard pawn_move{0};
-    const BitBoard capturable_squares = pos_.GetPieces<false>() | (pos_.GetEnPassantBB() & ~Magics::RANK_3BB);
+    const BitBoard capturable_squares = pos.GetPieces<false>() | (pos.GetEnPassantBB() & ~Magics::RANK_3BB);
 
-    pawn_move = Shift<MD::NORTH>(pawns) & pos_.GetEmptySquares() & ~Magics::RANK_8BB;
+    pawn_move = Shift<MD::NORTH>(pawns) & pos.GetEmptySquares() & ~Magics::RANK_8BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
@@ -20,7 +17,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::NORTH>(pawns) & pos_.GetEmptySquares() & Magics::RANK_8BB;
+    pawn_move = Shift<MD::NORTH>(pawns) & pos.GetEmptySquares() & Magics::RANK_8BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
@@ -33,7 +30,7 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::NORTHNORTH>(pawns) & pos_.GetEmptySquares() & Shift<MD::NORTH>(pos_.GetEmptySquares()) & Magics::RANK_4BB;
+    pawn_move = Shift<MD::NORTHNORTH>(pawns) & pos.GetEmptySquares() & Shift<MD::NORTH>(pos.GetEmptySquares()) & Magics::RANK_4BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
@@ -78,14 +75,14 @@ void MoveGen::WhitePawnMoves(MoveList& ml) noexcept
     }
 }
 
-void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
+void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
 {
-    BitBoard pawns = pos_.GetSpecificPieces<false, loc::PAWN>();
+    BitBoard pawns = pos.GetSpecificPieces<false, loc::PAWN>();
     if(!pawns) return;
     BitBoard pawn_move{0};
-    const BitBoard capturable_squares = pos_.GetPieces<true>() | (pos_.GetEnPassantBB() & ~Magics::RANK_6BB);
+    const BitBoard capturable_squares = pos.GetPieces<true>() | (pos.GetEnPassantBB() & ~Magics::RANK_6BB);
 
-    pawn_move = Shift<MD::SOUTH>(pawns) & pos_.GetEmptySquares() & ~Magics::RANK_1BB;
+    pawn_move = Shift<MD::SOUTH>(pawns) & pos.GetEmptySquares() & ~Magics::RANK_1BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
@@ -93,7 +90,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
 
-    pawn_move = Shift<MD::SOUTH>(pawns) & pos_.GetEmptySquares() & Magics::RANK_1BB;
+    pawn_move = Shift<MD::SOUTH>(pawns) & pos.GetEmptySquares() & Magics::RANK_1BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
@@ -103,7 +100,7 @@ void MoveGen::BlackPawnMoves(MoveList& ml) noexcept
         ml.add(Moves::EncodeMove(index + 8, index, Moves::PROM_KNIGHT));
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
-    pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos_.GetEmptySquares() & Shift<MD::SOUTH>(pos_.GetEmptySquares()) & Magics::RANK_5BB;
+    pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos.GetEmptySquares() & Shift<MD::SOUTH>(pos.GetEmptySquares()) & Magics::RANK_5BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
