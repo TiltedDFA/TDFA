@@ -29,23 +29,43 @@ void UCI::HandleUci()
 }
 void UCI::HandleIsReady()
 {
+    time_manager.SetOptions(60'000, 0);
     transpos_table.Resize(TT_SIZE);
     std::cout << "readyok\n";
     // std::cout.flush();
 }
-void UCI::HandleGo()
+void UCI::HandleGo(const ArgList& args)
 {
-    U64 time_taken_ms{0};
+    //update the time settings
     {
-        Timer<std::chrono::milliseconds> timer(&time_taken_ms);
-
-        std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(pos, transpos_table)));
+        U64 wtime{60'000};
+        U64 btime{60'000};
+        U64 winc{0};
+        U64 binc{0};
+        for(size_t i{0}; i < args.size(); ++i)
+        {
+            if(args[i] == "wtime")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), wtime);
+            if(args[i] == "btime")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
+            if(args[i] == "winc")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+            if(args[i] == "binc")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+        }
+        if(pos.whites_turn_)
+        {
+            time_manager.SetOptions(wtime, winc);
+        }
+        else
+        {
+            time_manager.SetOptions(btime, binc);
+        }
     }
-    #if USE_TRANSPOSITION_TABLE == 1
-        std::cout << std::format("Time: {}ms, Search depth: {}, TT size: {}mB, TT enabled: {}\n", time_taken_ms, SEARCH_DEPTH, TT_SIZE, true);
-    #else
-        std::cout << std::format("Time: {}ms, Search depth: {}, TT size: {}mB, TT enabled: {}\n", time_taken_ms, SEARCH_DEPTH, TT_SIZE, false);
-    #endif
+    //start the timer for this round of calculation
+    time_manager.StartTiming();
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(pos, transpos_table, time_manager)));
+    
     // size_t i{0};
     // while(i < 1'000'000)
     // {
@@ -105,6 +125,7 @@ void UCI::HandleNewGame()
 {
     pos = BB::Position(STARTPOS);
     transpos_table.Clear();
+    time_manager.SetOptions(60'000,0);
 }
 void UCI::HandleSetOption(const ArgList& args)
 {
@@ -132,7 +153,7 @@ void UCI::loop()
             HandleIsReady();
             break;
         case 3:
-            HandleGo();
+            HandleGo(args);
             break;
         case 4:
             HandlePosition(args);

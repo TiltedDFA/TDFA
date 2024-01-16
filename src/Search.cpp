@@ -52,7 +52,7 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
             if(eval >= beta)
             {
                 #if USE_TRANSPOSITION_TABLE == 1
-                tt.Store(pos.postion_key_, eval, list[i], depth, BoundType::BETA);
+                tt.Store(pos.postion_key_, eval, Moves::NULL_MOVE, depth, BoundType::BETA);
                 #endif
                 return beta;
             }
@@ -67,43 +67,54 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
         }
         else {pos.UnmakeMove();}
     }
+
     #if USE_TRANSPOSITION_TABLE == 1
     tt.Store(pos.postion_key_, alpha, Moves::NULL_MOVE, depth, hash_entry_flag);
     #endif
+
     return alpha;
 }
-Move Search::FindBestMove(BB::Position& pos, TransposTable& tt)
+Move Search::FindBestMove(BB::Position& pos, TransposTable& tt, TimeManager& tm)
 {
-    MoveList ml;
+    Move last_best_move = Moves::NULL_MOVE;
+    Score last_best_eval = Eval::NEG_INF;
 
-    if(pos.whites_turn_)
+    for(U8 depth{1};;++depth)
     {
-        MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
-    }
-    else
-    {
-        MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
-    }
+        MoveList ml;
 
-    Move best_move = Moves::NULL_MOVE;
-    Score best_eval = Eval::NEG_INF;
-
-    for(size_t i{0}; i < ml.len(); ++i)
-    {
-        pos.MakeMove(ml[i]);
-        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        Score best_eval = Eval::NEG_INF;
+        Move best_move = Moves::NULL_MOVE;
+        
+        if(pos.whites_turn_)
         {
-            if(best_move == Moves::NULL_MOVE) best_move = ml[i];
-
-            const Score eval = -GoSearch(tt, pos, SEARCH_DEPTH);
-
-            if(eval > best_eval)
-            {
-                best_eval = eval;
-                best_move = ml[i];
-            }
+            MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
         }
-        pos.UnmakeMove();
+        else
+        {
+            MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
+        }
+
+        for(size_t i{0}; i < ml.len(); ++i)
+        {
+            if(tm.OutOfTime()) return last_best_move;
+            pos.MakeMove(ml[i]);
+            if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            {
+                if(best_move == Moves::NULL_MOVE) best_move = ml[i];
+
+                const Score eval = -GoSearch(tt, pos, depth);
+
+                if(eval > best_eval)
+                {
+                    best_eval = eval;
+                    best_move = ml[i];
+                }
+            }
+            pos.UnmakeMove();
+        }
+        last_best_eval = best_eval;
+        last_best_move = best_move;
+        std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
     }
-    return best_move;
 }

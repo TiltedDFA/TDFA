@@ -15,12 +15,13 @@
 #include <iostream>
 #include <vector>
 #include <string_view>
+#include <charconv>
 
 using CmdMap = std::unordered_map<std::string_view, U8>;
 using ArgList = std::vector<std::string_view>;
 namespace UCI
 {
-    inline constexpr const char* ENGINE_NAME = "TDFA V1";
+    inline constexpr const char* ENGINE_NAME = "TDFA V1.1";
     inline constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     inline const CmdMap INIT_VALUES = 
     {
@@ -36,11 +37,12 @@ namespace UCI
     
     inline BB::Position pos(STARTPOS);    
     inline TransposTable transpos_table;
-    void loop();
+    inline TimeManager time_manager;
 
+    void loop();
     void HandleUci();
     void HandleIsReady();
-    void HandleGo();
+    void HandleGo(const ArgList&);
     void HandlePosition(const ArgList&);
     void HandleStop();
     void HandleNewGame();

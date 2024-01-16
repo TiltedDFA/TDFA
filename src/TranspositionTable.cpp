@@ -5,6 +5,8 @@ void TransposTable::Resize(size_t size_in_mB)
     const size_t num_bytes = size_in_mB * 1024 * 1024;
     num_elements_ = num_bytes / sizeof(HashEntry);
 
+    delete[] table_ptr_;
+    
     table_ptr_ = new HashEntry[num_elements_];
     
     if(!table_ptr_)
