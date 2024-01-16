@@ -8,19 +8,21 @@
 #include "Search.hpp"
 #include "Timer.hpp"
 #include "Uci.hpp"
+#include "TranspositionTable.hpp"
 #include "ZobristConstants.hpp"
 
 int main(void)
 {
     // RunBenchmark<false>();
     // RunPerftSuite<false>();
-    // Zobrist::Init();
 
     // for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
     // PRINTNL("------------------");
     // for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
-
+    // PRINTNL(sizeof(HashEntry));
     // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
+
+    // PRINTNL(alignof(HashEntry));
 
     UCI::loop();
 

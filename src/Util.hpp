@@ -33,7 +33,7 @@ namespace UTIL
         return (Moves::IsPromotionMove(m) ? (Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)) + PromotionChar(Moves::GetPieceType(m))) :
                                             Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)));
     }
-    static Move UciToMove(const std::string_view str, const BB::Position& pos)
+    inline Move UciToMove(const std::string_view str, const BB::Position& pos)
     {
         const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
         const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;

@@ -4,11 +4,11 @@
 #include "Types.hpp"
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
-using Score = I64;
+
 
 namespace Eval
 {
-    constexpr Score POS_INF = 9223372036854700800u;
+    constexpr Score POS_INF = std::numeric_limits<Score>::max() >> 1;
     constexpr Score NEG_INF = -POS_INF;
 
     constexpr Score PAWN_VAL    = 100;

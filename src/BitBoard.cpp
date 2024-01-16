@@ -32,6 +32,8 @@ static inline void SplitFen(std::string_view fen, std::array<std::string_view,6>
     ++current_fen_section;
 }
 static constexpr bool IsDigit(const char i) {return i <= '9' && i >= '0';}
+
+static inline constexpr U16 EncodeKing(Sq start, Sq target) {return start | (target << 6);}
 namespace BB
 {
     bool Position::ImportFen(std::string_view fen)
@@ -160,29 +162,36 @@ namespace BB
     void Position::MakeMove(Move m)
     {
         previous_pos_info.push(*this);
+
+        Sq start_sq;
+        Sq target_sq;
+        PieceType p_type;
+        const bool is_white{whites_turn_};
+        Moves::DecodeMove(m, start_sq, target_sq, p_type);
+        
         //switch turns
         whites_turn_ = !whites_turn_;
+        postion_key_ ^= Zobrist::WHITE_TO_MOVE;
 
-        Sq start;
-        Sq target;
-        PieceType p_type;
-        const bool is_white{!whites_turn_};
-        Moves::DecodeMove(m, start, target, p_type);
-        
-        const BitBoard target_bb{Magics::IndexToBB(target)};
+        const BitBoard target_bb{Magics::IndexToBB(target_sq)};
         
         full_moves_ += !is_white;
 
         if(Moves::IsPromotionMove(m)) //if not NOPROMO
         {
-            pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start);
+            //removing start_sq piece from boards and zobrist key
+            pieces_[is_white][loc::PAWN] &= ~Magics::IndexToBB(start_sq);
+            postion_key_ ^= Zobrist::PIECES_ARR[is_white][p_type][start_sq];
 
             if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
             {
                 if(target_bb & (Magics::IndexToBB<0>()  | Magics::IndexToBB<7>() | 
-                            Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
+                                Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
                 {
-                    switch(target)
+                    //remove old caslting rights
+                    postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
+                    switch(target_sq)
                     {
                     case 0:
                         info_.castling_rights_ &= 0x0B;
@@ -190,20 +199,36 @@ namespace BB
                     case 7: 
                         info_.castling_rights_ &= 0x07;
                         break;
-                    case 63:
-                        info_.castling_rights_ &= 0x0D;
-                        break;
                     case 56:
                         info_.castling_rights_ &= 0x0E;
+                        break;
+                    case 63:
+                        info_.castling_rights_ &= 0x0D;
                         break;
                     default:
                         break;
                     }
+
+                    //add the new castling rights 
+                    postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
                 }
-                is_white ? RemoveIntersectingPiece<false>(target_bb) 
-                        : RemoveIntersectingPiece<true>(target_bb);
+                if(is_white)
+                {
+                    //removing attacked piece from boards and zobrist key
+                    const PieceType pt = RemoveIntersectingPiece<false>(target_bb);
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][pt][target_sq];
+                }
+                else
+                {
+                    //removing attacked piece from boards and zobrist key
+                    const PieceType pt = RemoveIntersectingPiece<true>(target_bb);
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][pt][target_sq];
+                }
             }
-            pieces_[is_white][Moves::GetTypePromotingTo(m)] |= target_bb;
+            //adding the new piece that was promoted to, to the boards and zobrist key
+            const PieceType promoting_to = Moves::GetTypePromotingTo(m);
+            pieces_[is_white][promoting_to] |= target_bb;
+            postion_key_ ^= Zobrist::PIECES_ARR[is_white][promoting_to][target_sq];
             info_.half_moves_ = 0;
             return;
         }
@@ -211,11 +236,13 @@ namespace BB
         //removes the piece we take
         if((is_white ? GetPieces<false>() : GetPieces<true>()) & target_bb)
         {
-            //if removed piece is a rook
+            //if removed piece is a rook starting sq
             if(target_bb & (Magics::IndexToBB<0>()  | Magics::IndexToBB<7>() | 
                             Magics::IndexToBB<56>() | Magics::IndexToBB<63>()))
             {
-                switch(target)
+                //remove old caslting rights
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+                switch(target_sq)
                 {
                 case 0:
                     info_.castling_rights_ &= 0x0B;
@@ -232,69 +259,147 @@ namespace BB
                 default:
                     break;
                 }
+                //add the new castling rights 
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
             }
+            //removing attacked piece from boards and zobrist key
+            if(is_white)
+            {
+                const PieceType pt = RemoveIntersectingPiece<false>(target_bb);
+                postion_key_ ^= Zobrist::PIECES_ARR[false][pt][target_sq];
+            }
+            else
+            {
+                const PieceType pt = RemoveIntersectingPiece<true>(target_bb);
+                postion_key_ ^= Zobrist::PIECES_ARR[true][pt][target_sq];
+            }
+
             info_.half_moves_ = 0;
-            is_white ? RemoveIntersectingPiece<false>(target_bb) 
-                        : RemoveIntersectingPiece<true>(target_bb);
         }
         else
+        {
             ++info_.half_moves_;
+        }
 
         //updates en passant state
         if(p_type == Moves::PAWN) 
         {
             //remove en pessant taken piece
-            if(target == info_.en_passant_target_sq_)
+            if(target_sq == info_.en_passant_target_sq_)
             {
+                //removes old en passant target from zobrist key
+                postion_key_ ^= Zobrist::EN_PASSANT_ARR[info_.en_passant_target_sq_];
+
+                //resets the en passant target
                 info_.en_passant_target_sq_ = 0; 
-                pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb; // move our pawn
+
+                // move our pawn
+                pieces_[is_white][p_type] ^= Magics::IndexToBB(start_sq) | target_bb; 
+                postion_key_ ^= Zobrist::PIECES_ARR[is_white][loc::PAWN][start_sq];
+                postion_key_ ^= Zobrist::PIECES_ARR[is_white][loc::PAWN][target_sq];
+
+                // deletes enemy pawn
                 if(is_white)
                 {
-                    RemoveIntersectingPiece<false>(Magics::IndexToBB(target-8));
+                    pieces_[false][loc::PAWN] ^= target_bb >> 8;
+                    // RemoveIntersectingPiece<false>(target_sq - 8);
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::PAWN][target_sq - 8];
                 }
                 else
                 {
-                    RemoveIntersectingPiece<true>(Magics::IndexToBB(target+8));
+                    pieces_[true][loc::PAWN] ^= target_bb << 8;
+                    // RemoveIntersectingPiece<true>(target_sq + 8);
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::PAWN][target_sq + 8];
                 }
                 return;
             }
-            else if (std::abs(target - start) == 16)
+            if (std::abs(target_sq - start_sq) == 16)
             {
-                info_.en_passant_target_sq_ = (is_white ? target - 8 : target + 8);
+                //removes old en passant target from zobrist key
+                postion_key_ ^= Zobrist::EN_PASSANT_ARR[info_.en_passant_target_sq_];
+
+                info_.en_passant_target_sq_ = (is_white ? target_sq - 8 : target_sq + 8);
+
+                //adds new en passant target sq to the zobrist key
+                postion_key_ ^= Zobrist::EN_PASSANT_ARR[info_.en_passant_target_sq_];
             }       
             else
             {
+                //removes old en passant target from zobrist key
+                postion_key_ ^= Zobrist::EN_PASSANT_ARR[info_.en_passant_target_sq_];
                 info_.en_passant_target_sq_ = 0;
             }      
             info_.half_moves_ = 0;
         }
         else
         {
+            //removes old en passant target from zobrist key
+            postion_key_ ^= Zobrist::EN_PASSANT_ARR[info_.en_passant_target_sq_];
             info_.en_passant_target_sq_ = 0;
         }
 
         if(p_type == Moves::KING)
         {
+            //remove old castling rights from zobrist key
+            postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
             info_.castling_rights_ &= is_white ? 0x03 : 0x0C;
 
-            switch(start | (target << 6))
+            //add new castling rights to zobrist key
+            postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
+            switch(EncodeKing(start_sq, target_sq))
             {
-                case 132: //queen
+                case EncodeKing(4, 2): //queen side
                     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<2>();
                     pieces_[loc::WHITE][loc::ROOK] ^= Magics::IndexToBB<0>() | Magics::IndexToBB<3>();
+
+                    //remove king start pos from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::KING][4];
+                    //add king end sq to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::KING][2];
+                    //remove old rook from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::ROOK][0];
+                    // add new rook to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::ROOK][3];
                     return;
-                case 388: //king
+                case EncodeKing(4, 6): //king side
                     pieces_[loc::WHITE][loc::KING] = Magics::IndexToBB<6>();
                     pieces_[loc::WHITE][loc::ROOK] ^= Magics::IndexToBB<7>() | Magics::IndexToBB<5>();
+
+                    //remove king start pos from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::KING][4];
+                    //add king end sq to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::KING][6];
+                    //remove old rook from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::ROOK][5];
+                    // add new rook to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[true][loc::ROOK][7];
                     return;
-                case 3772: //queen
+                case EncodeKing(60, 58): //queen side
                     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<58>();
                     pieces_[loc::BLACK][loc::ROOK] ^= Magics::IndexToBB<56>() | Magics::IndexToBB<59>();
+                    //remove king start pos from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::KING][60];
+                    //add king end sq to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::KING][58];
+                    //remove old rook from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::ROOK][56];
+                    // add new rook to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::ROOK][59];
                     return;
-                case 4028: //king
+                case EncodeKing(60, 62): //king side
                     pieces_[loc::BLACK][loc::KING] = Magics::IndexToBB<62>();
                     pieces_[loc::BLACK][loc::ROOK] &= ~Magics::IndexToBB<63>();
                     pieces_[loc::BLACK][loc::ROOK] |= Magics::IndexToBB<61>();
+                    //remove king start pos from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::KING][60];
+                    //add king end sq to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::KING][58];
+                    //remove old rook from zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::ROOK][63];
+                    // add new rook to zobrist key
+                    postion_key_ ^= Zobrist::PIECES_ARR[false][loc::ROOK][61];
                     return;
                 default:
                     break;
@@ -302,25 +407,51 @@ namespace BB
         } 
         else if(p_type == Moves::ROOK)
         {
-            switch(start)
+            switch(start_sq)
             {
             case 0:
+                //remove old castling rights from zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
                 info_.castling_rights_ &= 0x0B;
+
+                //add new castling rights to zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
                 break;
             case 7: 
+                //remove old castling rights from zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
                 info_.castling_rights_ &= 0x07;
+
+                //add new castling rights to zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
                 break;
             case 63:
+                //remove old castling rights from zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+                
                 info_.castling_rights_ &= 0x0D;
+
+                //add new castling rights to zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
                 break;
             case 56:
+                //remove old castling rights from zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
+
                 info_.castling_rights_ &= 0x0E;
+
+                //add new castling rights to zobrist key
+                postion_key_ ^= Zobrist::CAST_ARR[info_.castling_rights_];
                 break;
             default:
                 break;
             }
         }
-        pieces_[is_white][p_type] ^= Magics::IndexToBB(start) | target_bb;
+        pieces_[is_white][p_type] ^= Magics::IndexToBB(start_sq) | target_bb;
+        postion_key_ ^= Zobrist::PIECES_ARR[is_white][p_type][start_sq];
+        postion_key_ ^= Zobrist::PIECES_ARR[is_white][p_type][target_sq];
     }
 
     void Position::HashCurrentPostion()

@@ -157,13 +157,30 @@ namespace BB
             An implamented assumption is that the king can never be removed as no legal move should be able to do this.
         */
         template<bool is_white>
-        constexpr void RemoveIntersectingPiece(BitBoard attacked_sq)
+        [[maybe_unused]]constexpr PieceType RemoveIntersectingPiece(BitBoard attacked_sq)
         {
-            if (pieces_[is_white][loc::QUEEN] & attacked_sq)        pieces_[is_white][loc::QUEEN] ^= attacked_sq;
-            else if (pieces_[is_white][loc::BISHOP] & attacked_sq)  pieces_[is_white][loc::BISHOP] ^= attacked_sq;
-            else if (pieces_[is_white][loc::KNIGHT] & attacked_sq)  pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
-            else if (pieces_[is_white][loc::ROOK] & attacked_sq)    pieces_[is_white][loc::ROOK] ^= attacked_sq;
-            else                                                    pieces_[is_white][loc::PAWN] ^= attacked_sq;
+            if (pieces_[is_white][loc::QUEEN] & attacked_sq)
+            {
+                pieces_[is_white][loc::QUEEN] ^= attacked_sq;
+                return loc::QUEEN;
+            }
+            if (pieces_[is_white][loc::BISHOP] & attacked_sq)
+            {
+                pieces_[is_white][loc::BISHOP] ^= attacked_sq;
+                return loc::QUEEN;
+            }
+            if (pieces_[is_white][loc::KNIGHT] & attacked_sq)
+            {
+                pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
+                return loc::QUEEN;
+            }
+            if (pieces_[is_white][loc::ROOK] & attacked_sq)
+            {
+                pieces_[is_white][loc::ROOK] ^= attacked_sq;
+                return loc::QUEEN;
+            }
+            pieces_[is_white][loc::PAWN] ^= attacked_sq; 
+            return loc::QUEEN;
         }
 
         void HashCurrentPostion();

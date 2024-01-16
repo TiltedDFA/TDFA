@@ -13,9 +13,9 @@
 #include <iostream>
 
 #if CONSTEVAL_TIT == 1
-static inline constexpr std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+inline constexpr std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 #else
-static inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
 #endif
 {
     std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
@@ -161,9 +161,9 @@ static inline std::array<std::array<std::array<move_info,2187>,4>,64> Precompute
 }
 
 #if CONSTEVAL_TIT == 1
-    static constexpr std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    constexpr inline std::array<std::array<std::array<move_info,2187>, 4>, 64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 #else
-    inline static std::array<std::array<std::array<move_info,2187>,4>,64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+    const inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 #endif
 namespace MoveGen
 {

@@ -9,6 +9,7 @@
 #include "Testing.hpp"
 #include "Search.hpp"
 #include "MoveGen.hpp"
+#include "TranspositionTable.hpp"
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -19,9 +20,9 @@ using CmdMap = std::unordered_map<std::string_view, U8>;
 using ArgList = std::vector<std::string_view>;
 namespace UCI
 {
-    static constexpr const char* ENGINE_NAME = "TDFA V1";
-    static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
-    static inline const CmdMap INIT_VALUES = 
+    inline constexpr const char* ENGINE_NAME = "TDFA V1";
+    inline constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
+    inline const CmdMap INIT_VALUES = 
     {
         {"uci", 1},
         {"isready", 2},
@@ -31,9 +32,10 @@ namespace UCI
         {"ucinewgame", 6},
         {"setoption", 7}
     };
+    inline size_t constexpr TT_SIZE = 128;//mb
     
-    static BB::Position pos(STARTPOS);    
-    
+    inline BB::Position pos(STARTPOS);    
+    inline TransposTable transpos_table;
     void loop();
 
     void HandleUci();

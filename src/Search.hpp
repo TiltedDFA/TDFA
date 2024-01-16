@@ -4,15 +4,16 @@
 #include "Types.hpp"
 #include "Evaluate.hpp"
 #include "MoveGen.hpp"
+#include "TranspositionTable.hpp"
 #include <limits>
 
-inline constexpr U8 SEARCH_DEPTH = 6; 
+inline constexpr U8 SEARCH_DEPTH = 8; 
 
 namespace Search
 {
-    Score GoSearch(BB::Position& pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+    Score GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
 
-    Move FindBestMove(BB::Position& pos);
+    Move FindBestMove(BB::Position& pos, TransposTable& tt);
 };
 
 

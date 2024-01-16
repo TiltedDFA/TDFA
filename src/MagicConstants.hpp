@@ -218,7 +218,7 @@ namespace Magics
     }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
+    static constexpr std::array<std::array<BitBoard, 4>, 64> SLIDING_ATTACKS_MASK = PrecomputeMask();
     
     static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 

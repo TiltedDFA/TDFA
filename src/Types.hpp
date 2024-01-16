@@ -5,19 +5,22 @@
 #include <array>
 
 #define CONSTEVAL_TIT 0
+#define USE_TRANSPOSITION_TABLE 1
+#define DEBUG_TRANPOSITION_TABLE 0
 #define DEVELOPER_MODE 0
 
 using U8  = unsigned char;
 using U16 = unsigned short;
 using U32 = unsigned int;
 using U64 = unsigned long long;
-using I64 = long long;
+using I16 = short;
 
 using Move      = U16;
 using BitBoard  = U64;
 using PieceType = U8;
 using Sq        = U8;
 using Castling  = U8;
+using Score     = I16;
 
 constexpr std::size_t MAX_MOVES = 218;
 
