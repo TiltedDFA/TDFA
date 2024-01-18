@@ -34,7 +34,7 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
 
     if(list.len() == 0 || pos.info_.half_moves_ >= 50)
     {
-        if(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos))
+        if(pos.whites_turn_ ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
             return Eval::NEG_INF;
         return 0;
     }

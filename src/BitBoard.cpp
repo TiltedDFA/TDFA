@@ -148,7 +148,7 @@ namespace BB
         {
             std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
         }
-        if(fen_sections.at(4) == "")
+        if(fen_sections.at(5) == "")
         {
             full_moves_ = 0;
         }

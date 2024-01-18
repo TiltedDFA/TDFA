@@ -16,13 +16,29 @@ int main(void)
     // RunBenchmark<false>();
     // RunPerftSuite<false>();
 
-    // for(const ZobristKey i : Zobrist::EN_PASSANT_ARR) PRINTNL(i);
     // PRINTNL("------------------");
-    // for(const ZobristKey i : Zobrist::CAST_ARR) PRINTNL(i);
+    // for(const ZobristKey i : Zobrist::CAST_ARR) PRINT(std::format("{},\n",i));
     // PRINTNL(sizeof(HashEntry));
-    // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
+    // // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
 
     // PRINTNL(alignof(HashEntry));
+    // TransposTable tt;
+    // tt.Resize(1024);
+    // BB::Position pos(STARTPOS);
+    
+    // // PRINTNL(Eval::Evaluate(pos));
+    // // pos.ImportFen("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1");    
+    // // PRINTNL(Eval::Evaluate(pos));
+    // for(int i = 0; i < 9; ++i)
+    // {
+    //     PRINT(std::format("{}, {}\n", i, Search::GoSearch(tt, pos, i)));
+    // }
+    // pos.ImportFen("5k2/8/4K3/5P2/8/8/8/8 b - - 0 1");
+    // for(int i = 0; i < 9; ++i)
+    // {
+    //     PRINT(std::format("{}, {}\n", i, Search::GoSearch(tt, pos, i)));
+    // }
+
 
     UCI::loop();
 

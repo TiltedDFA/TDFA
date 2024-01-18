@@ -21,7 +21,7 @@ namespace Zobrist
                                                             );
     
     //access by [colour][piece type][square]
-    const static PieceZobArr PIECES_ARR = []
+    const inline PieceZobArr PIECES_ARR = []
                                             {
                                                 PieceZobArr arr;
                                                 for(int clr = 0; clr < 2; ++clr)
@@ -31,47 +31,20 @@ namespace Zobrist
 
                                                 return arr;
                                             }();
-    const static std::array<ZobristKey, 64> EN_PASSANT_ARR = []
+    const inline std::array<ZobristKey, 64> EN_PASSANT_ARR = []
                                                                 {
                                                                     std::array<ZobristKey, 64> arr;
                                                                     for(int i = 0; i < 64; ++i) arr[i] = rng_gen(rng);
                                                                     return arr;
                                                                 }();
     //
-    const static std::array<ZobristKey, 16> CAST_ARR = []
+    const inline std::array<ZobristKey, 16> CAST_ARR = []
                                                         {
                                                             std::array<ZobristKey, 16> arr;
                                                             for(int i = 0; i < 16; ++i) arr[i] = rng_gen(rng);
                                                             return arr;
                                                         }();
-    const static ZobristKey WHITE_TO_MOVE = rng_gen(rng);
-
-    // ZobristKey GetHash(const BB::Position& pos)
-    // {
-    //     ZobristKey ret{0};
-
-    //     ret ^= WHITE_TO_MOVE * pos.whites_turn_;
-        
-    //     for(int clr = 0; clr < 2; ++clr)
-    //     {
-    //         for(int type = 0; type < 6; ++type)
-    //         {
-    //             BitBoard piece_board = pos.GetSpecificPieces(clr, type);
-    //             while(piece_board)
-    //             {
-    //                 const Sq idx = Magics::FindLS1B(piece_board);
-    //                 ret ^= PIECES_ARR[clr][type][idx];
-    //                 piece_board = Magics::PopLS1B(piece_board);
-    //             }
-    //         }
-    //     }
-
-    //     ret ^= EN_PASSANT_ARR[pos.GetEnPassantSq()];
-
-    //     ret ^= CAST_ARR[pos.GetRawCastling()];
-
-    //     return ret;
-    // }
+    const inline ZobristKey WHITE_TO_MOVE = rng_gen(rng);
 }
 
 

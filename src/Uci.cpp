@@ -114,7 +114,6 @@ void UCI::HandlePosition(const ArgList& args)
     #endif
 
         pos.MakeMove(move);
-        Debug::PrintBoardState(pos);
     }
 }
 void UCI::HandleStop()

@@ -22,22 +22,6 @@ public:
     constexpr size_t len()const noexcept {return idx_;}
 
     constexpr bool contains(const Move m) {return std::find(data_.cbegin(), data_.cend(), m) != data_.cend();}
-
-    //A debugging utility
-    void print()
-    {
-        std::vector<std::string> moves{};
-        moves.reserve(len());
-        for(size_t i = 0; i < idx_; ++i)
-        {
-            moves.push_back(UTIL::MoveToStr(data_[i]));
-        }
-        std::sort(moves.begin(), moves.end());
-        for(size_t i = 0; i < idx_; ++i)
-        {
-            std::cout << std::to_string(i+1) << '\t' << moves[i] << '\n';
-        }
-    }
 private:
     std::array<Move, MAX_MOVES> data_;
     size_t idx_;
