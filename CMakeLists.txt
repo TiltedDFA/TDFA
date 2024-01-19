@@ -15,7 +15,7 @@ if(WIN32)
     set(CMAKE_CXX_COMPILER "g++")
 endif(WIN32)
 
-file(GLOB_RECURSE MY_SOURCES "src/**.cpp")
+file(GLOB_RECURSE MY_SOURCES "src/*.hpp", "src/*.cpp")
 
 set(CACHE CMAKE_VERBOSE_MAKEFILE ON)
 

@@ -10,12 +10,7 @@
 #include <cstring>
 #include <format>
 
-enum class BoundType : U8
-{
-    EXACT_VAL,  //Score is X
-    ALPHA,      //Score is at max X
-    BETA        //Score is at least X
-};
+
 /*
     16 Bytes
     ZobristKey key_;    -> 64b  -> 8B

@@ -8,11 +8,11 @@
 #include "Debug.hpp"
 namespace UTIL
 {
-    static std::string Square(Sq sq)
+    inline std::string Square(Sq sq)
     {
         return std::string{char('a' + Magics::FileOf(sq)), char('1' + Magics::RankOf(sq))};
     }
-    static char PromotionChar(PieceType p)
+    inline char PromotionChar(PieceType p)
     {
         switch (p)
         {
@@ -28,12 +28,12 @@ namespace UTIL
             return 'z';
         }
     }
-    static std::string MoveToStr(Move m)
+    inline std::string MoveToStr(Move m)
     {
         return (Moves::IsPromotionMove(m) ? (Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)) + PromotionChar(Moves::GetPieceType(m))) :
                                             Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)));
     }
-    inline Move UciToMove(const std::string_view str, const BB::Position& pos)
+    inline Move UciToMove(const std::string_view str, const Position& pos)
     {
         const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
         const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;

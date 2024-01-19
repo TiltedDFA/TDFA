@@ -17,14 +17,14 @@ int main(void)
     // RunPerftSuite<false>();
 
     // PRINTNL("------------------");
-    // for(const ZobristKey i : Zobrist::CAST_ARR) PRINT(std::format("{},\n",i));
+    // for(const ZobristKey i : Zobrist::CASTLING) PRINT(std::format("{},\n",i));
     // PRINTNL(sizeof(HashEntry));
     // // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
 
     // PRINTNL(alignof(HashEntry));
     // TransposTable tt;
     // tt.Resize(1024);
-    // BB::Position pos(STARTPOS);
+    // Position pos(STARTPOS);
     
     // // PRINTNL(Eval::Evaluate(pos));
     // // pos.ImportFen("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1");    
@@ -44,8 +44,8 @@ int main(void)
 
     // MoveList ml;
 
-    // BB::Position pos("1r3k1b/5p1p/4pPpQ/p5P1/B1pP4/2p5/PP5R/R5K1 b - - 1 30");
-    // // BB::Position pos("1r3k1b/5p1p/4pPp1/p5P1/B1pP4/2p4Q/PP5R/R5K1 w - - 0 30");
+    // Position pos("1r3k1b/5p1p/4pPpQ/p5P1/B1pP4/2p5/PP5R/R5K1 b - - 1 30");
+    // // Position pos("1r3k1b/5p1p/4pPp1/p5P1/B1pP4/2p4Q/PP5R/R5K1 w - - 0 30");
 
     // MoveGen::GenerateLegalMoves<false>(pos, ml);
 

@@ -11,40 +11,48 @@
 
 using ZobristKey = U64;
 using PieceZobArr = std::array<std::array<std::array<ZobristKey, 64>, 6>, 2>;
-
+//source: stockfish
 namespace Zobrist
-{
-    static std::mt19937 rng{std::random_device{}()};
-    static std::uniform_int_distribution<ZobristKey> rng_gen(
-                                                            std::numeric_limits<ZobristKey>::min(),
-                                                            std::numeric_limits<ZobristKey>::max()
-                                                            );
-    
-    //access by [colour][piece type][square]
-    const inline PieceZobArr PIECES_ARR = []
-                                            {
-                                                PieceZobArr arr;
-                                                for(int clr = 0; clr < 2; ++clr)
-                                                    for(int pt = 0; pt < 6; ++pt)
-                                                        for(int sq = 0; sq < 64; ++sq)
-                                                            arr[clr][pt][sq] = rng_gen(rng);
+{    
+    constexpr U64 ZobRand64(U64& s) 
+    {
+        s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
+        return s * 2685821657736338717LL;
+    }
+    constexpr U64 ZobRand64NoRef(U64 s) 
+    {
+        s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
+        return s * 2685821657736338717LL;
+    }
+    constexpr PieceZobArr InitPieces()
+    {
+        U64 prng_seed{1070372};
 
-                                                return arr;
-                                            }();
-    const inline std::array<ZobristKey, 64> EN_PASSANT_ARR = []
-                                                                {
-                                                                    std::array<ZobristKey, 64> arr;
-                                                                    for(int i = 0; i < 64; ++i) arr[i] = rng_gen(rng);
-                                                                    return arr;
-                                                                }();
-    //
-    const inline std::array<ZobristKey, 16> CAST_ARR = []
-                                                        {
-                                                            std::array<ZobristKey, 16> arr;
-                                                            for(int i = 0; i < 16; ++i) arr[i] = rng_gen(rng);
-                                                            return arr;
-                                                        }();
-    const inline ZobristKey WHITE_TO_MOVE = rng_gen(rng);
+        PieceZobArr arr;
+        for(int clr = 0; clr < 2; ++clr)
+            for(int pt = 0; pt < 6; ++pt)
+                for(int sq = 0; sq < 64; ++sq)
+                    arr[clr][pt][sq] = ZobRand64(prng_seed);
+        return arr;
+    }
+    constexpr std::array<ZobristKey, 64> InitEnPassant()
+    {
+        U64 prng_seed{1070372};
+        std::array<ZobristKey, 64> arr;
+        for(int i = 0; i < 64; ++i) arr[i] = ZobRand64(prng_seed);
+        return arr;
+    }
+    constexpr std::array<ZobristKey, 16> InitCastling()
+    {
+        U64 prng_seed{1909068137};
+        std::array<ZobristKey, 16> arr;
+        for(int i = 0; i < 16; ++i) arr[i] = ZobRand64(prng_seed);
+        return arr;
+    }
+    constexpr inline PieceZobArr PIECES = InitPieces();
+    constexpr inline std::array<ZobristKey, 64> EN_PASSANT = InitEnPassant();
+    constexpr inline std::array<ZobristKey, 16> CASTLING = InitCastling();
+    constexpr inline ZobristKey SIDE_TO_MOVE = ZobRand64NoRef(144641901);
 }
 
 

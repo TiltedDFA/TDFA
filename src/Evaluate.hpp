@@ -20,7 +20,7 @@ namespace Eval
     inline bool is_middle_game;
 
     template<bool is_white>
-    constexpr Score CountMaterial(const BB::Position& pos)
+    constexpr Score CountMaterial(const Position& pos)
     {
         Score material{0};
         material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::PAWN>())     * PAWN_VAL;
@@ -30,13 +30,13 @@ namespace Eval
         material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::QUEEN>())    * QUEEN_VAL;
         return material;
     }
-    constexpr void UpdateData(const BB::Position& pos)
+    constexpr void UpdateData(const Position& pos)
     {
         const BitBoard all_pieces = pos.GetPieces<false>() | pos.GetPieces<true>();
         is_middle_game = Magics::PopCnt(all_pieces) > 8;
     }
     template<bool is_white>
-    constexpr Score Mobility(const BB::Position& pos)
+    constexpr Score Mobility(const Position& pos)
     {
         Score mobility{0};
         const U8 num_attks_king    = Magics::PopCnt(MoveGen::KingAttacks<is_white>(pos));
@@ -51,7 +51,7 @@ namespace Eval
         mobility += num_attks_rook  * (is_middle_game ?  10 : 15);
         return mobility;
     }
-    constexpr Score Evaluate(const BB::Position& pos)
+    constexpr Score Evaluate(const Position& pos)
     {
         UpdateData(pos);
         // const Score white_eval = CountMaterial<true>(pos);

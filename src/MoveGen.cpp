@@ -2,7 +2,7 @@
 #include <algorithm>
 using Magics::Shift;
 
-void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
+void MoveGen::WhitePawnMoves(const Position& pos, MoveList* ml) noexcept
 {
     BitBoard pawns = pos.GetSpecificPieces<true, loc::PAWN>();
     if(!pawns) return;
@@ -13,7 +13,7 @@ void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
-        ml.add(Moves::EncodeMove(index - 8, index, Moves::PAWN));
+        ml->add(Moves::EncodeMove(index - 8, index, Moves::PAWN));
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 
@@ -22,10 +22,10 @@ void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
     {
         const int index = Magics::FindLS1B(pawn_move);
 
-        ml.add(Moves::EncodeMove(index - 8, index, Moves::PROM_BISHOP));
-        ml.add(Moves::EncodeMove(index - 8, index, Moves::PROM_QUEEN));
-        ml.add(Moves::EncodeMove(index - 8, index, Moves::PROM_ROOK));
-        ml.add(Moves::EncodeMove(index - 8, index, Moves::PROM_KNIGHT));
+        ml->add(Moves::EncodeMove(index - 8, index, Moves::PROM_BISHOP));
+        ml->add(Moves::EncodeMove(index - 8, index, Moves::PROM_QUEEN));
+        ml->add(Moves::EncodeMove(index - 8, index, Moves::PROM_ROOK));
+        ml->add(Moves::EncodeMove(index - 8, index, Moves::PROM_KNIGHT));
 
         pawn_move = Magics::PopLS1B(pawn_move);
     }
@@ -34,7 +34,7 @@ void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
-        ml.add(Moves::EncodeMove(index - 16, index, Moves::PAWN));
+        ml->add(Moves::EncodeMove(index - 16, index, Moves::PAWN));
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 
@@ -44,14 +44,14 @@ void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
         const int index = Magics::FindLS1B(pawn_move);
         if(index > 55)
         {   
-            ml.add(Moves::EncodeMove(index - 9, index, Moves::PROM_BISHOP));
-            ml.add(Moves::EncodeMove(index - 9, index, Moves::PROM_QUEEN));
-            ml.add(Moves::EncodeMove(index - 9, index, Moves::PROM_ROOK));
-            ml.add(Moves::EncodeMove(index - 9, index, Moves::PROM_KNIGHT));
+            ml->add(Moves::EncodeMove(index - 9, index, Moves::PROM_BISHOP));
+            ml->add(Moves::EncodeMove(index - 9, index, Moves::PROM_QUEEN));
+            ml->add(Moves::EncodeMove(index - 9, index, Moves::PROM_ROOK));
+            ml->add(Moves::EncodeMove(index - 9, index, Moves::PROM_KNIGHT));
         }
         else
         {
-            ml.add(Moves::EncodeMove(index - 9, index, Moves::PAWN)); 
+            ml->add(Moves::EncodeMove(index - 9, index, Moves::PAWN)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     }
@@ -62,20 +62,20 @@ void MoveGen::WhitePawnMoves(const BB::Position& pos, MoveList& ml) noexcept
         const int index = Magics::FindLS1B(pawn_move);
         if(index > 55)
         {   
-            ml.add(Moves::EncodeMove(index - 7, index, Moves::PROM_BISHOP));
-            ml.add(Moves::EncodeMove(index - 7, index, Moves::PROM_QUEEN));
-            ml.add(Moves::EncodeMove(index - 7, index, Moves::PROM_ROOK));
-            ml.add(Moves::EncodeMove(index - 7, index, Moves::PROM_KNIGHT));
+            ml->add(Moves::EncodeMove(index - 7, index, Moves::PROM_BISHOP));
+            ml->add(Moves::EncodeMove(index - 7, index, Moves::PROM_QUEEN));
+            ml->add(Moves::EncodeMove(index - 7, index, Moves::PROM_ROOK));
+            ml->add(Moves::EncodeMove(index - 7, index, Moves::PROM_KNIGHT));
         }
         else
         {
-            ml.add(Moves::EncodeMove(index - 7, index, Moves::PAWN)); 
+            ml->add(Moves::EncodeMove(index - 7, index, Moves::PAWN)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 }
 
-void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
+void MoveGen::BlackPawnMoves(const Position& pos, MoveList* ml) noexcept
 {
     BitBoard pawns = pos.GetSpecificPieces<false, loc::PAWN>();
     if(!pawns) return;
@@ -86,7 +86,7 @@ void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
-        ml.add(Moves::EncodeMove(index + 8, index, Moves::PAWN));
+        ml->add(Moves::EncodeMove(index + 8, index, Moves::PAWN));
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
 
@@ -94,17 +94,17 @@ void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
-        ml.add(Moves::EncodeMove(index + 8, index, Moves::PROM_BISHOP));
-        ml.add(Moves::EncodeMove(index + 8, index, Moves::PROM_QUEEN));
-        ml.add(Moves::EncodeMove(index + 8, index, Moves::PROM_ROOK));
-        ml.add(Moves::EncodeMove(index + 8, index, Moves::PROM_KNIGHT));
+        ml->add(Moves::EncodeMove(index + 8, index, Moves::PROM_BISHOP));
+        ml->add(Moves::EncodeMove(index + 8, index, Moves::PROM_QUEEN));
+        ml->add(Moves::EncodeMove(index + 8, index, Moves::PROM_ROOK));
+        ml->add(Moves::EncodeMove(index + 8, index, Moves::PROM_KNIGHT));
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
     pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos.GetEmptySquares() & Shift<MD::SOUTH>(pos.GetEmptySquares()) & Magics::RANK_5BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
-        ml.add(Moves::EncodeMove(index + 16, index, Moves::PAWN));
+        ml->add(Moves::EncodeMove(index + 16, index, Moves::PAWN));
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
 
@@ -114,14 +114,14 @@ void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
         const int index = Magics::FindLS1B(pawn_move);
         if(index < 8)
         {   
-            ml.add(Moves::EncodeMove(index + 7, index, Moves::PROM_BISHOP));
-            ml.add(Moves::EncodeMove(index + 7, index, Moves::PROM_QUEEN));
-            ml.add(Moves::EncodeMove(index + 7, index, Moves::PROM_ROOK));
-            ml.add(Moves::EncodeMove(index + 7, index, Moves::PROM_KNIGHT));
+            ml->add(Moves::EncodeMove(index + 7, index, Moves::PROM_BISHOP));
+            ml->add(Moves::EncodeMove(index + 7, index, Moves::PROM_QUEEN));
+            ml->add(Moves::EncodeMove(index + 7, index, Moves::PROM_ROOK));
+            ml->add(Moves::EncodeMove(index + 7, index, Moves::PROM_KNIGHT));
         }
         else
         {
-            ml.add(Moves::EncodeMove(index + 7, index, Moves::PAWN)); 
+            ml->add(Moves::EncodeMove(index + 7, index, Moves::PAWN)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
@@ -132,20 +132,20 @@ void MoveGen::BlackPawnMoves(const BB::Position& pos, MoveList& ml) noexcept
         const int index = Magics::FindLS1B(pawn_move);
         if(index < 8)
         {  
-            ml.add(Moves::EncodeMove(index + 9, index, Moves::PROM_BISHOP));
-            ml.add(Moves::EncodeMove(index + 9, index, Moves::PROM_QUEEN));
-            ml.add(Moves::EncodeMove(index + 9, index, Moves::PROM_ROOK));
-            ml.add(Moves::EncodeMove(index + 9, index, Moves::PROM_KNIGHT));
+            ml->add(Moves::EncodeMove(index + 9, index, Moves::PROM_BISHOP));
+            ml->add(Moves::EncodeMove(index + 9, index, Moves::PROM_QUEEN));
+            ml->add(Moves::EncodeMove(index + 9, index, Moves::PROM_ROOK));
+            ml->add(Moves::EncodeMove(index + 9, index, Moves::PROM_KNIGHT));
         }
         else
         {
-            ml.add(Moves::EncodeMove(index + 9, index, Moves::PAWN)); 
+            ml->add(Moves::EncodeMove(index + 9, index, Moves::PAWN)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     } 
 }
 
-BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
+BitBoard MoveGen::GenerateAllWhiteAttacks(const Position& pos)
 {
     BitBoard attacks{0ull};
     
@@ -161,11 +161,11 @@ BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
     {
         const Sq piece_index = Magics::FindLS1B(bishop_queen);
 
-        move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
+        move_info* move = const_cast<move_info*>(GetMovesForSliding<Diagonal>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
-        move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
+        move = const_cast<move_info*>(GetMovesForSliding<AntiDiagonal>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
@@ -176,11 +176,11 @@ BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
     {
         const Sq piece_index = Magics::FindLS1B(rook_queen);
 
-        move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
+        move_info* move = const_cast<move_info*>(GetMovesForSliding<File>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
-        move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
+        move = const_cast<move_info*>(GetMovesForSliding<Rank>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
@@ -199,7 +199,7 @@ BitBoard MoveGen::GenerateAllWhiteAttacks(const BB::Position& pos)
     attacks |= Magics::Shift<MD::NORTH_WEST>(pawns) & ~us;
     return attacks;
 }  
-BitBoard MoveGen::GenerateAllBlackAttacks(const BB::Position& pos)
+BitBoard MoveGen::GenerateAllBlackAttacks(const Position& pos)
 {
     BitBoard attacks{0ull};
     
@@ -215,11 +215,11 @@ BitBoard MoveGen::GenerateAllBlackAttacks(const BB::Position& pos)
     {
         const Sq piece_index = Magics::FindLS1B(bishop_queen);
 
-        move_info* move = const_cast<move_info*>(GetMovesForSliding<D::DIAG>(piece_index, us, them));
+        move_info* move = const_cast<move_info*>(GetMovesForSliding<Diagonal>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
-        move = const_cast<move_info*>(GetMovesForSliding<D::ADIAG>(piece_index, us, them));
+        move = const_cast<move_info*>(GetMovesForSliding<AntiDiagonal>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
@@ -230,11 +230,11 @@ BitBoard MoveGen::GenerateAllBlackAttacks(const BB::Position& pos)
     {
         const Sq piece_index = Magics::FindLS1B(rook_queen);
 
-        move_info* move = const_cast<move_info*>(GetMovesForSliding<D::FILE>(piece_index, us, them));
+        move_info* move = const_cast<move_info*>(GetMovesForSliding<File>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 
-        move = const_cast<move_info*>(GetMovesForSliding<D::RANK>(piece_index, us, them));
+        move = const_cast<move_info*>(GetMovesForSliding<Rank>(piece_index, us, them));
         for(U8 i{0}; i < move->count; ++i)
                 attacks |= Magics::IndexToBB(Moves::GetTargetIndex(move->encoded_move[i]));
 

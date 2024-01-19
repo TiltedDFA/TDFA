@@ -12,9 +12,9 @@ inline constexpr U8 SEARCH_DEPTH = 8;
 
 namespace Search
 {
-    Score GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+    Score GoSearch(TransposTable& tt, Position& pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
 
-    Move FindBestMove(BB::Position& pos, TransposTable& tt, TimeManager& tm);
+    Move FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm);
 };
 
 

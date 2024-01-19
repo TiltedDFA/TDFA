@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <array>
 
-#define CONSTEVAL_TIT 0
+#define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
 #define DEVELOPER_MODE 1
@@ -24,7 +24,7 @@ using Score     = I16;
 
 constexpr std::size_t MAX_MOVES = 218;
 
-enum class MD : U8
+enum MD : U8
 {
     NORTH,
     NORTH_EAST,
@@ -65,12 +65,18 @@ enum class PromType : U8
     ROOK
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
-enum class D : U8
+enum AttackDirection : U8
 {
-    FILE,
-    RANK,
-    DIAG,
-    ADIAG
+    File,
+    Rank,
+    Diagonal,
+    AntiDiagonal
+};
+enum class BoundType : U8
+{
+    EXACT_VAL,  //Score is X
+    ALPHA,      //Score is at max X
+    BETA        //Score is at least X
 };
 template<typename T>
 float FloatDiv(T dividend, T divisor)

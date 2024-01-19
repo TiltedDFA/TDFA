@@ -39,7 +39,7 @@ namespace Moves
     constexpr PieceType BAD_MOVE = std::numeric_limits<PieceType>::max();
     constexpr Move NULL_MOVE = std::numeric_limits<PieceType>::max();
 
-    [[nodiscard]] constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const PieceType piece_type)
+    constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const PieceType piece_type)
     {
         Move move{0};
         move |= start_index & START_SQ_MASK;
@@ -47,11 +47,11 @@ namespace Moves
         move |= (piece_type << PIECE_TYPE_SHIFT) & PIECE_TYPE_MASK;
         return move;
     }
-    constexpr void DecodeMove(const Move move, Sq& start_index, Sq& target_index, PieceType& piece_type)
+    constexpr void DecodeMove(const Move move, Sq* start_index, Sq* target_index, PieceType* piece_type)
     {
-        start_index = move & START_SQ_MASK;
-        target_index =  (move & END_SQ_MASK) >> END_SQ_SHIFT;
-        piece_type = (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;
+        *start_index = move & START_SQ_MASK;
+        *target_index =  (move & END_SQ_MASK) >> END_SQ_SHIFT;
+        *piece_type = (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;
     }
 
     constexpr PieceType GetPieceType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}
@@ -65,10 +65,7 @@ namespace Moves
     constexpr PieceType GetTypePromotingTo(const Move move) {return GetPieceType(move) - 7;}
     
     template<PieceType type>
-    constexpr Move SetPieceType(const Move move)
-    {
-        return (move & ~PIECE_TYPE_MASK) | (type << PIECE_TYPE_SHIFT);
-    }
+    constexpr Move SetPieceType(const Move move) {return (move & ~PIECE_TYPE_MASK) | (type << PIECE_TYPE_SHIFT);}
 }
 
 

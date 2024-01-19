@@ -167,7 +167,7 @@ namespace Magics
         return result;
     }
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
+    static consteval std::array<std::array<BitBoard, 4> ,64> PrecomputeMask()
     {
         std::array<std::array<BitBoard,4>,64> r_val{};
         for(U8 i = 0; i < 64; ++i)
@@ -182,10 +182,10 @@ namespace Magics
             for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
             for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
             
-            r_val[i][static_cast<int>(D::FILE)] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
-            r_val[i][static_cast<int>(D::RANK)] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
-            r_val[i][static_cast<int>(D::DIAG)] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
-            r_val[i][static_cast<int>(D::ADIAG)] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
+            r_val[i][File] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
+            r_val[i][Rank] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
+            r_val[i][Diagonal] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
+            r_val[i][AntiDiagonal] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
         }
         return r_val;
     }
@@ -208,20 +208,20 @@ namespace Magics
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_us = compute_base_2_to_3<true>();
+    inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_us = compute_base_2_to_3<true>();
 
-    static constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
+    inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
 
-    static constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square)
+    inline constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square)
     {
         return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
     }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static constexpr std::array<std::array<BitBoard, 4>, 64> SLIDING_ATTACKS_MASK = PrecomputeMask();
+    inline constexpr std::array<std::array<BitBoard, 4>, 64> SLIDING_ATTACKS_MASK = PrecomputeMask();
     
-    static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
+    inline constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 
-    static constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
+    inline constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

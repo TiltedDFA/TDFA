@@ -109,9 +109,9 @@ void UCI::HandlePosition(const ArgList& args)
     {
         const Move move = UTIL::UciToMove(*it, pos);
 
-    #if DEVELOPER_MODE == 1
-        if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
-    #endif
+    // #if DEVELOPER_MODE == 1
+    //     // if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
+    // #endif
 
         pos.MakeMove(move);
     }
@@ -122,14 +122,14 @@ void UCI::HandleStop()
 }
 void UCI::HandleNewGame()
 {
-    pos = BB::Position(STARTPOS);
+    pos = Position(STARTPOS);
     transpos_table.Clear();
     time_manager.SetOptions(60'000,0);
 }
-void UCI::HandleSetOption(const ArgList& args)
-{
-    //there are no options to set as of this version
-}
+// void UCI::HandleSetOption(const ArgList& args)
+// {
+//     //there are no options to set as of this version
+// }
 void UCI::loop()
 {
     std::string input{""};
@@ -163,9 +163,9 @@ void UCI::loop()
         case 6:
             HandleNewGame();
             break;
-        case 7:
-            HandleSetOption(args);
-            break;
+        // case 7:
+        //     HandleSetOption(args);
+        //     break;
         default:
             break;
         }

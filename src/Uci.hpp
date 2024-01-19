@@ -35,7 +35,7 @@ namespace UCI
     };
     inline size_t constexpr TT_SIZE = 1024;//mb
     
-    inline BB::Position pos(STARTPOS);    
+    inline Position pos(STARTPOS);    
     inline TransposTable transpos_table;
     inline TimeManager time_manager;
 
@@ -46,6 +46,6 @@ namespace UCI
     void HandlePosition(const ArgList&);
     void HandleStop();
     void HandleNewGame();
-    void HandleSetOption(const ArgList&);
+    // void HandleSetOption(const ArgList&);
 }
 #endif // #ifndef UCI_HPP

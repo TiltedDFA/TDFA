@@ -29,16 +29,6 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintPiecesOnBoard(const BB::Position& pos)
-    {
-        char pieces[64];
-        for(char& i : pieces){i = ' ';}
-        BitBoard current_pieces{0};
-        for(U8 i = loc::KING; i <= loc::PAWN; ++i)
-        {
-            // current_pieces = 
-        }
-    }
     void PrintBB(BitBoard board, bool mirrored)
     {
         std::string output{}, current_line{};
@@ -92,7 +82,7 @@ namespace Debug
         output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
         PRINTNL(output);
     }
-    void PrintBoardState(const BB::Position& pos)
+    void PrintBoardState(const Position& pos)
     {
         pos.whites_turn_ ?  Debug::PrintUsThemBlank(pos.GetPieces<true>(), pos.GetPieces<false>(), true) :
                             Debug::PrintUsThemBlank(pos.GetPieces<false>(), pos.GetPieces<true>(), true);
@@ -106,7 +96,7 @@ namespace Debug
         }
 
         PRINTNL("Half moves: " + std::to_string(pos.info_.half_moves_)); 
-        PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_target_sq_)); 
+        PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_sq_)); 
 #if DEVELOPER_MODE == 1
         pos.whites_turn_ ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
 #endif

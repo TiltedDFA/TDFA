@@ -43,10 +43,10 @@ public:
     void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
     template<bool output_perft_paths>
-    void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
+    void RunPerft(int depth, Position& pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
 
     template<bool output_perft_paths>
-    void RunFastPerft(int depth, BB::Position& pos){ResetData(); FastPerft<true, output_perft_paths>(depth, pos);}
+    void RunFastPerft(int depth, Position& pos){ResetData(); FastPerft<true, output_perft_paths>(depth, pos);}
 
     U64 GetNodes() const {return total_nodes_;}
 
@@ -58,7 +58,7 @@ public:
     }
 private:
     template<bool is_root, bool output_perft_paths>
-    U64 Perft(int depth, BB::Position& pos)
+    U64 Perft(int depth, Position& pos)
     {
         if(!depth) return 1ull;
 
@@ -66,9 +66,9 @@ private:
         U64 nodes{0};
 
         if(pos.whites_turn_)
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
+            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
+            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
@@ -114,7 +114,7 @@ template<bool output_perft_paths>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
 {
     PerftHandler perft;
-    BB::Position pos(fen);
+    Position pos(fen);
     U64 time {1};
     
     {

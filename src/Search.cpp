@@ -1,6 +1,6 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alpha, Score beta)
+Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
 
@@ -8,7 +8,7 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
     BoundType hash_entry_flag = BoundType::ALPHA;
 
     //tt.probe() will set entry to nullptr if not found
-    if(HashEntry const* entry; entry = tt.Probe(pos.postion_key_))
+    if(HashEntry const* entry; (entry = tt.Probe(pos.postion_key_)))
     {
         if(entry->key_ == pos.postion_key_ && entry->depth_ >= depth)
         {
@@ -25,11 +25,11 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
     MoveList list;
     if(pos.whites_turn_)
     {
-        MoveGen::GeneratePseudoLegalMoves<true>(pos, list);
+        MoveGen::GeneratePseudoLegalMoves<true>(pos, &list);
     }
     else
     {
-        MoveGen::GeneratePseudoLegalMoves<false>(pos, list);
+        MoveGen::GeneratePseudoLegalMoves<false>(pos, &list);
     }
 
     if(list.len() == 0 || pos.info_.half_moves_ >= 50)
@@ -74,7 +74,7 @@ Score Search::GoSearch(TransposTable& tt, BB::Position& pos, U8 depth, Score alp
 
     return alpha;
 }
-Move Search::FindBestMove(BB::Position& pos, TransposTable& tt, TimeManager& tm)
+Move Search::FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm)
 {
     Move last_best_move = Moves::NULL_MOVE;
     Score last_best_eval = Eval::NEG_INF;
@@ -88,11 +88,11 @@ Move Search::FindBestMove(BB::Position& pos, TransposTable& tt, TimeManager& tm)
         
         if(pos.whites_turn_)
         {
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
+            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
         }
         else
         {
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
+            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
         }
 
         for(size_t i{0}; i < ml.len(); ++i)
