@@ -5,7 +5,7 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 #include "MoveGen.hpp"
-
+#include <array>
 namespace Eval
 {
     //constants
@@ -16,7 +16,7 @@ namespace Eval
     constexpr Score BISHOP_VAL  = 320;
     constexpr Score ROOK_VAL    = 520;
     constexpr Score QUEEN_VAL   = 950;
-
+    constexpr std::array<Score, 7> PAWN_PROGRESS_BONUS = {0,0,10,20,50,60,100};
     inline bool is_middle_game;
 
     template<bool is_white>
@@ -45,19 +45,37 @@ namespace Eval
         const U8 num_attks_knight  = Magics::PopCnt(MoveGen::KnightAttacks<is_white>(pos));
         const U8 num_attks_rook    = Magics::PopCnt(MoveGen::RookAttacks<is_white>(pos));
         mobility += num_attks_king  * (is_middle_game ? -10 : 20);
-        mobility += num_attks_queen * (is_middle_game ?   5 : 15);
+        mobility += num_attks_queen * (is_middle_game ?   3 : 10);
         mobility += num_attks_bishop* (is_middle_game ?  10 : 20);
         mobility += num_attks_knight* (is_middle_game ?  15 : 10);
         mobility += num_attks_rook  * (is_middle_game ?  10 : 15);
         return mobility;
     }
+    template<bool is_white>
+    constexpr Score PawnProgress(const Position& pos)
+    {
+        BitBoard our_pawns = pos.GetSpecificPieces<is_white, loc::PAWN>();
+        Score bonus{0};
+        while (our_pawns)
+        {
+            const Sq rank = Magics::RankOf(Magics::FindLS1B(our_pawns));
+            if constexpr(is_white)
+            {
+                bonus += PAWN_PROGRESS_BONUS[rank];
+            }
+            else
+            {
+                bonus += PAWN_PROGRESS_BONUS[7-rank];
+            }
+            our_pawns = Magics::PopLS1B(our_pawns);
+        }
+        return bonus;
+    }
     constexpr Score Evaluate(const Position& pos)
     {
         UpdateData(pos);
-        // const Score white_eval = CountMaterial<true>(pos);
-        // const Score black_eval = CountMaterial<false>(pos);
-        const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos);
-        const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos);
+        const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos) + PawnProgress<true>(pos);
+        const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos)+ PawnProgress<false>(pos);
 
         return (white_eval - black_eval) * (pos.whites_turn_ ? 1 : -1);
     }

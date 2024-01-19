@@ -39,7 +39,7 @@ int main(void)
     //     PRINT(std::format("{}, {}\n", i, Search::GoSearch(tt, pos, i)));
     // }
 
-
+    // PRINTNL((int)Magics::RankOf(48));
     UCI::loop();
 
     // MoveList ml;

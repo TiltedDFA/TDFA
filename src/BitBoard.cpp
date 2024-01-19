@@ -434,7 +434,7 @@ void Position::HashCurrentPostion()
             }
         }
     }
-    if(info_.en_passant_sq_) 
+    if(info_.en_passant_sq_ != 0) 
         postion_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     postion_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
 }
