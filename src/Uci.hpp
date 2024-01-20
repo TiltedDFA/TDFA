@@ -31,7 +31,8 @@ namespace UCI
         {"position", 4},
         {"stop", 5},
         {"ucinewgame", 6},
-        {"setoption", 7}
+        {"setoption", 7},
+        {"bench", 8}
     };
     inline size_t constexpr TT_SIZE = 1024;//mb
     
@@ -47,5 +48,6 @@ namespace UCI
     void HandleStop();
     void HandleNewGame();
     // void HandleSetOption(const ArgList&);
+    // void HandleBench(const ArgList&);
 }
 #endif // #ifndef UCI_HPP

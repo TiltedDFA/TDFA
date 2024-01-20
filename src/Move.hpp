@@ -54,15 +54,15 @@ namespace Moves
         *piece_type = (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;
     }
 
-    constexpr PieceType GetPieceType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}
+    constexpr PieceType PType(const Move move) {return (move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT;}
     
-    constexpr U8 GetTargetIndex(const Move move)     {return(move & END_SQ_MASK) >> END_SQ_SHIFT;}
+    constexpr U8 TargetSq(const Move move)     {return(move & END_SQ_MASK) >> END_SQ_SHIFT;}
 
-    constexpr U8 GetStartIndex(const Move move)      {return move & START_SQ_MASK;}
+    constexpr U8 StartSq(const Move move)      {return move & START_SQ_MASK;}
     
     constexpr bool IsPromotionMove(const Move move) {return move & 0x8000;}
 
-    constexpr PieceType GetTypePromotingTo(const Move move) {return GetPieceType(move) - 7;}
+    constexpr PieceType PTypeOfProm(const Move move) {return PType(move) - 7;}
     
     template<PieceType type>
     constexpr Move SetPieceType(const Move move) {return (move & ~PIECE_TYPE_MASK) | (type << PIECE_TYPE_SHIFT);}

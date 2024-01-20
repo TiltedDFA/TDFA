@@ -1,13 +1,25 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-#include <cstdint>
-#include <array>
 
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
-#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 0
+
+#if DEVELOPER_MODE != 1
+#define NDEBUG
+#endif
+
+
+#ifdef __GNUG__
+#define INLINE __attribute__((always_inline))
+#else
+#define INLINE
+#endif
+
+#include <array>
+#include <cstdint>
 
 using U8  = unsigned char;
 using U16 = unsigned short;
@@ -40,8 +52,8 @@ enum MD : U8
 
 struct move_info
 {
-    constexpr move_info():encoded_move(), count(0){}
-    constexpr void add_move(Move m){encoded_move.at(count++) = m;}
+    constexpr move_info(): encoded_move(), count(0){}
+    constexpr void add_move(Move m) noexcept {encoded_move.at(count++) = m;}
     std::array<Move, 7> encoded_move;
     U8 count;
 };

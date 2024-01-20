@@ -17,7 +17,7 @@ inline constexpr void SplitFen(std::string_view fen, std::array<std::string_view
     int start = 0;
     int end = -1;
     U8 current_fen_section = 0;
-    while(static_cast<std::size_t>(++end) < fen.size())
+    while(size_t(++end) < fen.size())
     {
         if(fen.at(end) == ' ')
         {

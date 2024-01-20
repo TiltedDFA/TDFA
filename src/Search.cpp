@@ -1,6 +1,6 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, Score beta)
+Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
 
@@ -8,9 +8,9 @@ Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, 
     BoundType hash_entry_flag = BoundType::ALPHA;
 
     //tt.probe() will set entry to nullptr if not found
-    if(HashEntry const* entry; (entry = tt.Probe(pos.postion_key_)))
+    if(HashEntry const* entry; (entry = tt->Probe(pos->ZKey())))
     {
-        if(entry->key_ == pos.postion_key_ && entry->depth_ >= depth)
+        if(entry->key_ == pos->ZKey() && entry->depth_ >= depth)
         {
             if(entry->bound_ == BoundType::EXACT_VAL)
                 return entry->eval_;
@@ -23,7 +23,7 @@ Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, 
     #endif
 
     MoveList list;
-    if(pos.whites_turn_)
+    if(pos->WhiteToMove())
     {
         MoveGen::GeneratePseudoLegalMoves<true>(pos, &list);
     }
@@ -32,27 +32,27 @@ Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, 
         MoveGen::GeneratePseudoLegalMoves<false>(pos, &list);
     }
 
-    if(list.len() == 0 || pos.info_.half_moves_ >= 50)
+    if(list.len() == 0 || pos->HalfMoves() >= 50)
     {
-        if(pos.whites_turn_ ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
+        if(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
             return Eval::NEG_INF;
         return 0;
     }
     
     for(size_t i = 0; i < list.len(); ++i)
     {
-        pos.MakeMove(list[i]);
+        pos->MakeMove(list[i]);
 
-        if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
         {
             Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
 
-            pos.UnmakeMove();
+            pos->UnmakeMove();
 
             if(eval >= beta)
             {
                 #if USE_TRANSPOSITION_TABLE == 1
-                tt.Store(pos.postion_key_, eval, Moves::NULL_MOVE, depth, BoundType::BETA);
+                tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::BETA);
                 #endif
                 return beta;
             }
@@ -65,16 +65,16 @@ Score Search::GoSearch(TransposTable& tt, Position& pos, U8 depth, Score alpha, 
                 alpha = eval;
             }
         }
-        else {pos.UnmakeMove();}
+        else {pos->UnmakeMove();}
     }
 
     #if USE_TRANSPOSITION_TABLE == 1
-    tt.Store(pos.postion_key_, alpha, Moves::NULL_MOVE, depth, hash_entry_flag);
+    tt->Store(pos->ZKey(), alpha, Moves::NULL_MOVE, depth, hash_entry_flag);
     #endif
 
     return alpha;
 }
-Move Search::FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm)
+Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* tm)
 {
     Move last_best_move = Moves::NULL_MOVE;
     Score last_best_eval = Eval::NEG_INF;
@@ -86,7 +86,7 @@ Move Search::FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm)
         Score best_eval = Eval::NEG_INF;
         Move best_move = Moves::NULL_MOVE;
         
-        if(pos.whites_turn_)
+        if(pos->WhiteToMove())
         {
             MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
         }
@@ -97,9 +97,9 @@ Move Search::FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm)
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm.OutOfTime()) return last_best_move;
-            pos.MakeMove(ml[i]);
-            if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            if(tm->OutOfTime()) return last_best_move;
+            pos->MakeMove(ml[i]);
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
             {
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];
 
@@ -111,7 +111,7 @@ Move Search::FindBestMove(Position& pos, TransposTable& tt, TimeManager& tm)
                     best_move = ml[i];
                 }
             }
-            pos.UnmakeMove();
+            pos->UnmakeMove();
         }
         last_best_eval = best_eval;
         last_best_move = best_move;

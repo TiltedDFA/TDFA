@@ -24,8 +24,7 @@ void TransposTable::Store(
                             BoundType   bound
                           )
 {
-    //check non zero
-    assert(num_elements_);
+    assert(num_elements_ != 0);
 
     HashEntry* entry = &table_ptr_[key % num_elements_];
 
@@ -41,6 +40,7 @@ void TransposTable::Store(
 }
 HashEntry const* TransposTable::Probe(ZobristKey key)const
 {
+    assert(num_elements_ != 0);
     HashEntry* entry = &table_ptr_[key % num_elements_];
     return (entry->key_ == key) ? entry : nullptr;
 }

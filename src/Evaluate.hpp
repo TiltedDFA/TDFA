@@ -20,23 +20,23 @@ namespace Eval
     inline bool is_middle_game;
 
     template<bool is_white>
-    constexpr Score CountMaterial(const Position& pos)
+    constexpr Score CountMaterial(Position const* pos)
     {
         Score material{0};
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::PAWN>())     * PAWN_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::KNIGHT>())   * KNIGHT_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::BISHOP>())   * BISHOP_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::ROOK>())     * ROOK_VAL;
-        material += Magics::PopCnt(pos.GetSpecificPieces<is_white, loc::QUEEN>())    * QUEEN_VAL;
+        material += Magics::PopCnt(pos->Pieces<is_white, loc::PAWN>())     * PAWN_VAL;
+        material += Magics::PopCnt(pos->Pieces<is_white, loc::KNIGHT>())   * KNIGHT_VAL;
+        material += Magics::PopCnt(pos->Pieces<is_white, loc::BISHOP>())   * BISHOP_VAL;
+        material += Magics::PopCnt(pos->Pieces<is_white, loc::ROOK>())     * ROOK_VAL;
+        material += Magics::PopCnt(pos->Pieces<is_white, loc::QUEEN>())    * QUEEN_VAL;
         return material;
     }
-    constexpr void UpdateData(const Position& pos)
+    constexpr void UpdateData(Position const* pos)
     {
-        const BitBoard all_pieces = pos.GetPieces<false>() | pos.GetPieces<true>();
+        const BitBoard all_pieces = pos->PiecesByColour<false>() | pos->PiecesByColour<true>();
         is_middle_game = Magics::PopCnt(all_pieces) > 8;
     }
     template<bool is_white>
-    constexpr Score Mobility(const Position& pos)
+    constexpr Score Mobility(Position const* pos)
     {
         Score mobility{0};
         const U8 num_attks_king    = Magics::PopCnt(MoveGen::KingAttacks<is_white>(pos));
@@ -52,9 +52,9 @@ namespace Eval
         return mobility;
     }
     template<bool is_white>
-    constexpr Score PawnProgress(const Position& pos)
+    constexpr Score PawnProgress(Position const* pos)
     {
-        BitBoard our_pawns = pos.GetSpecificPieces<is_white, loc::PAWN>();
+        BitBoard our_pawns = pos->Pieces<is_white, loc::PAWN>();
         Score bonus{0};
         while (our_pawns)
         {
@@ -71,13 +71,13 @@ namespace Eval
         }
         return bonus;
     }
-    constexpr Score Evaluate(const Position& pos)
+    constexpr Score Evaluate(Position const* pos)
     {
         UpdateData(pos);
         const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos) + PawnProgress<true>(pos);
         const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos)+ PawnProgress<false>(pos);
 
-        return (white_eval - black_eval) * (pos.whites_turn_ ? 1 : -1);
+        return (white_eval - black_eval) * (pos->WhiteToMove() ? 1 : -1);
     }
 }
 #endif // #ifndef EVALUATE_HPP

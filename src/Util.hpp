@@ -30,8 +30,8 @@ namespace UTIL
     }
     inline std::string MoveToStr(Move m)
     {
-        return (Moves::IsPromotionMove(m) ? (Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)) + PromotionChar(Moves::GetPieceType(m))) :
-                                            Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)));
+        return (Moves::IsPromotionMove(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::PType(m))) :
+                                            Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)));
     }
     inline Move UciToMove(const std::string_view str, const Position& pos)
     {
@@ -56,10 +56,10 @@ namespace UTIL
         }
 
         PieceType type;
-        if(pos.whites_turn_)
-            type = pos.GetTypeAtSq<true>(from);
+        if(pos.WhiteToMove())
+            type = pos.TypeAtSq<true>(from);
         else
-            type = pos.GetTypeAtSq<false>(from);
+            type = pos.TypeAtSq<false>(from);
 
         const Move constructed_move = Moves::EncodeMove(from, to, type);
         Debug::PrintEncodedMoveStr(constructed_move);

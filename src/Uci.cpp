@@ -53,7 +53,7 @@ void UCI::HandleGo(const ArgList& args)
             if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
         }
-        if(pos.whites_turn_)
+        if(pos.WhiteToMove())
         {
             time_manager.SetOptions(wtime, winc);
         }
@@ -64,25 +64,8 @@ void UCI::HandleGo(const ArgList& args)
     }
     //start the timer for this round of calculation
     time_manager.StartTiming();
-    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(pos, transpos_table, time_manager)));
-    
-    // size_t i{0};
-    // while(i < 1'000'000)
-    // {
-    //     MoveList ml;
-    //     if (i&1)
-    //     {
-    //         MoveGen::GenerateLegalMoves<false>(pos, ml);
-    //     }
-    //     else
-    //     {
-    //         MoveGen::GenerateLegalMoves<true>(pos, ml);
-    //     }
-    //     pos.MakeMove(ml[0]);
-    //     transpos_table.Store(pos.postion_key_, Eval::Evaluate(pos), ml[0], 7, BoundType::EXACT_VAL);
-    //     ++i;
-    // }
-    // std::cout << "done\n"; 
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(&pos, &transpos_table, &time_manager)));
+    std::cout.flush();
 }
 void UCI::HandlePosition(const ArgList& args)
 {
@@ -110,7 +93,7 @@ void UCI::HandlePosition(const ArgList& args)
         const Move move = UTIL::UciToMove(*it, pos);
 
     // #if DEVELOPER_MODE == 1
-    //     // if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
+    //     // if(Moves::PType(move) == Moves::BAD_MOVE)/*handle error*/;
     // #endif
 
         pos.MakeMove(move);
@@ -130,6 +113,26 @@ void UCI::HandleNewGame()
 // {
 //     //there are no options to set as of this version
 // }
+void HandleBench(const ArgList& args)
+{
+    if(args[1] != "perft") return;
+
+    if(args.size() > 2 && args[2] == "suite")
+    {
+        std::cout << "running perft suite bench\n";
+        if(RunPerftSuite<false>() == false) 
+            std::cout << "Failed to open perftsuite.epd";
+        else
+            std::cout << "completed perft suite bench\n";
+    }
+    else
+    {
+        std::cout << "running perft bench\n";
+        RunBenchmark<false>();
+        std::cout << "completed perft bench\n";
+    }
+    
+}
 void UCI::loop()
 {
     std::string input{""};
@@ -166,6 +169,9 @@ void UCI::loop()
         // case 7:
         //     HandleSetOption(args);
         //     break;
+        case 8:
+            HandleBench(args);
+            break;
         default:
             break;
         }

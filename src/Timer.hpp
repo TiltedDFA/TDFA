@@ -19,7 +19,7 @@ public:
         const std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
         if(time_out)
         {
-            *time_out = static_cast<U64>(std::chrono::duration_cast<T>(end-start_).count());
+            *time_out = U64(std::chrono::duration_cast<T>(end-start_).count());
         }
         else
         {
