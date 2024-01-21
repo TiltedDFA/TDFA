@@ -41,8 +41,11 @@ int main(void)
 
     // PRINTNL(alignof(Position));
     // PRINTNL(sizeof(Position));
-    // PRINTNL(alignof(StateInfo));
-    // PRINTNL(sizeof(StateInfo));
+    // PRINTNL(sizeof(move_info));
+    // PRINTNL(alignof(move_info));
+
+    // PRINTNL(sizeof(SLIDING_ATTACK_CONFIG));
+    // PRINTNL(alignof(SLIDING_ATTACK_CONFIG));
     UCI::loop();
 
     // MoveList ml;

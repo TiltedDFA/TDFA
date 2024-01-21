@@ -348,32 +348,6 @@ namespace MoveGen
         return attacks;
     }
     
-    // template<bool is_white>
-    // constexpr BitBoard BishopAttacks(Position const* pos)
-    // {
-    //     BitBoard bishops = pos->Pieces<is_white, loc::BISHOP>();
-    //     if(!bishops) return 0;
-
-    //     BitBoard attacks{0};
-    //     const BitBoard us = pos->PiecesByColour<is_white>();
-    //     const BitBoard them = pos->PiecesByColour<!is_white>();
-
-    //     while(bishops)
-    //     {
-    //         const U8 bishop_index = Magics::FindLS1B(bishops);
-
-    //         move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
-    //         for(U8 i{0}; i < move->count_; ++i)
-    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-    //         move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
-    //         for(U8 i{0}; i < move->count_; ++i)
-    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-    //         bishops = Magics::PopLS1B(bishops);
-    //     }
-    //     return attacks;
-    // }
     template<bool is_white>
     constexpr BitBoard BishopAttacks(Position const* pos)
     {
@@ -396,33 +370,6 @@ namespace MoveGen
         return attacks;
     }
 
-    // template<bool is_white>
-    // constexpr BitBoard RookAttacks(Position const* pos)
-    // {
-    //     BitBoard rooks = pos->Pieces<is_white, loc::ROOK>();
-    //     if(!rooks) return 0;
-    //     BitBoard attacks{0};
-
-
-    //     const BitBoard us = pos->PiecesByColour<is_white>();
-    //     const BitBoard them = pos->PiecesByColour<!is_white>();
-
-    //     while(rooks)
-    //     {
-    //         const U8 rook_index = Magics::FindLS1B(rooks);
-
-    //         move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
-    //         for(U8 i{0}; i < move->count_; ++i) 
-    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-    //         move = GetMovesForSliding<Rank>(rook_index, us, them);
-    //         for(U8 i{0}; i < move->count_; ++i) 
-    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-    //         rooks = Magics::PopLS1B(rooks);
-    //     }
-    //     return attacks;
-    // }
     template<bool is_white>
     constexpr BitBoard RookAttacks(Position const* pos)
     {
@@ -443,43 +390,6 @@ namespace MoveGen
         return attacks;
     }
   
-//    template<bool is_white>
-//     constexpr BitBoard QueenAttacks(Position const* pos)
-//     {
-//         BitBoard queens = pos->Pieces<is_white, loc::QUEEN>();
-//         if(!queens) return 0;
-
-//         BitBoard attacks{0};
-//         const BitBoard us = pos->PiecesByColour<is_white>();
-//         const BitBoard them = pos->PiecesByColour<!is_white>();
-  
-//         while(queens)
-//         {
-//             const U8 queen_index = Magics::FindLS1B(queens);
-            
-//             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-//             for(U8 i{0}; i < move->count_; ++i)
-//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-
-//             move = GetMovesForSliding<Rank>(queen_index, us, them);
-//             for(U8 i{0}; i < move->count_; ++i)
-//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-
-//             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-//             for(U8 i{0}; i < move->count_; ++i)
-//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-
-//             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-//             for(U8 i{0}; i < move->count_; ++i)
-//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
-            
-//             queens = Magics::PopLS1B(queens);
-//         }
-//         return attacks;
-//     }
     template<bool is_white>
     constexpr BitBoard QueenAttacks(Position const* pos)
     {
