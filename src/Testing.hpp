@@ -71,31 +71,55 @@ private:
         {
             if constexpr(is_root)
             {
+            #if DEVELOPER_MODE == 1
+                const Position copy = *pos;
+                Sq start;
+                Sq end;
+                PieceType t;
+                Moves::DecodeMove(ml[i], &start, &end, &t);
+                if(start == 2 && end == 47)
+                {
+                    PRINT("\n");
+                }
+            #endif
                 pos->MakeMove(ml[i]);
-                
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
-
                     if constexpr(output_perft_paths) 
                         nodes += cnt;
-
                     total_nodes_ += cnt;
-
                     if constexpr(output_perft_paths) 
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
-                
-                pos->UnmakeMove();
+                pos->UnmakeMove(ml[i]);
+            #if DEVELOPER_MODE == 1
+                assert(copy == *pos);
+            #endif
             } 
             else
             {
+            #if DEVELOPER_MODE == 1
+                const Position copy = *pos;
+                Sq start;
+                Sq end;
+                PieceType t;
+                Moves::DecodeMove(ml[i], &start, &end, &t);
+
+                if(start == 14 && end == 6 && t == PromQueen)
+                {
+                    PRINT("");
+                }
+            #endif
                 pos->MakeMove(ml[i]);
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
-                pos->UnmakeMove();
+                pos->UnmakeMove(ml[i]);
+            #if DEVELOPER_MODE == 1
+                assert(copy == *pos);
+            #endif
             }
         }
 
@@ -117,6 +141,10 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
     {
         Timer<std::chrono::microseconds> t(&time);
         perft.RunPerft<output_perft_paths>(depth, &pos);
+    }
+    if constexpr(output_perft_paths)
+    {
+        perft.PrintData();
     }
 
     const U64 nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);

@@ -3,7 +3,6 @@
 
 #include <random>
 #include "Types.hpp"
-#include "MagicConstants.hpp"
 #include <array>
 #include <random>
 #include <cassert>
@@ -25,7 +24,7 @@ namespace Zobrist
         s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
         return s * 2685821657736338717LL;
     }
-    constexpr PieceZobArr InitPieces()
+    consteval PieceZobArr InitPieces()
     {
         U64 prng_seed{1070372};
 
@@ -36,14 +35,14 @@ namespace Zobrist
                     arr[clr][pt][sq] = ZobRand64(prng_seed);
         return arr;
     }
-    constexpr std::array<ZobristKey, 64> InitEnPassant()
+    consteval std::array<ZobristKey, 64> InitEnPassant()
     {
         U64 prng_seed{1070372};
         std::array<ZobristKey, 64> arr;
         for(int i = 0; i < 64; ++i) arr[i] = ZobRand64(prng_seed);
         return arr;
     }
-    constexpr std::array<ZobristKey, 16> InitCastling()
+    consteval std::array<ZobristKey, 16> InitCastling()
     {
         U64 prng_seed{1909068137};
         std::array<ZobristKey, 16> arr;

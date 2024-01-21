@@ -33,6 +33,4 @@ inline constexpr void SplitFen(std::string_view fen, std::array<std::string_view
 }
 inline constexpr bool IsDigit(const char i) {return i <= '9' && i >= '0';}
 
-inline constexpr U16 EncodeKing(Sq start, Sq target) {return start | (target << 6);}
-
 #endif // #ifndef BOARDUTILS_HPP

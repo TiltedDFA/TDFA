@@ -47,7 +47,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
         {
             Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
 
-            pos->UnmakeMove();
+            pos->UnmakeMove(list[i]);
 
             if(eval >= beta)
             {
@@ -65,7 +65,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
                 alpha = eval;
             }
         }
-        else {pos->UnmakeMove();}
+        else {pos->UnmakeMove(list[i]);}
     }
 
     #if USE_TRANSPOSITION_TABLE == 1
@@ -111,7 +111,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
                     best_move = ml[i];
                 }
             }
-            pos->UnmakeMove();
+            pos->UnmakeMove(ml[i]);
         }
         last_best_eval = best_eval;
         last_best_move = best_move;

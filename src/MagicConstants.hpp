@@ -2,6 +2,7 @@
 #define MAGICCONSTANTS_HPP
 
 #include "Types.hpp"
+#include "ZobristConstants.hpp"
 #include <array>
 #include <bitset>
 #include <cmath>
@@ -10,6 +11,15 @@
 
 namespace Magics
 {
+    //forced compile time eval version of the other SqToBB
+    template<Sq N>
+    consteval BitBoard SqToBB() noexcept {return 1ull << N;}
+    
+    //returns the file of an index/square
+    constexpr Sq FileOf(U8 index) noexcept {return index & 7;}
+
+    constexpr U16 EncodeKing(Sq start, Sq target) {return start | (target << 6);}
+
     constexpr BitBoard FILE_ABB = 0x01'01'01'01'01'01'01'01;
     constexpr BitBoard FILE_BBB = FILE_ABB << 1;
     constexpr BitBoard FILE_CBB = FILE_ABB << 2;
@@ -31,6 +41,33 @@ namespace Magics
     constexpr BitBoard CROSS_DIAG = 0x8040201008040201;         // A1 - H8
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 
+    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() | 
+                                         SqToBB<56>() | SqToBB<63>());
+    
+    constexpr U8 CASTLE_K_W = 0x08;
+    constexpr U8 CASTLE_Q_W = 0x04;
+    constexpr U8 CASTLE_K_B = 0x02;
+    constexpr U8 CASTLE_Q_B = 0x01;    
+    constexpr U8 CASTLE_ALL = 0x0F;
+    //preserve black's right to castle
+    constexpr U8 NO_CASTLE_W = (CASTLE_K_B | CASTLE_Q_B);
+    constexpr U8 NO_CASTLE_B = (CASTLE_K_W | CASTLE_Q_W);
+
+    constexpr BitBoard ROOK_TO_FROM_W_Q = SqToBB<0>() | SqToBB<3>();
+    constexpr BitBoard ROOK_TO_FROM_W_K = SqToBB<5>() | SqToBB<7>();
+    constexpr BitBoard ROOK_TO_FROM_B_Q = SqToBB<56>()| SqToBB<59>();
+    constexpr BitBoard ROOK_TO_FROM_B_K = SqToBB<61>()| SqToBB<63>();
+
+    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] = 
+        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K}; 
+    constexpr ZobristKey CASTLING_ZOB_KEYS[5] = 
+    {
+        0,
+        (Zobrist::PIECES[true][Rook][0]   ^ Zobrist::PIECES[true][Rook][3]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][2]  ),
+        (Zobrist::PIECES[true][Rook][5]   ^ Zobrist::PIECES[true][Rook][7]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][6]  ),
+        (Zobrist::PIECES[false][Rook][56] ^ Zobrist::PIECES[false][Rook][59] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][58]),
+        (Zobrist::PIECES[false][Rook][61] ^ Zobrist::PIECES[false][Rook][63] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][62])
+    };
     constexpr BitBoard GetLS1B(BitBoard bb) noexcept {return bb & -bb;}
 
 #ifdef __GNUG__
@@ -65,17 +102,11 @@ namespace Magics
     constexpr bool ValidSq(int index) noexcept {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
-    constexpr BitBoard SqToBB(Sq index) noexcept {return 1ull << index;}
+    constexpr BitBoard SqToBB(Sq index) {assert(ValidSq(index));return 1ull << index;}
 
-    //forced compile time eval version of the other IndexToBB
-    template<Sq N>
-    consteval BitBoard IndexToBB() noexcept {return 1ull << N;}
-    
-    //returns the file of an index/square
-    constexpr Sq FileOf(U8 index) noexcept {return index & 7;}
 
     //returns the rank of an index/square
-    constexpr Sq RankOf(U8 index) noexcept {return index >> 3;}
+    constexpr Sq RankOf(Sq index) {assert(ValidSq(index));return index >> 3;}
 
     //finds the file of the square/index and returns a bitboard containing a 1 bit
     // in the square specified
@@ -131,8 +162,8 @@ namespace Magics
     consteval std::array<BitBoard, 64> KnightAttackingMask() noexcept
     {
         std::array<BitBoard, 64> temp_array{};
-        constexpr BitBoard knight_attack_template = IndexToBB<1>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
-                                                    IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
+        constexpr BitBoard knight_attack_template = SqToBB<1>() | SqToBB<3>() | SqToBB<8>() | SqToBB<12>() |
+                                                    SqToBB<24>()| SqToBB<28>()| SqToBB<33>()| SqToBB<35>() ;
         for(U8 i{0}; i < 64;++i)
         {
             if(i % 8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)))
@@ -197,9 +228,9 @@ namespace Magics
     consteval std::array<BitBoard, 64> KingAttackingMask() noexcept
     {
         std::array<BitBoard, 64> temp_array{};
-        constexpr BitBoard king_attack_template =   IndexToBB<0>() | IndexToBB<1>() | IndexToBB<2>() |
-                                                    IndexToBB<8>() | IndexToBB<10>()|
-                                                    IndexToBB<16>()| IndexToBB<17>()| IndexToBB<18>();
+        constexpr BitBoard king_attack_template =   SqToBB<0>() | SqToBB<1>() | SqToBB<2>() |
+                                                    SqToBB<8>() | SqToBB<10>()|
+                                                    SqToBB<16>()| SqToBB<17>()| SqToBB<18>();
         for(U8 i{0}; i < 64; ++i)
         {
             if(i % 8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)))

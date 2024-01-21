@@ -16,13 +16,13 @@ namespace UTIL
     {
         switch (p)
         {
-        case Moves::PROM_BISHOP:
+        case PromBishop:
             return 'b';
-        case Moves::PROM_KNIGHT:
+        case PromKnight:
             return 'n';
-        case Moves::PROM_QUEEN:
+        case PromQueen:
             return 'q';
-        case Moves::PROM_ROOK:
+        case PromRook:
             return 'r';
         default:
             return 'z';
@@ -43,15 +43,15 @@ namespace UTIL
             switch(str[4])
             {
             case 'q':
-                return Moves::EncodeMove(from, to, Moves::PROM_QUEEN);
+                return Moves::EncodeMove(from, to, PromQueen);
             case 'r':
-                return Moves::EncodeMove(from, to, Moves::PROM_ROOK);
+                return Moves::EncodeMove(from, to, PromRook);
             case 'b':
-                return Moves::EncodeMove(from, to, Moves::PROM_BISHOP);
+                return Moves::EncodeMove(from, to, PromBishop);
             case 'n':
-                return Moves::EncodeMove(from, to, Moves::PROM_KNIGHT);
+                return Moves::EncodeMove(from, to, PromKnight);
             default:
-                return Moves::EncodeMove(from, to, Moves::BAD_MOVE);
+                return Moves::EncodeMove(from, to, NullPiece);
             }
         }
 

@@ -16,6 +16,10 @@ int main(void)
     // RunBenchmark<false>();
     // RunPerftSuite<false>();
 
+    // PRINTNL((int)Moves::EncodeMove(32,41,Pawn));
+    // PRINTNL((int)Moves::EncodeMove(32,41,King));
+    // TestPerft<true>(6, 367724, 1, "8/8/8/8/8/8/1k6/R3K3 b Q - 0 1");
+
     // PRINTNL("------------------");
     // for(const ZobristKey i : Zobrist::CASTLING) PRINT(std::format("{},\n",i));
     // PRINTNL(sizeof(HashEntry));
@@ -46,6 +50,8 @@ int main(void)
 
     // PRINTNL(sizeof(SLIDING_ATTACK_CONFIG));
     // PRINTNL(alignof(SLIDING_ATTACK_CONFIG));
+    
+
     UCI::loop();
 
     // MoveList ml;

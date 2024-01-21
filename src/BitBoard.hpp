@@ -7,7 +7,7 @@
 #include "BoardUtils.hpp"
 #include <iostream>
 #include <string_view>
-#include <stack>
+#include <vector>
 #include <cstring>
 #include <cassert>
 #include "ZobristConstants.hpp"
@@ -16,21 +16,18 @@
 struct StateInfo
 {
 public:
-    constexpr StateInfo(): castling_rights_(0xF), half_moves_(0), en_passant_sq_(0){}
-    
-    constexpr StateInfo& operator=(const StateInfo& p)
-    {
-        castling_rights_ = p.castling_rights_;
-        half_moves_ = p.half_moves_;
-        en_passant_sq_ = p.en_passant_sq_;
-        return *this;
-    }
+    constexpr StateInfo():
+        castling_rights_(0),
+        half_moves_(0),
+        en_passant_sq_(255),
+        captured_type_(NullPiece),
+        zobrist_key_(0){}
 public: 
-    // top 4 bits are ignored XXXX WkWqBkBq where Wx and Bx represents sides and colours
-    // 1 = can castle 0 = can't castle
-    U8 castling_rights_;
-    U8 half_moves_;
-    U8 en_passant_sq_;
+    U8          castling_rights_;
+    U8          half_moves_;
+    U8          en_passant_sq_;
+    PieceType   captured_type_;
+    ZobristKey  zobrist_key_;
 };
 class Position
 {
@@ -40,60 +37,82 @@ public:
         info_({}),
         whites_turn_(true),
         full_moves_(0),
-        position_key_(0){}
+        previous_state_info({})
+    {
+        previous_state_info.reserve(MAX_MOVES);
+    }
     
-    Position(std::string_view fen)
+    Position(std::string_view fen) : Position()
     {
         ImportFen(fen);
         HashCurrentPostion();
     }
-    
+
+#if DEVELOPER_MODE == 1
+
+    bool operator==(const Position& other)
+    {
+        for(int i = 0; i < 2;++i)
+        {
+            for(int j = 0; j < 6;++j)
+            {
+                if(this->pieces_[i][j] != other.pieces_[i][j]) return false;
+            }
+        }
+        if(info_.castling_rights_  != other.info_.castling_rights_  ) return false;
+        if(info_.half_moves_       != other.info_.half_moves_       ) return false;
+        if(info_.en_passant_sq_    != other.info_.en_passant_sq_    ) return false;
+        if(info_.captured_type_    != other.info_.captured_type_    ) return false;
+        if(info_.zobrist_key_      != other.info_.zobrist_key_      ) return false;
+        if(whites_turn_            != other.whites_turn_            ) return false;
+        if(full_moves_             != other.full_moves_             ) return false;
+        return true;
+    }
+#endif
+
     constexpr Position(const Position& p)
     {
         std::memcpy(pieces_, p.pieces_, sizeof(pieces_));
-        whites_turn_ = p.whites_turn_;
-        full_moves_ = p.full_moves_;
-        position_key_ = p.position_key_;
-        info_.castling_rights_ = p.info_.castling_rights_;
-        info_.en_passant_sq_ = p.info_.en_passant_sq_;
-        info_.half_moves_ = p.info_.half_moves_;
+        info_.castling_rights_  = p.info_.castling_rights_;
+        info_.half_moves_       = p.info_.half_moves_;
+        info_.en_passant_sq_    = p.info_.en_passant_sq_;
+        info_.captured_type_    = p.info_.captured_type_;
+        info_.zobrist_key_      = p.info_.zobrist_key_;
+        whites_turn_            = p.whites_turn_;
+        full_moves_             = p.full_moves_;
     }
     
     constexpr Position& operator=(const Position& p)
     {
         std::memcpy(pieces_, p.pieces_, sizeof(pieces_));
-        whites_turn_ = p.whites_turn_;
-        full_moves_ = p.full_moves_;
-        position_key_ = p.position_key_;
-        info_.castling_rights_ = p.info_.castling_rights_;
-        info_.en_passant_sq_ = p.info_.en_passant_sq_;
-        info_.half_moves_ = p.info_.half_moves_;
+        info_.castling_rights_  = p.info_.castling_rights_;
+        info_.half_moves_       = p.info_.half_moves_;
+        info_.en_passant_sq_    = p.info_.en_passant_sq_;
+        info_.captured_type_    = p.info_.captured_type_;
+        info_.zobrist_key_      = p.info_.zobrist_key_;
+        whites_turn_            = p.whites_turn_;
+        full_moves_             = p.full_moves_;
         return *this;
     }
     
     void Reset()
     {
         std::memset(pieces_, 0, sizeof(pieces_));
-        info_.castling_rights_ = 0x00;
-        whites_turn_ = true;
-        info_.en_passant_sq_ = 0;
-        info_.half_moves_ = 0;
-        full_moves_ = 0;
-
-        while(!previous_pos_info.empty())
-            previous_pos_info.pop();
-        position_key_ = 0;
+        info_.castling_rights_  = 0;
+        info_.half_moves_       = 0;
+        info_.en_passant_sq_    = 255;
+        info_.captured_type_    = Moves::BAD_MOVE;
+        info_.zobrist_key_      = 0;
+        whites_turn_            = true;
+        full_moves_             = 0;
+        previous_state_info.clear();
     }    
 
     void ImportFen(std::string_view fen);
 
     void MakeMove(Move m);
     
-    void UnmakeMove()
-    {
-        *this = previous_pos_info.top();
-        previous_pos_info.pop();
-    }
+    void UnmakeMove(Move m);
     
     template<bool is_white>
     constexpr BitBoard PiecesByColour()const
@@ -107,13 +126,13 @@ public:
             pieces_[is_white][loc::PAWN];
     }
     
-    template<bool is_white, PieceType type>
+    template<bool is_white, U8 type>
     constexpr BitBoard Pieces()const
     {
         return pieces_[is_white][type];
     }
     
-    constexpr BitBoard Pieces(bool is_white, PieceType type)const
+    constexpr BitBoard Pieces(bool is_white, U8 type)const
     {
         assert(type < 6);
         return pieces_[(is_white ? loc::WHITE : loc::BLACK)][type];
@@ -121,7 +140,7 @@ public:
     
     constexpr BitBoard EmptySqs()const {return ~(PiecesByColour<true>() | PiecesByColour<false>());}
     
-    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
+    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_ != 255) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
 
     constexpr Sq EnPasSq()const {return info_.en_passant_sq_;}
 
@@ -129,21 +148,21 @@ public:
 
     constexpr bool WhiteToMove()const {return whites_turn_;}
 
-    constexpr ZobristKey ZKey()const {return position_key_;}
+    constexpr ZobristKey ZKey()const {return info_.zobrist_key_;}
 
-    const U8 HalfMoves()const {return info_.half_moves_;}
+    constexpr U8 HalfMoves()const {return info_.half_moves_;}
 
-    const U16 FullMoves()const {return full_moves_;}
+    constexpr U16 FullMoves()const {return full_moves_;}
 
     template<bool is_white>
     constexpr PieceType TypeAtSq(Sq sq)const
     {
-        if      (pieces_[is_white][loc::QUEEN]  &   Magics::SqToBB(sq))  return Moves::QUEEN;
-        else if (pieces_[is_white][loc::BISHOP] &   Magics::SqToBB(sq))  return Moves::BISHOP;
-        else if (pieces_[is_white][loc::KNIGHT] &   Magics::SqToBB(sq))  return Moves::KNIGHT;
-        else if (pieces_[is_white][loc::ROOK]   &   Magics::SqToBB(sq))  return Moves::ROOK;
-        else if (pieces_[is_white][loc::PAWN]   &   Magics::SqToBB(sq))  return Moves::PAWN;
-        else                                                                return Moves::KING;
+        if      (pieces_[is_white][loc::QUEEN]  &   Magics::SqToBB(sq))  return Queen;
+        else if (pieces_[is_white][loc::BISHOP] &   Magics::SqToBB(sq))  return Bishop;
+        else if (pieces_[is_white][loc::KNIGHT] &   Magics::SqToBB(sq))  return Knight;
+        else if (pieces_[is_white][loc::ROOK]   &   Magics::SqToBB(sq))  return Rook;
+        else if (pieces_[is_white][loc::PAWN]   &   Magics::SqToBB(sq))  return Pawn;
+        else                                                             return King;
     }
 
     /*
@@ -152,33 +171,36 @@ public:
         An implamented assumption is that the king can never be removed as no legal move should be able to do this.
     */
     template<bool is_white>
-    constexpr PieceType RemoveIntersectingPiece(BitBoard attacked_sq)
+    constexpr PieceType RemovePiece(BitBoard attacked_sq)
     {
         assert(Magics::PopCnt(attacked_sq) == 1);
         if (pieces_[is_white][loc::QUEEN] & attacked_sq)
         {
-            pieces_[is_white][loc::QUEEN] ^= attacked_sq;
-            return loc::QUEEN;
+            pieces_[is_white][loc::QUEEN] &= ~attacked_sq;
+            return Queen;
         }
         if (pieces_[is_white][loc::BISHOP] & attacked_sq)
         {
-            pieces_[is_white][loc::BISHOP] ^= attacked_sq;
-            return loc::BISHOP;
+            pieces_[is_white][loc::BISHOP] &= ~attacked_sq;
+            return Bishop;
         }
         if (pieces_[is_white][loc::KNIGHT] & attacked_sq)
         {
-            pieces_[is_white][loc::KNIGHT] ^= attacked_sq;
-            return loc::KNIGHT;
+            pieces_[is_white][loc::KNIGHT] &= ~attacked_sq;
+            return Knight;
         }
         if (pieces_[is_white][loc::ROOK] & attacked_sq)
         {
-            pieces_[is_white][loc::ROOK] ^= attacked_sq;
-            return loc::ROOK;
+            pieces_[is_white][loc::ROOK] &= ~attacked_sq;
+            return Rook;
         }
-        pieces_[is_white][loc::PAWN] ^= attacked_sq; 
-        return loc::PAWN;
+        pieces_[is_white][loc::PAWN] &= ~attacked_sq; 
+        return Pawn;
     }
-
+    bool IsOk()
+    {
+        return ((PiecesByColour<true>() & PiecesByColour<false>()) == 0);
+    }
     void HashCurrentPostion();
 private:
     void UpdateCastlingRights();
@@ -186,9 +208,8 @@ private:
     BitBoard pieces_[2][6];                         
     StateInfo info_;                                
     bool whites_turn_;                              
-    U16 full_moves_;                                
-    ZobristKey position_key_;                        
-    static std::stack<Position> previous_pos_info;
+    U16 full_moves_;                                                      
+    std::vector<StateInfo> previous_state_info;
 };
 
 

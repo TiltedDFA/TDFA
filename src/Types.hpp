@@ -5,7 +5,7 @@
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
-#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 0
 
 #if DEVELOPER_MODE != 1
 #define NDEBUG
@@ -29,7 +29,7 @@ using I16 = short;
 
 using Move      = U16;
 using BitBoard  = U64;
-using PieceType = U8;
+// using PieceType = U8;
 using Sq        = U8;
 using Castling  = U8;
 using Score     = I16;
@@ -77,6 +77,20 @@ enum class PromType : U8
     BISHOP,
     KNIGHT,
     ROOK
+};
+enum PieceType : U8
+{
+    King = 0,
+    Queen,
+    Bishop,
+    Knight,
+    Rook,
+    Pawn,
+    PromQueen = 0b1000,
+    PromBishop,
+    PromKnight,
+    PromRook,
+    NullPiece
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum AttackDirection : U8

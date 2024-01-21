@@ -134,17 +134,17 @@ namespace Debug
     {
         switch (piece)
         {
-        case Moves::KING:
+        case King:
             return "King";
-        case Moves::QUEEN:
+        case Queen:
             return "Queen";
-        case Moves::BISHOP:
+        case Bishop:
             return "Bishop";
-        case Moves::KNIGHT:
+        case Knight:
             return "Knight";
-        case Moves::ROOK:
+        case Rook:
             return "Rook";
-        case Moves::PAWN:
+        case Pawn:
             return "Pawn";
         default:
             return "Error with piece type to string";
