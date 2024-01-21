@@ -11,16 +11,17 @@
 
 using ZobristKey = U64;
 using PieceZobArr = std::array<std::array<std::array<ZobristKey, 64>, 6>, 2>;
-//source: stockfish
 namespace Zobrist
 {    
     constexpr U64 ZobRand64(U64& s) 
     {
+        //source: stockfish
         s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
         return s * 2685821657736338717LL;
     }
     constexpr U64 ZobRand64NoRef(U64 s) 
     {
+        //source: stockfish
         s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
         return s * 2685821657736338717LL;
     }
@@ -54,8 +55,4 @@ namespace Zobrist
     constexpr inline std::array<ZobristKey, 16> CASTLING = InitCastling();
     constexpr inline ZobristKey SIDE_TO_MOVE = ZobRand64NoRef(144641901);
 }
-
-
-
-
 #endif // #ifndef ZOBRISTSCONSTANTS_HPP

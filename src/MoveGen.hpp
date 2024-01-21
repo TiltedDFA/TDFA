@@ -147,9 +147,9 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                     U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
                     U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
 
-                    result.at(sq).at((U8)File).at(p1 + p2) = file_attack_moves;
-                    result.at(sq).at((U8)Diagonal).at(p1 + p2) = diagonal_attack_moves;
-                    result.at(sq).at((U8)AntiDiagonal).at(p1 + p2) = anti_diagonal_attack_moves;
+                    result.at(sq).at((U8)File           ).at(p1 + p2) = file_attack_moves;
+                    result.at(sq).at((U8)Diagonal       ).at(p1 + p2) = diagonal_attack_moves;
+                    result.at(sq).at((U8)AntiDiagonal   ).at(p1 + p2) = anti_diagonal_attack_moves;
                 }
             }
         }
@@ -162,7 +162,6 @@ const inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_
 
 namespace MoveGen
 {
-
     constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const PieceType type)
     {
         while(b)
@@ -171,11 +170,6 @@ namespace MoveGen
             b = Magics::PopLS1B(b);
         }
     }
-
-    BitBoard GenerateAllWhiteAttacks(Position const* pos);
-   
-
-    BitBoard GenerateAllBlackAttacks(Position const* pos);
 
     template<AttackDirection direction>
     constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them)
@@ -558,7 +552,6 @@ namespace MoveGen
                 ml->add(Moves::EncodeMove(king_index, 58, Moves::KING));
         }
     }
-
 
     template<bool is_white>
     constexpr void GeneratePseudoLegalMoves(Position const* __restrict__  pos, MoveList* __restrict__ ml)
