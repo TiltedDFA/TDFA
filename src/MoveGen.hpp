@@ -13,7 +13,7 @@
 #include <iostream>
 
 
-inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboards()
+inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
     for(U8 sq = 0; sq < 64; ++sq)
@@ -36,8 +36,9 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                 const U8 rankofsq = Magics::RankOf(sq);
                 const U8 fileofsq = Magics::FileOf(sq);
 
-                U64 diag_attacks = 0ull;
-                U64 anti_diag_attacks = 0ull;
+                BitBoard diag_attacks = 0ull;
+                BitBoard anti_diag_attacks = 0ull;
+
                 if(us & Magics::BBFileOf(sq))
                 {
                     for(int8_t current_file = fileofsq + 1; current_file < 8; ++current_file)
@@ -46,11 +47,13 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         if(!((rank_combined >> current_file) & 1)) //empty
                         {
                             rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - fileofsq), Moves::ROOK));
+                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (current_file - fileofsq));
                             continue;
                         }
                         if((them >> current_file) & 1) //their piece
                         {
                             rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - fileofsq), Moves::ROOK));
+                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (current_file - fileofsq));
                             break;
                         }
                     }
@@ -60,17 +63,19 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         if(!((rank_combined >> current_file) & 1)) 
                         {
                             rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - current_file), Moves::ROOK));
+                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - current_file));
                             continue;
                         }
                         if((them >> current_file) & 1)
                         {
                             rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - current_file), Moves::ROOK));
+                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - current_file));
                             break;
                         }
                     }
                     U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
                     U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
-                    result.at(sq).at((U8)Rank).at(p1 + p2) = rank_attack_moves;      
+                    result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
                 }
                
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,22 +89,24 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         if(!((other_combined >> current_file) & 1)) //empty
                         {
                             file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - rankofsq), Moves::ROOK));
+                            file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
                             
-                            if(Magics::IndexInBounds(sq + 9 * (current_file - rankofsq)))
+                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
                                 diag_attacks |= Magics::SqToBB(sq + 9 * (current_file - rankofsq));
                             
-                            if(Magics::IndexInBounds(sq +  7 * (current_file - rankofsq)))
+                            if(Magics::ValidSq(sq +  7 * (current_file - rankofsq)))
                                 anti_diag_attacks |=  Magics::SqToBB(sq +  7 * (current_file - rankofsq));
                             continue;
                         }
                         if((them >> current_file) & 1) //their piece
                         {
                             file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - rankofsq), Moves::ROOK));
+                            file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
                             
-                            if(Magics::IndexInBounds(sq + 9 * (current_file - rankofsq)))
+                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
                                 diag_attacks |= Magics::SqToBB(sq + 9 * (current_file - rankofsq));
                                 
-                            if(Magics::IndexInBounds(sq +  7 * (current_file - rankofsq)))
+                            if(Magics::ValidSq(sq +  7 * (current_file - rankofsq)))
                                 anti_diag_attacks |=  Magics::SqToBB(sq +  7 * (current_file - rankofsq));
                             break;
                         }
@@ -111,11 +118,12 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         if(!((other_combined >> current_file) & 1)) 
                         {
                             file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (rankofsq - current_file), Moves::ROOK));
-                            
-                            if(Magics::IndexInBounds(sq - 9 * (rankofsq - current_file)))
+                            file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
+
+                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
                                 diag_attacks |= Magics::SqToBB(sq - 9 * (rankofsq - current_file));
                             
-                            if(Magics::IndexInBounds(sq -  7 * (rankofsq - current_file)))
+                            if(Magics::ValidSq(sq -  7 * (rankofsq - current_file)))
                                 anti_diag_attacks |=  Magics::SqToBB(sq -  7 * (rankofsq - current_file));
 
                             continue;
@@ -123,17 +131,23 @@ inline std::array<std::array<std::array<move_info,2187>,4>,64> PrecomputeTitboar
                         if((them >> current_file) & 1)
                         {
                             file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (rankofsq - current_file), Moves::ROOK));
-                            if(Magics::IndexInBounds(sq - 9 * (rankofsq - current_file)))
+                            file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
+
+                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
                                 diag_attacks |= Magics::SqToBB(sq - 9 * (rankofsq - current_file));
 
-                            if(Magics::IndexInBounds(sq -  7 * (rankofsq - current_file)))
+                            if(Magics::ValidSq(sq -  7 * (rankofsq - current_file)))
                                 anti_diag_attacks |=  Magics::SqToBB(sq -  7 * (rankofsq - current_file));
                             break;
                         }
                     }
 
-                    diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
-                    anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
+                    diag_attacks        &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
+                    anti_diag_attacks   &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
+
+                    diagonal_attack_moves.attacks_      = diag_attacks;
+                    anti_diagonal_attack_moves.attacks_ = anti_diag_attacks;
+
                     while(diag_attacks)
                     {
                         diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_attacks),Moves::BISHOP));
@@ -208,12 +222,12 @@ namespace MoveGen
             const U8 bishop_index = Magics::FindLS1B(bishops);
 
             move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(move->encoded_move[i]);
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(move->encoded_move_[i]);
             
             move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(move->encoded_move[i]);
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(move->encoded_move_[i]);
             
             bishops = Magics::PopLS1B(bishops);
         }
@@ -233,12 +247,12 @@ namespace MoveGen
             const U8 rook_index = Magics::FindLS1B(rooks);
 
             move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
-            for(U8 i{0}; i < move->count; ++i) 
-                ml->add(move->encoded_move[i]);
+            for(U8 i{0}; i < move->count_; ++i) 
+                ml->add(move->encoded_move_[i]);
             
             move = GetMovesForSliding<Rank>(rook_index, us, them);
-            for(U8 i{0}; i < move->count; ++i) 
-                ml->add(move->encoded_move[i]);
+            for(U8 i{0}; i < move->count_; ++i) 
+                ml->add(move->encoded_move_[i]);
             
             rooks = Magics::PopLS1B(rooks);
         }
@@ -258,20 +272,20 @@ namespace MoveGen
             const U8 queen_index = Magics::FindLS1B(queens);
             
             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move[i]));
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move_[i]));
             
             move = GetMovesForSliding<Rank>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move[i]));
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move_[i]));
             
             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move[i]));
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move_[i]));
             
             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move[i]));
+            for(U8 i{0}; i < move->count_; ++i)
+                ml->add(Moves::SetPieceType<Moves::QUEEN>(move->encoded_move_[i]));
             
             queens = Magics::PopLS1B(queens);
         }
@@ -328,18 +342,38 @@ namespace MoveGen
 
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] 
-                                     & ~pos->PiecesByColour<is_white>();
-            // while(possible_move)
-            // {
-            //     attacks |= Magics::FindLS1B(possible_move);
-            //     possible_move = Magics::PopLS1B(possible_move);
-            // }
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos->PiecesByColour<is_white>();
             knights = Magics::PopLS1B(knights);
         }
         return attacks;
     }
     
+    // template<bool is_white>
+    // constexpr BitBoard BishopAttacks(Position const* pos)
+    // {
+    //     BitBoard bishops = pos->Pieces<is_white, loc::BISHOP>();
+    //     if(!bishops) return 0;
+
+    //     BitBoard attacks{0};
+    //     const BitBoard us = pos->PiecesByColour<is_white>();
+    //     const BitBoard them = pos->PiecesByColour<!is_white>();
+
+    //     while(bishops)
+    //     {
+    //         const U8 bishop_index = Magics::FindLS1B(bishops);
+
+    //         move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
+    //         for(U8 i{0}; i < move->count_; ++i)
+    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+    //         move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
+    //         for(U8 i{0}; i < move->count_; ++i)
+    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+    //         bishops = Magics::PopLS1B(bishops);
+    //     }
+    //     return attacks;
+    // }
     template<bool is_white>
     constexpr BitBoard BishopAttacks(Position const* pos)
     {
@@ -354,19 +388,41 @@ namespace MoveGen
         {
             const U8 bishop_index = Magics::FindLS1B(bishops);
 
-            move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
-            move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
+            attacks |= GetMovesForSliding<Diagonal      >(bishop_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<AntiDiagonal  >(bishop_index, us, them)->attacks_;
             
             bishops = Magics::PopLS1B(bishops);
         }
         return attacks;
     }
 
+    // template<bool is_white>
+    // constexpr BitBoard RookAttacks(Position const* pos)
+    // {
+    //     BitBoard rooks = pos->Pieces<is_white, loc::ROOK>();
+    //     if(!rooks) return 0;
+    //     BitBoard attacks{0};
+
+
+    //     const BitBoard us = pos->PiecesByColour<is_white>();
+    //     const BitBoard them = pos->PiecesByColour<!is_white>();
+
+    //     while(rooks)
+    //     {
+    //         const U8 rook_index = Magics::FindLS1B(rooks);
+
+    //         move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
+    //         for(U8 i{0}; i < move->count_; ++i) 
+    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+    //         move = GetMovesForSliding<Rank>(rook_index, us, them);
+    //         for(U8 i{0}; i < move->count_; ++i) 
+    //             attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+    //         rooks = Magics::PopLS1B(rooks);
+    //     }
+    //     return attacks;
+    // }
     template<bool is_white>
     constexpr BitBoard RookAttacks(Position const* pos)
     {
@@ -374,27 +430,56 @@ namespace MoveGen
         if(!rooks) return 0;
         BitBoard attacks{0};
 
-
         const BitBoard us = pos->PiecesByColour<is_white>();
         const BitBoard them = pos->PiecesByColour<!is_white>();
 
         while(rooks)
         {
             const U8 rook_index = Magics::FindLS1B(rooks);
-
-            move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
-            for(U8 i{0}; i < move->count; ++i) 
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
-            move = GetMovesForSliding<Rank>(rook_index, us, them);
-            for(U8 i{0}; i < move->count; ++i) 
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
+            attacks |= GetMovesForSliding<File>(rook_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<Rank>(rook_index, us, them)->attacks_;
             rooks = Magics::PopLS1B(rooks);
         }
         return attacks;
     }
-    
+  
+//    template<bool is_white>
+//     constexpr BitBoard QueenAttacks(Position const* pos)
+//     {
+//         BitBoard queens = pos->Pieces<is_white, loc::QUEEN>();
+//         if(!queens) return 0;
+
+//         BitBoard attacks{0};
+//         const BitBoard us = pos->PiecesByColour<is_white>();
+//         const BitBoard them = pos->PiecesByColour<!is_white>();
+  
+//         while(queens)
+//         {
+//             const U8 queen_index = Magics::FindLS1B(queens);
+            
+//             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
+//             for(U8 i{0}; i < move->count_; ++i)
+//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+
+//             move = GetMovesForSliding<Rank>(queen_index, us, them);
+//             for(U8 i{0}; i < move->count_; ++i)
+//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+
+//             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
+//             for(U8 i{0}; i < move->count_; ++i)
+//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+
+//             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
+//             for(U8 i{0}; i < move->count_; ++i)
+//                 attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move_[i]));
+            
+//             queens = Magics::PopLS1B(queens);
+//         }
+//         return attacks;
+//     }
     template<bool is_white>
     constexpr BitBoard QueenAttacks(Position const* pos)
     {
@@ -402,32 +487,18 @@ namespace MoveGen
         if(!queens) return 0;
 
         BitBoard attacks{0};
-        const BitBoard us = pos->PiecesByColour<is_white>();
+        const BitBoard us   = pos->PiecesByColour<is_white>();
         const BitBoard them = pos->PiecesByColour<!is_white>();
   
         while(queens)
         {
             const U8 queen_index = Magics::FindLS1B(queens);
             
-            move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
-
-            move = GetMovesForSliding<Rank>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
-
-            move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
-
-            move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                attacks |= Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]));
-            
+            attacks |= GetMovesForSliding<File          >(queen_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<Rank          >(queen_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<Diagonal      >(queen_index, us, them)->attacks_;     
+            attacks |= GetMovesForSliding<AntiDiagonal  >(queen_index, us, them)->attacks_;
+      
             queens = Magics::PopLS1B(queens);
         }
         return attacks;
@@ -440,7 +511,7 @@ namespace MoveGen
         // us, them are variables used for sliding move gen with titboards.
         //since we want to generate moves for the opponent and see if they attack
         //our king we want the us and them variables to be inverted from our king in colour
-        const BitBoard us = pos->PiecesByColour<!is_white>();
+        const BitBoard us   = pos->PiecesByColour<!is_white>();
         const BitBoard them = pos->PiecesByColour<is_white>();
 
         //Bishop and half queen
@@ -449,13 +520,8 @@ namespace MoveGen
         {
             const Sq piece_index = Magics::FindLS1B(bishop_queen);
 
-            move_info const* move = GetMovesForSliding<Diagonal>(piece_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                if(our_king & Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]))) return true;
-
-            move = GetMovesForSliding<AntiDiagonal>(piece_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                if(our_king & Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]))) return true;
+            if(our_king & GetMovesForSliding<Diagonal       >(piece_index, us, them)->attacks_) return true;
+            if(our_king & GetMovesForSliding<AntiDiagonal   >(piece_index, us, them)->attacks_) return true;
 
             bishop_queen = Magics::PopLS1B(bishop_queen);
         }
@@ -466,13 +532,8 @@ namespace MoveGen
         {
             const Sq piece_index = Magics::FindLS1B(rook_queen);
 
-            move_info const* move = GetMovesForSliding<File>(piece_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                if(our_king & Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]))) return true;
-
-            move = GetMovesForSliding<Rank>(piece_index, us, them);
-            for(U8 i{0}; i < move->count; ++i)
-                if(our_king & Magics::SqToBB(Moves::TargetSq(move->encoded_move[i]))) return true;
+            if(our_king & GetMovesForSliding<File>(piece_index, us, them)->attacks_) return true;
+            if(our_king & GetMovesForSliding<Rank>(piece_index, us, them)->attacks_) return true;
 
             rook_queen = Magics::PopLS1B(rook_queen);
         }
@@ -487,7 +548,7 @@ namespace MoveGen
 
         //pawns
         const BitBoard them_pawns = pos->Pieces<!is_white, loc::PAWN>();
-        if (is_white)
+        if constexpr (is_white)
         {
             if(our_king & Magics::Shift<SOUTH_EAST>(them_pawns)) return true;
             if(our_king & Magics::Shift<SOUTH_WEST>(them_pawns)) return true;

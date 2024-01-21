@@ -195,12 +195,12 @@ namespace Debug
     }
     void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored)
     {
-        if(move.count == 0) std::cout << "No moves found\n";
+        if(move.count_ == 0) std::cout << "No moves found\n";
 
         BitBoard combined_board{0ull};
 
-        for(U8 i = 0; i < move.count; ++i)
-            combined_board |= 1ull << Moves::TargetSq(move.encoded_move[i]);
+        for(U8 i = 0; i < move.count_; ++i)
+            combined_board |= 1ull << Moves::TargetSq(move.encoded_move_[i]);
         
         PrintBB(combined_board, mirrored);
     }

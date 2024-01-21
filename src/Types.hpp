@@ -52,10 +52,12 @@ enum MD : U8
 
 struct move_info
 {
-    constexpr move_info(): encoded_move(), count(0){}
-    constexpr void add_move(Move m) noexcept {encoded_move.at(count++) = m;}
-    std::array<Move, 7> encoded_move;
-    U8 count;
+    constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
+    constexpr void add_move(Move m) noexcept {encoded_move_.at(count_++) = m;}
+
+    std::array<Move, 7> encoded_move_;
+    U8 count_;
+    BitBoard attacks_;
 };
 namespace loc
 {

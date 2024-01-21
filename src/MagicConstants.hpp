@@ -62,7 +62,7 @@ namespace Magics
     }
 
     //Returns whether the index provided is inbounds of the board
-    constexpr bool IndexInBounds(int index) noexcept {return index >= 0 && index < 64;}
+    constexpr bool ValidSq(int index) noexcept {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
     constexpr BitBoard SqToBB(Sq index) noexcept {return 1ull << index;}
