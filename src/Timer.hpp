@@ -4,21 +4,6 @@
 #include <chrono>
 #include <iostream>
 
-using MiliSeconds = U64;
-
-class Clock
-{
-public:
-    Clock()
-        :start_(std::chrono::high_resolution_clock::now()){}
-
-    MiliSeconds GetElapsed()
-    {
-        return static_cast<MiliSeconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_).count());
-    }
-private:
-    const std::chrono::time_point<std::chrono::high_resolution_clock> start_;
-};
 template<typename T>
 class Timer
 {
@@ -34,7 +19,7 @@ public:
         const std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
         if(time_out)
         {
-            *time_out = static_cast<U64>(std::chrono::duration_cast<T>(end-start_).count());
+            *time_out = U64(std::chrono::duration_cast<T>(end-start_).count());
         }
         else
         {
@@ -45,5 +30,29 @@ private:
     const std::chrono::time_point<std::chrono::high_resolution_clock> start_;
     U64* time_out;
 };
+class TimeManager
+{
+private:
+    //miliseconds
+    U64 GetTimeAllowance()const
+    {
+        return U64(our_time_ / 20 + our_increment_ / 2);
+    }
+public:
+    void SetOptions(U64 time, U64 increment)
+    {
+        our_time_ = time;
+        our_increment_ = increment;
+    }
+    void StartTiming()
+    {
+        end_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(GetTimeAllowance());
+    }
+    bool OutOfTime()const {return std::chrono::steady_clock::now() > end_;}
 
+private:
+    U64 our_time_;
+    U64 our_increment_;
+    std::chrono::time_point<std::chrono::steady_clock> end_;
+};
 #endif // #ifndef TIMER_HPP

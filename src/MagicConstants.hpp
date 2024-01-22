@@ -2,6 +2,7 @@
 #define MAGICCONSTANTS_HPP
 
 #include "Types.hpp"
+#include "ZobristConstants.hpp"
 #include <array>
 #include <bitset>
 #include <cmath>
@@ -10,6 +11,15 @@
 
 namespace Magics
 {
+    //forced compile time eval version of the other SqToBB
+    template<Sq N>
+    consteval BitBoard SqToBB() noexcept {return 1ull << N;}
+    
+    //returns the file of an index/square
+    constexpr Sq FileOf(U8 index) noexcept {return index & 7;}
+
+    constexpr U16 EncodeKing(Sq start, Sq target) {return start | (target << 6);}
+
     constexpr BitBoard FILE_ABB = 0x01'01'01'01'01'01'01'01;
     constexpr BitBoard FILE_BBB = FILE_ABB << 1;
     constexpr BitBoard FILE_CBB = FILE_ABB << 2;
@@ -31,30 +41,57 @@ namespace Magics
     constexpr BitBoard CROSS_DIAG = 0x8040201008040201;         // A1 - H8
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 
-    constexpr BitBoard GetLS1B(BitBoard bb){return bb & -bb;}
+    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() | 
+                                         SqToBB<56>() | SqToBB<63>());
+    
+    constexpr U8 CASTLE_K_W = 0x08;
+    constexpr U8 CASTLE_Q_W = 0x04;
+    constexpr U8 CASTLE_K_B = 0x02;
+    constexpr U8 CASTLE_Q_B = 0x01;    
+    constexpr U8 CASTLE_ALL = 0x0F;
+    //preserve black's right to castle
+    constexpr U8 NO_CASTLE_W = (CASTLE_K_B | CASTLE_Q_B);
+    constexpr U8 NO_CASTLE_B = (CASTLE_K_W | CASTLE_Q_W);
+
+    constexpr BitBoard ROOK_TO_FROM_W_Q = SqToBB<0>() | SqToBB<3>();
+    constexpr BitBoard ROOK_TO_FROM_W_K = SqToBB<5>() | SqToBB<7>();
+    constexpr BitBoard ROOK_TO_FROM_B_Q = SqToBB<56>()| SqToBB<59>();
+    constexpr BitBoard ROOK_TO_FROM_B_K = SqToBB<61>()| SqToBB<63>();
+
+    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] = 
+        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K}; 
+    constexpr ZobristKey CASTLING_ZOB_KEYS[5] = 
+    {
+        0,
+        (Zobrist::PIECES[true][Rook][0]   ^ Zobrist::PIECES[true][Rook][3]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][2]  ),
+        (Zobrist::PIECES[true][Rook][5]   ^ Zobrist::PIECES[true][Rook][7]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][6]  ),
+        (Zobrist::PIECES[false][Rook][56] ^ Zobrist::PIECES[false][Rook][59] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][58]),
+        (Zobrist::PIECES[false][Rook][61] ^ Zobrist::PIECES[false][Rook][63] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][62])
+    };
+    constexpr BitBoard GetLS1B(BitBoard bb) noexcept {return bb & -bb;}
 
 #ifdef __GNUG__
     //finds least significant 1 bit and returns the position of it
-    constexpr Sq FindLS1B(BitBoard bb){return (bb ? __builtin_ctzll(bb) : 0);}
+    constexpr Sq FindLS1B(BitBoard bb) noexcept {return (bb ? __builtin_ctzll(bb) : 0);}
     //returns the number of 1 bits in the board
-    constexpr U8 PopCnt(BitBoard bb) {return __builtin_popcountll(bb);}
+    constexpr U8 PopCnt(BitBoard bb) noexcept {return __builtin_popcountll(bb);}
 #else
     //finds least significant 1 bit and returns the position of it
-    constexpr Sq FindLS1B(BitBoard bb){return std::countr_zero(bb);}
+    constexpr Sq FindLS1B(BitBoard bb)  noexcept {return std::countr_zero(bb);}
     //returns the number of 1 bits in the board
-    constexpr uint8_t PopCnt(BitBoard bb) {return std::popcount(bb);}
+    constexpr uint8_t PopCnt(BitBoard bb) noexcept {return std::popcount(bb);}
 #endif
     //returns (x^y). compile time friendly.
-    static constexpr double pow(double x, unsigned int y){return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
+    constexpr double pow(double x, unsigned int y) noexcept {return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
     //Returns the index of the most significant 1 bit.
-    constexpr Sq FindMS1B(BitBoard board){return FindLS1B(board) ^ 0x3F;}
+    constexpr Sq FindMS1B(BitBoard board) noexcept {return FindLS1B(board) ^ 0x3F;}
 
     //Returns the number without the least significant 1 bit. 
     //Not protected against 0 inputs
-    constexpr BitBoard PopLS1B(BitBoard board) {return (board & (board - 1));}
+    constexpr BitBoard PopLS1B(BitBoard board) noexcept {return (board & (board - 1));}
 
-    constexpr Sq PopNRetLS1B(BitBoard& board) 
+    constexpr Sq PopNRetLS1B(BitBoard& board) noexcept
     {
         const Sq lsb = FindLS1B(board);
         board &= board -1;
@@ -62,40 +99,38 @@ namespace Magics
     }
 
     //Returns whether the index provided is inbounds of the board
-    constexpr bool IndexInBounds(int index) {return index >= 0 && index < 64;}
+    constexpr bool ValidSq(int index) noexcept {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
-    constexpr BitBoard IndexToBB(Sq index){return 1ull << index;}
+    constexpr BitBoard SqToBB(Sq index) {assert(ValidSq(index));return 1ull << index;}
 
-    //forced compile time eval version of the other IndexToBB
-    template<Sq N>
-    consteval BitBoard IndexToBB(){return 1ull << N;}
-    
-    //returns the file of an index/square
-    constexpr Sq FileOf(U8 index){return index & 7;}
 
     //returns the rank of an index/square
-    constexpr Sq RankOf(U8 index){return index >> 3;}
+    constexpr Sq RankOf(Sq index) {assert(ValidSq(index));return index >> 3;}
 
     //finds the file of the square/index and returns a bitboard containing a 1 bit
     // in the square specified
-    constexpr U8 BBFileOf(Sq square){return 1 << FileOf(square);}
+    constexpr U8 BBFileOf(Sq square) noexcept {return 1 << FileOf(square);}
 
-    constexpr U8 BBRankOf(Sq square){return 1 << RankOf(square);}
+    constexpr U8 BBRankOf(Sq square) noexcept {return 1 << RankOf(square);}
     
-    static constexpr U8 CollapsedFilesIndex(BitBoard b) 
+    constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept INLINE;
+    constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept
     {
         return (b * FILE_ABB) >> 56;
     }
     //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
-    static constexpr U8 CollapsedRanksIndex(BitBoard b) 
+    constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept INLINE;
+    constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept
     {
+        //collapses the bb into a file
+        //then performs collapsed files
         b |= b >> 4;
         b |= b >> 2;
         b |= b >> 1;
         return ((b & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
     }
-    constexpr BitBoard PopMS1B(const BitBoard board)
+    constexpr BitBoard PopMS1B(const BitBoard board) noexcept
     {
         BitBoard b = board;
         b |= b >> 1;
@@ -108,7 +143,7 @@ namespace Magics
     }
     //Returns a bitboard which has been moved by the shift specified
     template<MD D>
-    constexpr BitBoard Shift(BitBoard b)
+    constexpr BitBoard Shift(BitBoard b) noexcept
     {
         return 
             D == MD::NORTH      ? b                 << 8 :
@@ -124,11 +159,11 @@ namespace Magics
             0;
     }
     
-    static consteval std::array<BitBoard, 64> KnightAttackingMask()
+    consteval std::array<BitBoard, 64> KnightAttackingMask() noexcept
     {
         std::array<BitBoard, 64> temp_array{};
-        constexpr BitBoard knight_attack_template = IndexToBB<1>() | IndexToBB<3>() | IndexToBB<8>() | IndexToBB<12>() |
-                                                    IndexToBB<24>()| IndexToBB<28>()| IndexToBB<33>()| IndexToBB<35>() ;
+        constexpr BitBoard knight_attack_template = SqToBB<1>() | SqToBB<3>() | SqToBB<8>() | SqToBB<12>() |
+                                                    SqToBB<24>()| SqToBB<28>()| SqToBB<33>()| SqToBB<35>() ;
         for(U8 i{0}; i < 64;++i)
         {
             if(i % 8 < 2)     temp_array[i] = ((i < 18) ? (knight_attack_template  >> (18 - i)) : (knight_attack_template  << (i - 18)))
@@ -142,9 +177,9 @@ namespace Magics
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
     template<bool gen_us>
-    static consteval std::array<std::array<U16,256>,8> compute_base_2_to_3()
+    consteval std::array<std::array<U16, 256>, 8> compute_base_2_to_3() noexcept
     {
-        std::array<std::array<U16,256>,8> result{};
+        std::array<std::array<U16, 256>, 8> result{};
         for(U8 missed_file = 0; missed_file < 8; ++missed_file)
         {
             for(U16 i = 0; i < 256; ++i)
@@ -162,13 +197,12 @@ namespace Magics
                         result.at(missed_file).at(i) += ((i >> j) & 1) * ((j < missed_file) ? (2 * pow(3, j)) : (2 * pow(3, j - 1)));
                     }
                 }
-                    //assert(result.at(missed_file).at(i) < 1094);
             }
         }
         return result;
     }
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static consteval std::array<std::array<BitBoard,4>,64> PrecomputeMask()
+    consteval std::array<std::array<BitBoard, 4> ,64> PrecomputeMask() noexcept
     {
         std::array<std::array<BitBoard,4>,64> r_val{};
         for(U8 i = 0; i < 64; ++i)
@@ -178,51 +212,51 @@ namespace Magics
             BitBoard cross_attacks{0ull};
             BitBoard anti_cross_attacks{0ull};
 
-            for(int8_t r = rank + 1, f = file + 1; r < 8 && f < 8; ++r, ++f)     cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 + f));
-            for(int8_t r = rank - 1, f = file - 1; r >= 0 && f >= 0; --r, --f)   cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 + f));
-            for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
-            for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks |= Magics::IndexToBB(static_cast<U8>(r * 8 +f));
+            for(int8_t r = rank + 1, f = file + 1; r < 8 && f < 8; ++r, ++f)    cross_attacks       |= Magics::SqToBB(U8(r * 8 + f));
+            for(int8_t r = rank - 1, f = file - 1; r >= 0 && f >= 0; --r, --f)  cross_attacks       |= Magics::SqToBB(U8(r * 8 + f));
+            for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks  |= Magics::SqToBB(U8(r * 8 +f));
+            for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks  |= Magics::SqToBB(U8(r * 8 +f));
             
-            r_val[i][static_cast<int>(D::FILE)] = (Magics::FILE_ABB << file) & ~Magics::IndexToBB(i); //Rook file attacks
-            r_val[i][static_cast<int>(D::RANK)] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::IndexToBB(i); // Rook Rank attacks
-            r_val[i][static_cast<int>(D::DIAG)] = cross_attacks & ~Magics::IndexToBB(i); //Bishop cross attacks
-            r_val[i][static_cast<int>(D::ADIAG)] = anti_cross_attacks & ~Magics::IndexToBB(i); //Bishop anti cross attacks
+            r_val[i][File] = (Magics::FILE_ABB << file) & ~Magics::SqToBB(i); //Rook file attacks
+            r_val[i][Rank] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::SqToBB(i); // Rook Rank attacks
+            r_val[i][Diagonal] = cross_attacks & ~Magics::SqToBB(i); //Bishop cross attacks
+            r_val[i][AntiDiagonal] = anti_cross_attacks & ~Magics::SqToBB(i); //Bishop anti cross attacks
         }
         return r_val;
     }
     
-    static consteval std::array<BitBoard, 64> KingAttackingMask()
+    consteval std::array<BitBoard, 64> KingAttackingMask() noexcept
     {
         std::array<BitBoard, 64> temp_array{};
-        constexpr BitBoard king_attack_template =   IndexToBB<0>() | IndexToBB<1>() | IndexToBB<2>() |
-                                                    IndexToBB<8>() | IndexToBB<10>()|
-                                                    IndexToBB<16>()| IndexToBB<17>()| IndexToBB<18>();
-        for(U8 i{0}; i < 64;++i)
+        constexpr BitBoard king_attack_template =   SqToBB<0>() | SqToBB<1>() | SqToBB<2>() |
+                                                    SqToBB<8>() | SqToBB<10>()|
+                                                    SqToBB<16>()| SqToBB<17>()| SqToBB<18>();
+        for(U8 i{0}; i < 64; ++i)
         {
-            if(i%8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+            if(i % 8 < 1)     temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)))
                                             & ~FILE_HBB;
-            else if(i%8 > 6)temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)))
+            else if(i % 8 > 6) temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)))
                                             & ~FILE_ABB;
-            else temp_array[i] = ((i < 9) ? (king_attack_template  >> (9-i)) : (king_attack_template  << (i-9)));
+            else temp_array[i] = ((i < 9) ? (king_attack_template  >> (9 - i)) : (king_attack_template  << (i - 9)));
         }
         return temp_array;
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
-    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_us = compute_base_2_to_3<true>();
+    inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_us = compute_base_2_to_3<true>();
 
-    static constexpr std::array<std::array<U16,256>,8> base_2_to_3_them = compute_base_2_to_3<false>();
+    inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
 
-    static constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square)
+    inline constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square) noexcept
     {
         return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
     }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
-    static constexpr std::array<std::array<BitBoard,4>,64> SLIDING_ATTACKS_MASK = PrecomputeMask();
+    inline constexpr std::array<std::array<BitBoard, 4>, 64> SLIDING_ATTACKS_MASK = PrecomputeMask();
     
-    static constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
+    inline constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 
-    static constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
+    inline constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

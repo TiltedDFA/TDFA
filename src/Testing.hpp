@@ -43,10 +43,7 @@ public:
     void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
     template<bool output_perft_paths>
-    void RunPerft(int depth, BB::Position& pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
-
-    template<bool output_perft_paths>
-    void RunFastPerft(int depth, BB::Position& pos){ResetData(); FastPerft<true, output_perft_paths>(depth, pos);}
+    void RunPerft(int depth, Position* pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
 
     U64 GetNodes() const {return total_nodes_;}
 
@@ -58,47 +55,71 @@ public:
     }
 private:
     template<bool is_root, bool output_perft_paths>
-    U64 Perft(int depth, BB::Position& pos)
+    U64 Perft(int depth, Position* pos)
     {
         if(!depth) return 1ull;
 
         MoveList ml{};
         U64 nodes{0};
 
-        if(pos.whites_turn_)
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, ml);
+        if(pos->WhiteToMove())
+            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, ml);
+            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
             if constexpr(is_root)
             {
-                pos.MakeMove(ml[i]);
-                
-                if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            #if DEVELOPER_MODE == 1
+                const Position copy = *pos;
+                Sq start;
+                Sq end;
+                PieceType t;
+                Moves::DecodeMove(ml[i], &start, &end, &t);
+                if(start == 2 && end == 47)
+                {
+                    PRINT("\n");
+                }
+            #endif
+                pos->MakeMove(ml[i]);
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
-
                     if constexpr(output_perft_paths) 
                         nodes += cnt;
-
                     total_nodes_ += cnt;
-
                     if constexpr(output_perft_paths) 
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
-                
-                pos.UnmakeMove();
+                pos->UnmakeMove(ml[i]);
+            #if DEVELOPER_MODE == 1
+                assert(copy == *pos);
+            #endif
             } 
             else
             {
-                pos.MakeMove(ml[i]);
-                if(!(pos.whites_turn_ ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            #if DEVELOPER_MODE == 1
+                const Position copy = *pos;
+                Sq start;
+                Sq end;
+                PieceType t;
+                Moves::DecodeMove(ml[i], &start, &end, &t);
+                //used for breakpointing at specific move in perft when debugging
+                if(start == 14 && end == 6 && t == PromQueen)
+                {
+                    PRINT();
+                }
+            #endif
+                pos->MakeMove(ml[i]);
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
-                pos.UnmakeMove();
+                pos->UnmakeMove(ml[i]);
+            #if DEVELOPER_MODE == 1
+                assert(copy == *pos);
+            #endif
             }
         }
 
@@ -114,12 +135,16 @@ template<bool output_perft_paths>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
 {
     PerftHandler perft;
-    BB::Position pos(fen);
+    Position pos(fen);
     U64 time {1};
     
     {
         Timer<std::chrono::microseconds> t(&time);
-        perft.RunPerft<output_perft_paths>(depth, pos);
+        perft.RunPerft<output_perft_paths>(depth, &pos);
+    }
+    if constexpr(output_perft_paths)
+    {
+        perft.PrintData();
     }
 
     const U64 nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);
@@ -162,11 +187,11 @@ static std::vector<std::string> Split(const std::string& line, const std::string
     return tmp;
 }
 template<bool output_perft_paths>
-void RunPerftSuite()
+bool RunPerftSuite()
 {
     std::fstream perft_file("perftsuite.epd", std::ios::in);
 
-    if(!perft_file.is_open()){PRINTNL("FAILED TO OPEN FILE\n"); return;}
+    if(!perft_file.is_open()){return false;}
 
     std::string line;
 
@@ -194,5 +219,6 @@ void RunPerftSuite()
     }
 
     perft_file.close();
+    return true;
 }
 #endif // #ifndef TESTING_HPP

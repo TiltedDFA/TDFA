@@ -8,32 +8,32 @@
 #include "Debug.hpp"
 namespace UTIL
 {
-    static std::string Square(Sq sq)
+    inline std::string Square(Sq sq)
     {
         return std::string{char('a' + Magics::FileOf(sq)), char('1' + Magics::RankOf(sq))};
     }
-    static char PromotionChar(PieceType p)
+    inline char PromotionChar(PieceType p)
     {
         switch (p)
         {
-        case Moves::PROM_BISHOP:
+        case PromBishop:
             return 'b';
-        case Moves::PROM_KNIGHT:
+        case PromKnight:
             return 'n';
-        case Moves::PROM_QUEEN:
+        case PromQueen:
             return 'q';
-        case Moves::PROM_ROOK:
+        case PromRook:
             return 'r';
         default:
             return 'z';
         }
     }
-    static std::string MoveToStr(Move m)
+    inline std::string MoveToStr(Move m)
     {
-        return (Moves::IsPromotionMove(m) ? (Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)) + PromotionChar(Moves::GetPieceType(m))) :
-                                            Square(Moves::GetStartIndex(m)) + Square(Moves::GetTargetIndex(m)));
+        return (Moves::IsPromotionMove(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::PType(m))) :
+                                            Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)));
     }
-    static Move UciToMove(const std::string_view str, const BB::Position& pos)
+    inline Move UciToMove(const std::string_view str, const Position& pos)
     {
         const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
         const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;
@@ -43,23 +43,23 @@ namespace UTIL
             switch(str[4])
             {
             case 'q':
-                return Moves::EncodeMove(from, to, Moves::PROM_QUEEN);
+                return Moves::EncodeMove(from, to, PromQueen);
             case 'r':
-                return Moves::EncodeMove(from, to, Moves::PROM_ROOK);
+                return Moves::EncodeMove(from, to, PromRook);
             case 'b':
-                return Moves::EncodeMove(from, to, Moves::PROM_BISHOP);
+                return Moves::EncodeMove(from, to, PromBishop);
             case 'n':
-                return Moves::EncodeMove(from, to, Moves::PROM_KNIGHT);
+                return Moves::EncodeMove(from, to, PromKnight);
             default:
-                return Moves::EncodeMove(from, to, Moves::BAD_MOVE);
+                return Moves::EncodeMove(from, to, NullPiece);
             }
         }
 
         PieceType type;
-        if(pos.whites_turn_)
-            type = pos.GetTypeAtSq<true>(from);
+        if(pos.WhiteToMove())
+            type = pos.TypeAtSq<true>(from);
         else
-            type = pos.GetTypeAtSq<false>(from);
+            type = pos.TypeAtSq<false>(from);
 
         const Move constructed_move = Moves::EncodeMove(from, to, type);
         Debug::PrintEncodedMoveStr(constructed_move);

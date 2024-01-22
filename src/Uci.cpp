@@ -15,8 +15,10 @@ ArgList SplitArgs(std::string_view inp)
             start = end;
         }
     }
+
     if(inp[inp.size() - 1] != ' ')
         ret.push_back(inp.substr(start, end - start));
+
     return ret;
 }
 void UCI::HandleUci()
@@ -27,22 +29,56 @@ void UCI::HandleUci()
 }
 void UCI::HandleIsReady()
 {
+    time_manager.SetOptions(60'000, 0);
+    transpos_table.Resize(TT_SIZE);
     std::cout << "readyok\n";
+    // std::cout.flush();
 }
-void UCI::HandleGo()
+void UCI::HandleGo(const ArgList& args)
 {
-    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(pos)));
+    //update the time settings
+    {
+        U64 wtime{60'000};
+        U64 btime{60'000};
+        U64 winc{0};
+        U64 binc{0};
+        for(size_t i{0}; i < args.size(); ++i)
+        {
+            if(args[i] == "wtime")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), wtime);
+            if(args[i] == "btime")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
+            if(args[i] == "winc")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+            if(args[i] == "binc")
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+        }
+        if(pos.WhiteToMove())
+        {
+            time_manager.SetOptions(wtime, winc);
+        }
+        else
+        {
+            time_manager.SetOptions(btime, binc);
+        }
+    }
+    //start the timer for this round of calculation
+    time_manager.StartTiming();
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(&pos, &transpos_table, &time_manager)));
+    std::cout.flush();
 }
 void UCI::HandlePosition(const ArgList& args)
 {
     if(args[1] == "fen")
     {
         std::string constructed_fen{""};
-        for(std::size_t i{2};i < 6; ++i)
+
+        for(std::size_t i{2}; i < 7; ++i)
             constructed_fen += std::string(args[i]) + ' ';
+
         constructed_fen += std::string(args[7]);
+
         pos.ImportFen(constructed_fen);
-        Debug::PrintBoardState(pos);
     }
     else if (args[1] == "startpos")
     {
@@ -55,12 +91,12 @@ void UCI::HandlePosition(const ArgList& args)
     for(++it ;it != args.end(); ++it)
     {
         const Move move = UTIL::UciToMove(*it, pos);
-#if DEVELOPER_MODE == 1
-        if(Moves::GetPieceType(move) == Moves::BAD_MOVE)/*handle error*/;
-#endif
-        pos.MakeMove(move);
-        Debug::PrintBoardState(pos);
 
+    // #if DEVELOPER_MODE == 1
+    //     // if(Moves::PType(move) == Moves::BAD_MOVE)/*handle error*/;
+    // #endif
+
+        pos.MakeMove(move);
     }
 }
 void UCI::HandleStop()
@@ -69,11 +105,33 @@ void UCI::HandleStop()
 }
 void UCI::HandleNewGame()
 {
-    pos = BB::Position(STARTPOS);
+    pos = Position(STARTPOS);
+    transpos_table.Clear();
+    time_manager.SetOptions(60'000,0);
 }
-void UCI::HandleSetOption(const ArgList& args)
+// void UCI::HandleSetOption(const ArgList& args)
+// {
+//     //there are no options to set as of this version
+// }
+void UCI::HandleBench(const ArgList& args)
 {
-    //there are no options to set as of this version
+    if(args[1] != "perft") return;
+
+    if(args.size() > 2 && args[2] == "suite")
+    {
+        std::cout << "running perft suite bench\n";
+        if(RunPerftSuite<false>() == false) 
+            std::cout << "Failed to open perftsuite.epd";
+        else
+            std::cout << "completed perft suite bench\n";
+    }
+    else
+    {
+        std::cout << "running perft bench\n";
+        RunBenchmark<false>();
+        std::cout << "completed perft bench\n";
+    }
+    
 }
 void UCI::loop()
 {
@@ -97,7 +155,7 @@ void UCI::loop()
             HandleIsReady();
             break;
         case 3:
-            HandleGo();
+            HandleGo(args);
             break;
         case 4:
             HandlePosition(args);
@@ -108,8 +166,11 @@ void UCI::loop()
         case 6:
             HandleNewGame();
             break;
-        case 7:
-            HandleSetOption(args);
+        // case 7:
+        //     HandleSetOption(args);
+        //     break;
+        case 8:
+            HandleBench(args);
             break;
         default:
             break;

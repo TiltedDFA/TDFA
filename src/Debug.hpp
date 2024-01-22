@@ -26,10 +26,10 @@ namespace Debug
     //Prints a bitboard with an 'x' on a specified sq
     void PrintBB(BitBoard board, int board_center, bool mirrored = false);
 
-    //Prints all of the information about a BB::Position
-    void PrintBoardState(const BB::Position& pos);
+    //Prints all of the information about a Position
+    void PrintBoardState(const Position& pos);
     
-    //Prints all of the piece bitboards contained within the BB::Position.pieces_ array
+    //Prints all of the piece bitboards contained within the Position.pieces_ array
     void PrintInduvidualPieces(const BitBoard (&board)[2][6]);
 
     //Helper function, converts a piece type to it's string representation
@@ -40,8 +40,6 @@ namespace Debug
 
     //Prints an encoded move's data out in it's encoded binary form
     void PrintEncodedMoveBin(Move move);
-
-    void PrintPiecesOnBoard(const BB::Position& pos);
 
     //More detailed version of the print bitboard function, can be used to 
     //print 2 bitboards worth of pieces

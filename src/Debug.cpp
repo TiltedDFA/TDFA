@@ -29,16 +29,6 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintPiecesOnBoard(const BB::Position& pos)
-    {
-        char pieces[64];
-        for(char& i : pieces){i = ' ';}
-        BitBoard current_pieces{0};
-        for(U8 i = loc::KING; i <= loc::PAWN; ++i)
-        {
-            // current_pieces = 
-        }
-    }
     void PrintBB(BitBoard board, bool mirrored)
     {
         std::string output{}, current_line{};
@@ -92,25 +82,25 @@ namespace Debug
         output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
         PRINTNL(output);
     }
-    void PrintBoardState(const BB::Position& pos)
+    void PrintBoardState(const Position& pos)
     {
-        pos.whites_turn_ ?  Debug::PrintUsThemBlank(pos.GetPieces<true>(), pos.GetPieces<false>(), true) :
-                            Debug::PrintUsThemBlank(pos.GetPieces<false>(), pos.GetPieces<true>(), true);
+        pos.WhiteToMove() ?  Debug::PrintUsThemBlank(pos.PiecesByColour<true>(), pos.PiecesByColour<false>(), true) :
+                            Debug::PrintUsThemBlank(pos.PiecesByColour<false>(), pos.PiecesByColour<true>(), true);
         {
             std::string prnt{"Castiling rights: "};
-            if(pos.info_.castling_rights_ & 0x08) prnt += "Wk";
-            if(pos.info_.castling_rights_ & 0x04) prnt += "Wq";
-            if(pos.info_.castling_rights_ & 0x02) prnt += "Bk";
-            if(pos.info_.castling_rights_ & 0x01) prnt += "Bq";
+            if(pos.CastlingRights() & 0x08) prnt += "Wk";
+            if(pos.CastlingRights() & 0x04) prnt += "Wq";
+            if(pos.CastlingRights() & 0x02) prnt += "Bk";
+            if(pos.CastlingRights() & 0x01) prnt += "Bq";
             PRINTNL(prnt);
         }
 
-        PRINTNL("Half moves: " + std::to_string(pos.info_.half_moves_)); 
-        PRINTNL("Passant trgt sq: " + std::to_string(pos.info_.en_passant_target_sq_)); 
+        PRINTNL("Half moves: " + std::to_string(pos.HalfMoves())); 
+        PRINTNL("Passant trgt sq: " + std::to_string(pos.EnPasSq())); 
 #if DEVELOPER_MODE == 1
-        pos.whites_turn_ ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
+        pos.WhiteToMove() ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
 #endif
-        PRINTNL("Full moves: " + std::to_string(pos.full_moves_)); 
+        PRINTNL("Full moves: " + std::to_string(pos.FullMoves())); 
     }
     void PrintInduvidualPieces(const BitBoard (&board)[2][6])
     {
@@ -144,17 +134,17 @@ namespace Debug
     {
         switch (piece)
         {
-        case Moves::KING:
+        case King:
             return "King";
-        case Moves::QUEEN:
+        case Queen:
             return "Queen";
-        case Moves::BISHOP:
+        case Bishop:
             return "Bishop";
-        case Moves::KNIGHT:
+        case Knight:
             return "Knight";
-        case Moves::ROOK:
+        case Rook:
             return "Rook";
-        case Moves::PAWN:
+        case Pawn:
             return "Pawn";
         default:
             return "Error with piece type to string";
@@ -166,7 +156,7 @@ namespace Debug
         const std::string comma (", ");
         move_str += std::string("S: ") + std::to_string(move & Moves::START_SQ_MASK) + comma;
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
-        move_str += std::string("T: ") + PieceTypeToStr(Moves::GetPieceType(move)) + comma;
+        move_str += std::string("T: ") + PieceTypeToStr(Moves::PType(move)) + comma;
         move_str += "\n";
         PRINTNL(move_str);
     }
@@ -205,12 +195,12 @@ namespace Debug
     }
     void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored)
     {
-        if(move.count == 0) std::cout << "No moves found\n";
+        if(move.count_ == 0) std::cout << "No moves found\n";
 
         BitBoard combined_board{0ull};
 
-        for(U8 i = 0; i < move.count; ++i)
-            combined_board |= 1ull << Moves::GetTargetIndex(move.encoded_move[i]);
+        for(U8 i = 0; i < move.count_; ++i)
+            combined_board |= 1ull << Moves::TargetSq(move.encoded_move_[i]);
         
         PrintBB(combined_board, mirrored);
     }
