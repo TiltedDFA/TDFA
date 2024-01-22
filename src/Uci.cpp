@@ -113,7 +113,7 @@ void UCI::HandleNewGame()
 // {
 //     //there are no options to set as of this version
 // }
-void HandleBench(const ArgList& args)
+void UCI::HandleBench(const ArgList& args)
 {
     if(args[1] != "perft") return;
 

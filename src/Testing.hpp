@@ -105,10 +105,10 @@ private:
                 Sq end;
                 PieceType t;
                 Moves::DecodeMove(ml[i], &start, &end, &t);
-
+                //used for breakpointing at specific move in perft when debugging
                 if(start == 14 && end == 6 && t == PromQueen)
                 {
-                    PRINT("");
+                    PRINT();
                 }
             #endif
                 pos->MakeMove(ml[i]);

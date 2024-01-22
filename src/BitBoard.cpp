@@ -218,7 +218,6 @@ void Position::MakeMove(Move m)
     
     if(p_type == Pawn)
     {
-        // (start_sq ^ target_sq) == 16
         if(std::abs(start_sq - target_sq) == 16)
         {
             info_.en_passant_sq_ = target_sq - (whites_turn_ ? 8 : -8);
