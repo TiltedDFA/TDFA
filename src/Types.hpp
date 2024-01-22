@@ -2,7 +2,6 @@
 #define TYPES_HPP
 
 
-#define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
 #define DEVELOPER_MODE 0
@@ -10,7 +9,6 @@
 #if DEVELOPER_MODE != 1
 #define NDEBUG
 #endif
-
 
 #ifdef __GNUG__
 #define INLINE __attribute__((always_inline))

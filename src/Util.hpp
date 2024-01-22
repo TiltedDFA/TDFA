@@ -66,8 +66,4 @@ namespace UTIL
         return constructed_move;
     }
 }
-
-
-
-
 #endif // #ifndef UTIL_HPP

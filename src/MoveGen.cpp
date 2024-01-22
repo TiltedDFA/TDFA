@@ -74,7 +74,6 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
         pawn_move = Magics::PopLS1B(pawn_move);
     }
 }
-
 void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
 {
     BitBoard pawns = pos->Pieces<false, loc::PAWN>();

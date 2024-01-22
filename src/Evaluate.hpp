@@ -8,7 +8,6 @@
 #include <array>
 namespace Eval
 {
-    //constants
     constexpr Score POS_INF = std::numeric_limits<Score>::max() >> 1;
     constexpr Score NEG_INF = -POS_INF;
     constexpr Score PAWN_VAL    = 100;

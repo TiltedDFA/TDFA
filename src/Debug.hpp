@@ -30,7 +30,7 @@ namespace Debug
     void PrintBoardState(const Position& pos);
     
     //Prints all of the piece bitboards contained within the Position.pieces_ array
-    void PrintInduvidualPieces(const BitBoard (&board)[2][6]);
+    void PrintIndividualPieces(const BitBoard (&board)[2][6]);
 
     //Helper function, converts a piece type to it's string representation
     std::string PieceTypeToStr(PieceType piece);
@@ -46,6 +46,7 @@ namespace Debug
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false);
     
     void PrintUsThemBlank(BitBoard us, BitBoard them, bool mirrored = false);
+    
     //Prints out the attack squares of the moves stored in a move_info as a bitboard
     void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored = false);
 

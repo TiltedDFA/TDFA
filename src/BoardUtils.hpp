@@ -32,5 +32,4 @@ inline constexpr void SplitFen(std::string_view fen, std::array<std::string_view
     ++current_fen_section;
 }
 inline constexpr bool IsDigit(const char i) {return i <= '9' && i >= '0';}
-
 #endif // #ifndef BOARDUTILS_HPP

@@ -21,8 +21,8 @@ using CmdMap = std::unordered_map<std::string_view, U8>;
 using ArgList = std::vector<std::string_view>;
 namespace UCI
 {
-    inline constexpr const char* ENGINE_NAME = "TDFA V1.0.0";
-    inline constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
+    constexpr const char* ENGINE_NAME = "TDFA V1.0.0";
+    constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     inline const CmdMap INIT_VALUES = 
     {
         {"uci", 1},
@@ -34,7 +34,7 @@ namespace UCI
         {"setoption", 7},
         {"bench", 8}
     };
-    inline size_t TT_SIZE = 1024;//mb
+    constexpr size_t TT_SIZE = 64;//mb
     
     inline Position pos(STARTPOS);    
     inline TransposTable transpos_table;

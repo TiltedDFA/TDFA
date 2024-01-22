@@ -177,7 +177,6 @@ void Position::MakeMove(Move m)
         info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
     }
     
-
     if(p_type == King)
     {
         info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];

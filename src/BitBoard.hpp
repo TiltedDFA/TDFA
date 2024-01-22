@@ -12,7 +12,6 @@
 #include <cassert>
 #include "ZobristConstants.hpp"
 
-
 struct StateInfo
 {
 public:

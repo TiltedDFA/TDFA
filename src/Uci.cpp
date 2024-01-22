@@ -32,7 +32,6 @@ void UCI::HandleIsReady()
     time_manager.SetOptions(60'000, 0);
     transpos_table.Resize(TT_SIZE);
     std::cout << "readyok\n";
-    // std::cout.flush();
 }
 void UCI::HandleGo(const ArgList& args)
 {
@@ -91,10 +90,6 @@ void UCI::HandlePosition(const ArgList& args)
     for(++it ;it != args.end(); ++it)
     {
         const Move move = UTIL::UciToMove(*it, pos);
-
-    // #if DEVELOPER_MODE == 1
-    //     // if(Moves::PType(move) == Moves::BAD_MOVE)/*handle error*/;
-    // #endif
 
         pos.MakeMove(move);
     }

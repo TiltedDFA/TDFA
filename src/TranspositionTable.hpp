@@ -10,16 +10,6 @@
 #include <cstring>
 #include <format>
 
-
-/*
-    16 Bytes
-    ZobristKey key_;    -> 64b  -> 8B
-    Score eval_;        -> 16b  -> 2B
-    Move best_;         -> 16b  -> 2B
-    U8 depth_;          -> 8b   -> 1B
-    BoundType bound_;   -> 8b   -> 1B
-    U8 padding_[2];     -> 16b  -> 2B
-*/
 struct HashEntry
 {
     ZobristKey key_;
@@ -42,5 +32,4 @@ private:
     size_t num_elements_;
     HashEntry* table_ptr_{nullptr};
 };
-
 #endif // #ifndef TRANSPOSITIONTABLE_HPP

@@ -176,6 +176,7 @@ namespace Magics
     }
     //Not a true conversion. Just returns the value of the binary number if it was base 3.
     //This omits the file of piece that you're trying to calculate the moves for
+    //Used for the titboard look up
     template<bool gen_us>
     consteval std::array<std::array<U16, 256>, 8> compute_base_2_to_3() noexcept
     {

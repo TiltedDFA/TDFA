@@ -102,7 +102,7 @@ namespace Debug
 #endif
         PRINTNL("Full moves: " + std::to_string(pos.FullMoves())); 
     }
-    void PrintInduvidualPieces(const BitBoard (&board)[2][6])
+    void PrintIndividualPieces(const BitBoard (&board)[2][6])
     {
         PRINTNL("wk");
         PrintBB(board[loc::WHITE][loc::KING],true);

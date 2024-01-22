@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <array>
 #include <vector>
-
 class MoveList
 {
 public:
@@ -26,6 +25,4 @@ private:
     std::array<Move, MAX_MOVES> data_;
     size_t idx_;
 };
-
-
 #endif // #ifndef MOVELIST_HPP
