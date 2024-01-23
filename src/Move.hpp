@@ -34,14 +34,16 @@ namespace Moves
         Move move{0};
         move |= start_index & START_SQ_MASK;
         move |= (target_index & START_SQ_MASK) << END_SQ_SHIFT;
-        move |= (piece_type << PIECE_TYPE_SHIFT) & PIECE_TYPE_MASK;
+        // move |= (piece_type << PIECE_TYPE_SHIFT) & PIECE_TYPE_MASK;
+        move |= piece_type << PIECE_TYPE_SHIFT;
         return move;
     }
-    constexpr void DecodeMove(const Move move, Sq* start_index, Sq* target_index, PieceType* piece_type)
+    constexpr void DecodeMove(const Move move, Sq* __restrict__ start_index, Sq* __restrict__ target_index, PieceType* __restrict__ piece_type)
     {
         *start_index    = move & START_SQ_MASK;
         *target_index   = (move & END_SQ_MASK) >> END_SQ_SHIFT;
-        *piece_type     = PieceType((move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT);
+        // *piece_type     = PieceType((move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT);
+        *piece_type     = PieceType(move >> PIECE_TYPE_SHIFT);
     }
 
     constexpr PieceType PType(const Move move) {return PieceType((move & PIECE_TYPE_MASK) >> PIECE_TYPE_SHIFT);}

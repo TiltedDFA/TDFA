@@ -14,45 +14,10 @@
 int main(void)
 {
     // RunBenchmark<false>();
+    // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();
-
-    // PRINTNL((int)Moves::EncodeMove(32,41,Pawn));
-    // PRINTNL((int)Moves::EncodeMove(32,41,King));
-    // TestPerft<true>(6, 367724, 1, "8/8/8/8/8/8/1k6/R3K3 b Q - 0 1");
-
-    // PRINTNL("------------------");
-    // for(const ZobristKey i : Zobrist::CASTLING) PRINT(std::format("{},\n",i));
-    // PRINTNL(sizeof(HashEntry));
-    // // PRINTNL(sizeof(MoveGen::SLIDING_ATTACK_CONFIG));
-
-    // PRINTNL(alignof(HashEntry));
-    // TransposTable tt;
-    // tt.Resize(1024);
-    // Position pos(STARTPOS);
-    
-    // // PRINTNL(Eval::Evaluate(pos));
-    // // pos.ImportFen("rnbqkbnr/pppppppp/8/8/8/3P4/PPP1PPPP/RNBQKBNR b KQkq - 0 1");    
-    // // PRINTNL(Eval::Evaluate(pos));
-    // for(int i = 0; i < 9; ++i)
-    // {
-    //     PRINT(std::format("{}, {}\n", i, Search::GoSearch(tt, pos, i)));
-    // }
-    // pos.ImportFen("5k2/8/4K3/5P2/8/8/8/8 b - - 0 1");
-    // for(int i = 0; i < 9; ++i)
-    // {
-    //     PRINT(std::format("{}, {}\n", i, Search::GoSearch(tt, pos, i)));
-    // }
-
-    // PRINTNL(alignof(Position));
-    // PRINTNL(sizeof(Position));
-    // PRINTNL(sizeof(move_info));
-    // PRINTNL(alignof(move_info));
-
-    // PRINTNL(sizeof(SLIDING_ATTACK_CONFIG));
-    // PRINTNL(alignof(SLIDING_ATTACK_CONFIG));
-    
-
-    UCI::loop();
+    Uci uci;
+    uci.Loop();
 
     // MoveList ml;
 
