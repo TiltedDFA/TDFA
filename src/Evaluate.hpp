@@ -23,32 +23,32 @@ namespace Eval
     constexpr Score CountMaterial(Position const* pos)
     {
         Score material{0};
-        material += Magics::PopCnt(pos->Pieces<is_white, loc::PAWN>())     * PAWN_VAL;
-        material += Magics::PopCnt(pos->Pieces<is_white, loc::KNIGHT>())   * KNIGHT_VAL;
-        material += Magics::PopCnt(pos->Pieces<is_white, loc::BISHOP>())   * BISHOP_VAL;
-        material += Magics::PopCnt(pos->Pieces<is_white, loc::ROOK>())     * ROOK_VAL;
-        material += Magics::PopCnt(pos->Pieces<is_white, loc::QUEEN>())    * QUEEN_VAL;
+        material += Score(Magics::PopCnt(pos->Pieces<is_white, loc::PAWN>())     * PAWN_VAL);
+        material += Score(Magics::PopCnt(pos->Pieces<is_white, loc::KNIGHT>())   * KNIGHT_VAL);
+        material += Score(Magics::PopCnt(pos->Pieces<is_white, loc::BISHOP>())   * BISHOP_VAL);
+        material += Score(Magics::PopCnt(pos->Pieces<is_white, loc::ROOK>())     * ROOK_VAL);
+        material += Score(Magics::PopCnt(pos->Pieces<is_white, loc::QUEEN>())    * QUEEN_VAL);
         return material;
     }
     constexpr void UpdateData(Position const* pos)
     {
         const BitBoard all_pieces = pos->PiecesByColour<false>() | pos->PiecesByColour<true>();
-        is_middle_game = Magics::PopCnt(all_pieces) > 8;
+        is_middle_game = Magics::PopCnt(all_pieces) > 16;
     }
     template<bool is_white>
     constexpr Score Mobility(Position const* pos)
     {
         Score mobility{0};
-        const U8 num_attks_king    = Magics::PopCnt(MoveGen::KingAttacks<is_white>(pos));
-        const U8 num_attks_queen   = Magics::PopCnt(MoveGen::QueenAttacks<is_white>(pos));
-        const U8 num_attks_bishop  = Magics::PopCnt(MoveGen::BishopAttacks<is_white>(pos));
-        const U8 num_attks_knight  = Magics::PopCnt(MoveGen::KnightAttacks<is_white>(pos));
-        const U8 num_attks_rook    = Magics::PopCnt(MoveGen::RookAttacks<is_white>(pos));
-        mobility += num_attks_king  * (is_middle_game ? -10 : 20);
-        mobility += num_attks_queen * (is_middle_game ?   3 : 10);
-        mobility += num_attks_bishop* (is_middle_game ?  10 : 20);
-        mobility += num_attks_knight* (is_middle_game ?  15 : 10);
-        mobility += num_attks_rook  * (is_middle_game ?  10 : 15);
+        const Score num_attks_king    = Magics::PopCnt(MoveGen::KingAttacks<is_white>(pos));
+        const Score num_attks_queen   = Magics::PopCnt(MoveGen::QueenAttacks<is_white>(pos));
+        const Score num_attks_bishop  = Magics::PopCnt(MoveGen::BishopAttacks<is_white>(pos));
+        const Score num_attks_knight  = Magics::PopCnt(MoveGen::KnightAttacks<is_white>(pos));
+        const Score num_attks_rook    = Magics::PopCnt(MoveGen::RookAttacks<is_white>(pos));
+        mobility += Score(num_attks_king  * (is_middle_game ? -10 : 20));
+        mobility += Score(num_attks_queen * (is_middle_game ?   3 : 10));
+        mobility += Score(num_attks_bishop* (is_middle_game ?  10 : 20));
+        mobility += Score(num_attks_knight* (is_middle_game ?  15 : 10));
+        mobility += Score(num_attks_rook  * (is_middle_game ?  10 : 15));
         return mobility;
     }
     template<bool is_white>

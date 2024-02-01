@@ -3,6 +3,7 @@
 Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
+    if(pos->ThreeFoldOccured()) return 0;
 
     #if USE_TRANSPOSITION_TABLE == 1
     BoundType hash_entry_flag = BoundType::ALPHA;
@@ -25,11 +26,11 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     MoveList list;
     if(pos->WhiteToMove())
     {
-        MoveGen::GeneratePseudoLegalMoves<true>(pos, &list);
+        MoveGen::GenerateLegalMoves<true>(pos, &list);
     }
     else
     {
-        MoveGen::GeneratePseudoLegalMoves<false>(pos, &list);
+        MoveGen::GenerateLegalMoves<false>(pos, &list);
     }
 
     if(list.len() == 0 || pos->HalfMoves() >= 50)
@@ -43,29 +44,30 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     {
         pos->MakeMove(list[i]);
 
-        if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        // if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        // {
+        Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
+
+        pos->UnmakeMove(list[i]);
+
+        if(eval >= beta)
         {
-            Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
-
-            pos->UnmakeMove(list[i]);
-
-            if(eval >= beta)
-            {
-                #if USE_TRANSPOSITION_TABLE == 1
-                tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::BETA);
-                #endif
-                return beta;
-            }
-
-            if(eval > alpha)
-            {
-                #if USE_TRANSPOSITION_TABLE == 1
-                hash_entry_flag = BoundType::EXACT_VAL;
-                #endif
-                alpha = eval;
-            }
+            #if USE_TRANSPOSITION_TABLE == 1
+            tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::BETA);
+            #endif
+            return beta;
         }
-        else {pos->UnmakeMove(list[i]);}
+
+        if(eval > alpha)
+        {
+            #if USE_TRANSPOSITION_TABLE == 1
+            hash_entry_flag = BoundType::EXACT_VAL;
+            #endif
+            alpha = eval;
+        }
+        // }
+        // else {pos->UnmakeMove(list[i]);}
+        // pos->UnmakeMove(list[i]);
     }
 
     #if USE_TRANSPOSITION_TABLE == 1
@@ -101,6 +103,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
             pos->MakeMove(ml[i]);
             if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
             {
+                //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];
 
                 const Score eval = -GoSearch(tt, pos, depth);

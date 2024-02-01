@@ -3,7 +3,7 @@ ArgList SplitArgs(std::string* inp)
 {
     ArgList ret;
 
-    if(inp->size() == 0 ) return {""};
+    if(inp->size() == 0) return {""};
 
     std::transform(inp->cbegin(), inp->cend(), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
@@ -13,13 +13,15 @@ ArgList SplitArgs(std::string* inp)
     {
         if(inp->at(end++) == ' ')
         {
-            ret.push_back(inp->substr(start, end - start - 1));
+            // ret.push_back(inp->substr(start, end - start - 1));
+            ret.push_back({inp->c_str() + start, inp->c_str() + (end - 1)});
             start = end;
         }
     }
 
     if(inp->at(inp->size() - 1) != ' ')
-        ret.push_back(inp->substr(start, end - start));
+        // ret.push_back(inp->substr(start, end - start));
+        ret.push_back({inp->c_str() + start, inp->c_str() + end});
 
     return ret;
 }
@@ -66,7 +68,7 @@ void Uci::HandleGo(const ArgList& args)
     }
     //start the timer for this round of calculation
     time_manager_.StartTiming();
-    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(&pos_, &tt_, &time_manager_)));
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(search_.FindBestMove(&pos_, &tt_, &time_manager_)));
     std::cout.flush();
 }
 void Uci::HandlePosition(const ArgList& args)

@@ -3,6 +3,7 @@
 #include "Types.hpp"
 #include <array>
 #include <charconv>
+#include <string_view>
 
 inline constexpr std::string_view RemoveWhiteSpace(std::string_view str)
 {

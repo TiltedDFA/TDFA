@@ -24,7 +24,7 @@ using ArgList = std::vector<std::string_view>;
 class Uci
 {
 public:
-    Uci():tt_size_(64), pos_(STARTPOS), tt_(), time_manager_(){}
+    Uci():tt_size_(64), pos_(STARTPOS), tt_(), time_manager_(){tt_.Resize(tt_size_);}
     void Loop();
 private:
     //helper functions
@@ -42,9 +42,10 @@ private:
     Position pos_;    
     TransposTable tt_;
     TimeManager time_manager_;
+    Search search_;
 private:
     //constants
-    static constexpr const char* ENGINE_NAME = "TDFA V1.0.0";
+    static constexpr const char* ENGINE_NAME = "TDFA V1.1.0";
     static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     static inline const CmdMap COMMAND_VALUES = 
     {
