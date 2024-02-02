@@ -75,6 +75,7 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
                     }
                     U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
                     U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
+                    assert((p1 + p2 ) <= 2187);
                     result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
                 }
                
@@ -160,7 +161,7 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
                     }
                     U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
                     U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
-
+                    assert((p1 + p2 ) <= 2187);
                     result.at(sq).at((U8)File           ).at(p1 + p2) = file_attack_moves;
                     result.at(sq).at((U8)Diagonal       ).at(p1 + p2) = diagonal_attack_moves;
                     result.at(sq).at((U8)AntiDiagonal   ).at(p1 + p2) = anti_diagonal_attack_moves;
@@ -201,6 +202,7 @@ namespace MoveGen
 
                 (direction == Rank) ? Magics::FileOf(piece_sq)  : Magics::RankOf(piece_sq)
             );
+        assert(index <= 2187);
         return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(direction).at(index);
     }
 

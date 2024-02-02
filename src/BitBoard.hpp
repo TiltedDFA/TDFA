@@ -58,7 +58,7 @@ public:
     constexpr StateInfo():
         castling_rights_(0),
         half_moves_(0),
-        en_passant_sq_(255),
+        en_passant_sq_(Magics::EP_NULL),
         captured_type_(NullPiece),
         zobrist_key_(0){}
 public: 
@@ -142,7 +142,7 @@ public:
         std::memset(pieces_, 0, sizeof(pieces_));
         info_.castling_rights_  = 0;
         info_.half_moves_       = 0;
-        info_.en_passant_sq_    = 255;
+        info_.en_passant_sq_    = Magics::EP_NULL;
         info_.captured_type_    = Moves::BAD_MOVE;
         info_.zobrist_key_      = 0;
         whites_turn_            = true;
@@ -183,7 +183,7 @@ public:
     
     constexpr BitBoard EmptySqs()const {return ~(PiecesByColour<true>() | PiecesByColour<false>());}
     
-    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_ != 255) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
+    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_ != Magics::EP_NULL) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
 
     constexpr Sq EnPasSq()const {return info_.en_passant_sq_;}
 

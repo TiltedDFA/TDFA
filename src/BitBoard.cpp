@@ -193,10 +193,10 @@ void Position::MakeMove(Move m)
         case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
         }
     }
-    if(info_.en_passant_sq_ != 255)
+    if(info_.en_passant_sq_ != Magics::EP_NULL)
     {
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
-        info_.en_passant_sq_ = 255;
+        info_.en_passant_sq_ = Magics::EP_NULL;
     }
 
     if(is_castling_move)
@@ -319,7 +319,7 @@ void Position::HashCurrentPostion()
             }
         }
     }
-    if(info_.en_passant_sq_ != 0) 
+    if(info_.en_passant_sq_ != Magics::EP_NULL) 
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
 }
