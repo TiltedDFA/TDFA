@@ -1,7 +1,6 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
@@ -10,7 +9,6 @@
 #if DEVELOPER_MODE != 1
 #define NDEBUG
 #endif
-
 
 #ifdef __GNUG__
 #define INLINE __attribute__((always_inline))
@@ -49,7 +47,6 @@ enum MD : U8
     NORTHNORTH,
     SOUTHSOUTH
 };
-
 struct move_info
 {
     constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}

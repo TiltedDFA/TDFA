@@ -38,6 +38,8 @@ namespace Magics
     constexpr BitBoard RANK_7BB = RANK_1BB << 48;
     constexpr BitBoard RANK_8BB = RANK_1BB << 56;
 
+    constexpr U8 EP_NULL = 255;
+
     constexpr BitBoard CROSS_DIAG = 0x8040201008040201;         // A1 - H8
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 

@@ -108,10 +108,10 @@ private:
                 PieceType t;
                 Moves::DecodeMove(ml[i], &start, &end, &t);
                 //used for breakpointing at specific move in perft when debugging
-                if(start == 14 && end == 6 && t == PromQueen)
-                {
-                    PRINT();
-                }
+                // if(start == 14 && end == 6 && t == PromQueen)
+                // {
+                //     PRINT("");
+                // }
             #endif
                 pos->MakeMove(ml[i]);
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
