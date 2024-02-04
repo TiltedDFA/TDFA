@@ -33,7 +33,6 @@ void Uci::HandleUci()
 void Uci::HandleIsReady()
 {
     time_manager_.SetOptions(60'000, 0);
-    tt_.Resize(tt_size_);
     std::cout << "readyok\n";
 }
 void Uci::HandleGo(const ArgList& args)

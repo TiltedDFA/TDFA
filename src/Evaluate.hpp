@@ -16,7 +16,7 @@ namespace Eval
     constexpr Score BISHOP_VAL  = 320;
     constexpr Score ROOK_VAL    = 520;
     constexpr Score QUEEN_VAL   = 950;
-    constexpr std::array<Score, 7> PAWN_PROGRESS_BONUS = {0,0,10,20,50,60,100};
+    constexpr std::array<Score, 7> PAWN_PROGRESS_BONUS = {0,0,7,15,35,42,70};
     inline bool is_middle_game;
 
     template<bool is_white>
@@ -44,7 +44,7 @@ namespace Eval
         const Score num_attks_bishop  = Magics::PopCnt(MoveGen::BishopAttacks<is_white>(pos));
         const Score num_attks_knight  = Magics::PopCnt(MoveGen::KnightAttacks<is_white>(pos));
         const Score num_attks_rook    = Magics::PopCnt(MoveGen::RookAttacks<is_white>(pos));
-        mobility += Score(num_attks_king  * (is_middle_game ? -10 : 20));
+        mobility += Score(num_attks_king  * (is_middle_game ? -30 : 20));
         mobility += Score(num_attks_queen * (is_middle_game ?   3 : 10));
         mobility += Score(num_attks_bishop* (is_middle_game ?  10 : 20));
         mobility += Score(num_attks_knight* (is_middle_game ?  15 : 10));

@@ -1,4 +1,5 @@
 #include "Debug.hpp"
+#include <string>
 namespace Debug
 {
     void PrintBB(BitBoard board, int board_center, bool mirrored)
@@ -8,7 +9,7 @@ namespace Debug
         {
             for(int col{0}; col < 8;++col)
             {
-                if((col + row*8) == board_center)
+                if((col + row * 8) == board_center)
                 {
                     current_line = mirrored ?   current_line + "X " : "X " + current_line;
                 }
@@ -92,14 +93,15 @@ namespace Debug
             if(pos.CastlingRights() & 0x04) prnt += "Wq";
             if(pos.CastlingRights() & 0x02) prnt += "Bk";
             if(pos.CastlingRights() & 0x01) prnt += "Bq";
-            PRINTNL(prnt);
+            std::cout << (prnt);
         }
 
-        PRINTNL("Half moves: " + std::to_string(pos.HalfMoves())); 
-        PRINTNL("Passant trgt sq: " + std::to_string(pos.EnPasSq())); 
+        std::cout << ("Half moves: " + std::to_string(pos.HalfMoves())) << '\n'; 
+        std::cout << ("Passant trgt sq: " + std::to_string(pos.EnPasSq())) << '\n'; 
 
-        pos.WhiteToMove() ? PRINTNL("w to move") : PRINTNL("b to move");
-        PRINTNL("Full moves: " + std::to_string(pos.FullMoves())); 
+        pos.WhiteToMove() ? std::cout << ("w to move") : std::cout <<("b to move");
+        std::cout << '\n';
+        std::cout <<("Full moves: " + std::to_string(pos.FullMoves())) << '\n'; 
     }
     void PrintInduvidualPieces(const BitBoard (&board)[2][6])
     {

@@ -22,7 +22,7 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
         {
             for(U16 them = 0; them < 256; ++them)
             {
-                //skiping useless blocker configs 
+                //skipping useless blocker configurations
                 if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
 
                 move_info file_attack_moves{};
@@ -73,8 +73,8 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
                             break;
                         }
                     }
-                    U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
-                    U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
+                    const U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
                     assert((p1 + p2 ) <= 2187);
                     result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
                 }
@@ -159,8 +159,8 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
                         anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(anti_diag_attacks),Bishop));
                         anti_diag_attacks = Magics::PopLS1B(anti_diag_attacks);
                     }
-                    U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
-                    U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
+                    const U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
                     assert((p1 + p2 ) <= 2187);
                     result.at(sq).at((U8)File           ).at(p1 + p2) = file_attack_moves;
                     result.at(sq).at((U8)Diagonal       ).at(p1 + p2) = diagonal_attack_moves;
@@ -341,10 +341,11 @@ namespace MoveGen
         if(!knights) return 0;
 
         BitBoard attacks{0};
+        const BitBoard them = ~pos->PiecesByColour<is_white>();
 
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & ~pos->PiecesByColour<is_white>();
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & them;
             knights = Magics::PopLS1B(knights);
         }
         return attacks;

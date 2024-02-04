@@ -85,7 +85,7 @@ namespace Magics
 #endif
     //returns (x^y). compile time friendly.
     constexpr double pow(double x, unsigned int y) noexcept {return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
-    //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
+    //returns an 8 bit number. the 1 bits in the number show that the corresponding file has at least one occupying piece.
     //Returns the index of the most significant 1 bit.
     constexpr Sq FindMS1B(BitBoard board) noexcept {return FindLS1B(board) ^ 0x3F;}
 
@@ -100,7 +100,7 @@ namespace Magics
         return lsb;
     }
 
-    //Returns whether the index provided is inbounds of the board
+    //Returns whether the index provided is in bounds of the board
     constexpr bool ValidSq(int index) noexcept {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
@@ -121,7 +121,7 @@ namespace Magics
     {
         return (b * FILE_ABB) >> 56;
     }
-    //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
+    //returns an 8 bit number. the 1 bits in the number show that the corresponding rank has at least one occupying piece.
     constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept INLINE;
     constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept
     {

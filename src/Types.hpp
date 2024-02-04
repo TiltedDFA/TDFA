@@ -4,10 +4,13 @@
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
-#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 0
 
 #if DEVELOPER_MODE != 1
 #define NDEBUG
+#define _AT(x) [x]
+#else
+#define _AT(x) .at(x)
 #endif
 
 #ifdef __GNUG__
