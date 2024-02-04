@@ -13,7 +13,9 @@
 
 int main(void)
 {
+    #if USE_TITBOARDS != 1
     Pext::PextInit();
+    #endif 
     RunBenchmark<false>();
     return 0;
 }
