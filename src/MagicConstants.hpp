@@ -116,13 +116,11 @@ namespace Magics
 
     constexpr U8 BBRankOf(Sq square) noexcept {return 1 << RankOf(square);}
     
-    constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept INLINE;
     constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept
     {
         return (b * FILE_ABB) >> 56;
     }
     //returns an 8 bit number. the 1 bits in the number show that the corresponding rank has at least one occupying piece.
-    constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept INLINE;
     constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept
     {
         //collapses the bb into a file
@@ -131,6 +129,12 @@ namespace Magics
         b |= b >> 2;
         b |= b >> 1;
         return ((b & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
+    }
+    constexpr U8 CollapsedRanksIndex(BitBoard b, U8 file) noexcept
+    {
+        assert(file < 8);
+        // return (((b >> file) & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
+        return ((b >> file) * ANTI_CROSS_DIAG) >> 56;
     }
     constexpr BitBoard PopMS1B(const BitBoard board) noexcept
     {

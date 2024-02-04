@@ -17,10 +17,14 @@ int main(void)
     // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();
 
-    // Position pos(STARTPOS);
-    // Debug::PrintBoardGraphically(pos.GetArray());
 
 
+
+    // BitBoard board = 8796227241984;
+    // Debug::PrintBB(board);
+    // U8 fileof = Magics::FileOf(Magics::FindLS1B(board));
+    // std::cout << (int)fileof << std::endl;
+    // Debug::PrintBB(board >> fileof);
     Uci uci;
     uci.Loop();
     return 0;
