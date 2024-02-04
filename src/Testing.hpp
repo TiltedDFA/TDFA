@@ -74,7 +74,7 @@ private:
         {
             if constexpr(is_root)
             {
-            #if DEVELOPER_MODE == 1
+            #if TDFA_DEBUG == 1
                 const Position copy = *pos;
                 Sq start;
                 Sq end;
@@ -96,13 +96,13 @@ private:
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
-            #if DEVELOPER_MODE == 1
+            #if TDFA_DEBUG == 1
                 assert(copy == *pos);
             #endif
             } 
             else
             {
-            #if DEVELOPER_MODE == 1
+            #if TDFA_DEBUG == 1
                 const Position copy = *pos;
                 Sq start;
                 Sq end;
@@ -120,7 +120,7 @@ private:
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);
-            #if DEVELOPER_MODE == 1
+            #if TDFA_DEBUG == 1
                 assert(copy == *pos);
             #endif
             }

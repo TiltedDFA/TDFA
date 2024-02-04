@@ -186,26 +186,6 @@ namespace MoveGen
         }
     }
 
-    // template<AttackDirection direction>
-    // constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them)
-    // {
-    //     const U16 index = 
-    //         Magics::GetBaseThreeUsThem
-    //         (
-    //             (direction == Rank) ? 
-    //             Magics::CollapsedFilesIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][direction]):
-    //             Magics::CollapsedRanksIndex(us & Magics::SLIDING_ATTACKS_MASK[piece_sq][direction]),
-
-    //             (direction == Rank) ? 
-    //             Magics::CollapsedFilesIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][direction]):
-    //             Magics::CollapsedRanksIndex(them & Magics::SLIDING_ATTACKS_MASK[piece_sq][direction]),
-
-    //             (direction == Rank) ? Magics::FileOf(piece_sq)  : Magics::RankOf(piece_sq)
-    //         );
-    //     assert(index <= 2187);
-    //     return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(direction).at(index);
-    // }
-
     template<AttackDirection direction>
     constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them)
     {
@@ -216,7 +196,12 @@ namespace MoveGen
             const U8 us_collapsed   = Magics::CollapsedFilesIndex(us   & attack_mask);
             const U8 them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
+            assert(lookup_index <= 2187);
+            #if TDFA_DEBUG == 1
             return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(direction).at(lookup_index);
+            #else
+            return &SLIDING_ATTACK_CONFIG[piece_sq][direction][lookup_index];
+            #endif
         }
         else if constexpr(direction == File)
         {
@@ -226,7 +211,12 @@ namespace MoveGen
             const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask, file_of_attacker);
             const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
+            assert(lookup_index <= 2187);
+            #if TDFA_DEBUG == 1
             return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(direction).at(lookup_index);
+            #else
+            return &SLIDING_ATTACK_CONFIG[piece_sq][direction][lookup_index];
+            #endif
         }
         else //direction == Diag || direction == Anti Diag
         {
@@ -235,7 +225,12 @@ namespace MoveGen
             const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask);
             const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
+            assert(lookup_index <= 2187);
+            #if TDFA_DEBUG == 1
             return &SLIDING_ATTACK_CONFIG.at(piece_sq).at(direction).at(lookup_index);
+            #else
+            return &SLIDING_ATTACK_CONFIG[piece_sq][direction][lookup_index];
+            #endif
         }
     }
 

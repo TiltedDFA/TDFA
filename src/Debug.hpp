@@ -11,7 +11,7 @@
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"
 
-#if DEVELOPER_MODE == 1
+#if TDFA_DEBUG == 1
 #define PRINT(x) std::cout << (x)
 #define PRINTNL(x) std::cout << (x) << std::endl
 #else

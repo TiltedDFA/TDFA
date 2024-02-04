@@ -90,7 +90,7 @@ public:
         HashCurrentPostion();
     }
 
-#if DEVELOPER_MODE == 1
+#if TDFA_DEBUG == 1
 
     bool operator==(const Position& other)
     {
