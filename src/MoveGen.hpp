@@ -488,7 +488,7 @@ namespace MoveGen
         {
             const U8 rook_index = Magics::FindLS1B(rooks);
 
-            BitBoard attacks = Pext::bishop_attacks(rook_index, occupied);
+            BitBoard attacks = Pext::rook_attacks(rook_index, occupied);
 
             while(attacks)
             {
