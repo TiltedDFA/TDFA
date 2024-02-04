@@ -33,7 +33,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
         MoveGen::GenerateLegalMoves<false>(pos, &list);
     }
 
-    if(list.len() == 0 || pos->HalfMoves() >= 50)
+    if(list.len() == 0 || pos->FullMoves() >= 50)
     {
         if(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
             return Eval::NEG_INF;
@@ -44,8 +44,6 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     {
         pos->MakeMove(list[i]);
 
-        // if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
-        // {
         Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
 
         pos->UnmakeMove(list[i]);
@@ -65,9 +63,6 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
             #endif
             alpha = eval;
         }
-        // }
-        // else {pos->UnmakeMove(list[i]);}
-        // pos->UnmakeMove(list[i]);
     }
 
     #if USE_TRANSPOSITION_TABLE == 1

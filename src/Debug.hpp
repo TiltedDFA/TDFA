@@ -4,6 +4,7 @@
 #include <bitset>
 #include <iostream>
 #include <vector>
+#include <format>
 
 #include "Move.hpp"
 #include "Types.hpp"
@@ -51,6 +52,8 @@ namespace Debug
 
     //Prints out a uint8_t's pieces
     void PrintU8BB(U8 bb, U8 board_center, bool mirrored = false);
+
+    void PrintBoardGraphically(BitBoard* boards);
 }
 
 #endif // #ifndef DEBUG_HPP

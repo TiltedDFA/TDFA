@@ -36,6 +36,7 @@ private:
     void HandleNewGame();
     void HandleSetOption(const ArgList&);
     void HandleBench(const ArgList&);
+    void HandlePrint(const ArgList&);
 private:
     //mutables
     size_t tt_size_;
@@ -56,7 +57,8 @@ private:
         {"stop", 5},
         {"ucinewgame", 6},
         {"setoption", 7},
-        {"bench", 8}
+        {"bench", 8},
+        {"print", 9}
     };
 };
 #endif // #ifndef UCI_HPP

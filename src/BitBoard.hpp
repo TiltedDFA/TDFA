@@ -25,11 +25,11 @@ public:
     };
     constexpr void Add(ZobristKey key)
     {
-        assert(idx_ <= 50);
+        assert(idx_ <= 100);
         if(three_fold_occured_) return;
         previous_positions_[idx_++] = key;
         if(idx_ < 3) return;
-        three_fold_occured_ = std::count(std::cbegin(previous_positions_), std::cbegin(previous_positions_) + idx_, key) >= 3;
+        three_fold_occured_ = std::count(std::begin(previous_positions_), std::begin(previous_positions_) + idx_, key) >= 3;
     }
     constexpr void Reset()
     {
@@ -39,6 +39,8 @@ public:
     constexpr void Pop()
     {
         idx_ = bool(idx_) * (idx_ - 1);
+        const ZobristKey pkey = previous_positions_[idx_];
+        three_fold_occured_ = std::count(std::begin(previous_positions_), std::begin(previous_positions_) + idx_, pkey) >= 3;
     }
     constexpr ThreeFoldChecker& operator=(const ThreeFoldChecker& other)
     {
@@ -50,7 +52,7 @@ public:
 private:
     U8          idx_;
     bool        three_fold_occured_;
-    ZobristKey  previous_positions_[50];
+    ZobristKey  previous_positions_[100];
 };
 struct StateInfo
 {
@@ -247,6 +249,9 @@ public:
         return ((PiecesByColour<true>() & PiecesByColour<false>()) == 0);
     }
     void HashCurrentPostion();
+
+    BitBoard* GetArray(){return &pieces_[0][0];}
+    
 private:
     void UpdateCastlingRights();
 private:

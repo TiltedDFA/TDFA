@@ -95,6 +95,8 @@ void Uci::HandlePosition(const ArgList& args)
     {
         pos_.MakeMove(UTIL::UciToMove(*it, pos_));
     }
+    ////////////////////////////////////////////
+    std::cout << std::format("Detected three fold: {} \n", pos_.ThreeFoldOccured());
 }
 void Uci::HandleStop()
 {
@@ -131,6 +133,14 @@ void Uci::HandleBench(const ArgList& args)
         std::cout << "running perft bench\n";
         RunBenchmark<false>();
         std::cout << "completed perft bench\n";
+    }
+}
+void Uci::HandlePrint(const ArgList& args)
+{
+    if(args[1] == "state")
+    {
+        Debug::PrintBoardGraphically(pos_.GetArray());
+        Debug::PrintBoardState(pos_);
     }
 }
 void Uci::Loop()
@@ -171,6 +181,9 @@ void Uci::Loop()
             break;
         case 8:
             HandleBench(args);
+            break;
+        case 9:
+            HandlePrint(args);
             break;
         default:
             break;
