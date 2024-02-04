@@ -12,7 +12,7 @@
 #include "Pext.hpp"
 #include "MoveList.hpp"
 
-#if USE_TITBOARDS == 1
+// #if USE_TITBOARDS == 1
 inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
@@ -174,7 +174,7 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
 
 const inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
 
-#endif // #if USE_TITBOARDS == 1
+// #endif // #if USE_TITBOARDS == 1
 
 namespace MoveGen
 {
@@ -187,7 +187,7 @@ namespace MoveGen
         }
     }
 
-    #if USE_TITBOARDS == 1
+    // #if USE_TITBOARDS == 1
     template<AttackDirection direction>
     constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them)
     {
@@ -235,7 +235,7 @@ namespace MoveGen
             #endif
         }
     }
-    #endif
+    // #endif
 
     void WhitePawnMoves(Position const* pos, MoveList* ml) noexcept;
 
@@ -475,7 +475,29 @@ namespace MoveGen
             bishops = Magics::PopLS1B(bishops);
         }
     }
-    
+    template<bool is_white>
+    constexpr BitBoard TitQueenAttacks(Position const* pos)
+    {
+        BitBoard queens = pos->Pieces<is_white, Queen>();
+        if(!queens) return 0;
+
+        BitBoard attacks{0};
+        const BitBoard us   = pos->PiecesByColour<is_white>();
+        const BitBoard them = pos->PiecesByColour<!is_white>();
+  
+        while(queens)
+        {
+            const U8 queen_index = Magics::FindLS1B(queens);
+            
+            attacks |= GetMovesForSliding<File          >(queen_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<Rank          >(queen_index, us, them)->attacks_;
+            attacks |= GetMovesForSliding<Diagonal      >(queen_index, us, them)->attacks_;     
+            attacks |= GetMovesForSliding<AntiDiagonal  >(queen_index, us, them)->attacks_;
+      
+            queens = Magics::PopLS1B(queens);
+        }
+        return attacks;
+    }
     template<bool is_white>
     constexpr void RookMoves(Position const* pos, MoveList* ml)
     {
