@@ -13,20 +13,7 @@
 
 int main(void)
 {
-    // RunBenchmark<false>();
-    // RunBulkBenchmark<false>();
-    // RunPerftSuite<false>();
-    BitBoard board = 1 << 54;
-    std::cout << board << std::endl;
-    Debug::PrintBB(board);
-
-
-    // BitBoard board = 8796227241984;
-    // Debug::PrintBB(board);
-    // U8 fileof = Magics::FileOf(Magics::FindLS1B(board));
-    // std::cout << (int)fileof << std::endl;
-    // Debug::PrintBB(board >> fileof);
-    // Uci uci;
-    // uci.Loop();
+    Pext::PextInit();
+    RunBenchmark<false>();
     return 0;
 }

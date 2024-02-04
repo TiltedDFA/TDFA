@@ -1,10 +1,10 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-#define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
 #define TDFA_DEBUG 0
+#define USE_TITBOARDS 0
 
 #if TDFA_DEBUG != 1
 #define NDEBUG
