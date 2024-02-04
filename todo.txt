@@ -1,5 +1,0 @@
--done------------------------------------------------------------------------resizeable TT by uci 
--done---(testing needed)-----------------------------------------------------detect 3 fold repetition
--add quiescence search 
--add Principle variation (will hopefully speed up iterative deepening)
--add move ordering (search is slow)
