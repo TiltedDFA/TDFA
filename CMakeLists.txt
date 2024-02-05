@@ -19,23 +19,9 @@ file(GLOB_RECURSE MY_SOURCES "src/*.hpp", "src/*.cpp")
 
 set(CACHE CMAKE_VERBOSE_MAKEFILE ON)
 
-if(WIN32)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        add_compile_options(-std=c++20 -g3 -gdwarf-5 -ggdb -C -O0 -Wall -Wextra -Wpedantic -save-temps -s -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647)
-    else()
-        set(CMAKE_CXX_FLAGS_RELEASE "-std=c++20 -O3 -static-libgcc --static -static-libstdc++ -funroll-loops -march=x86-64 -mbmi2")
-        # set(CMAKE_CXX_FLAGS_RELEASE "-std=c++20 -O3 -static-libgcc --static -static-libstdc++ -march=native -funroll-loops -mtune=native")
-        add_link_options(-flto -flto-partition=one -static)
-    endif()
-endif(WIN32)
-if(UNIX)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        add_compile_options(-std=c++20 -g3 -gdwarf-5 -ggdb -C -O0 -Wall -Wextra -pedantic-errors -Wpedantic -save-temps -s -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647 -fsanitize=undefined)
-        add_link_options(-fsanitize=undefined)
-    else()
-        add_compile_options(-std=c++20 -O3 -march=native -mtune=native -funroll-loops)
-    endif()
-endif(UNIX)
+set(CMAKE_CXX_FLAGS_RELEASE "-std=c++20 -O3 -march=native -funroll-loops -mtune=native")
+
+add_link_options(-flto -flto-partition=one -static)
 
 add_executable(TDFA ${MY_SOURCES})
 
