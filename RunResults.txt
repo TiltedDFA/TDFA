@@ -1,0 +1,101 @@
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+CPU: Ryzen 9 7950x3d
+OS:	Windows 10 pro
+Compiled with: gcc 13.2.0
+Compiler flags: -std=c++20 -O3 -static-libgcc --static -static-libstdc++ -march=native -funroll-loops -mtune=native
+Linked with: -flto -flto-partition=one -static
+Results: 
+	Titboard perft group:
+	Run 1 completed with 22400181 nps.
+	Run 2 completed with 23828451 nps.
+	Run 3 completed with 47135777 nps.
+	Run 5 completed with 22999880 nps.
+	All tests completed with means nps: 27320914
+
+	Pext perft group:
+	Run 1 completed with 51718137 nps.
+	Run 2 completed with 52696389 nps.
+	Run 3 completed with 60268010 nps.
+	Run 4 completed with 50556210 nps.
+	Run 5 completed with 49870664 nps.
+	Run 6 completed with 53180927 nps.
+	All tests completed with means nps: 53048389
+
+	Magic Bitboard perft group:
+	Run 1 completed with 49459964 nps.
+	Run 2 completed with 51243010 nps.
+	Run 3 completed with 58432122 nps.
+	Run 4 completed with 48682567 nps.
+	Run 5 completed with 48192119 nps.
+	Run 6 completed with 51683801 nps.
+	All tests completed with means nps: 51282263
+	
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+CPU: Ryzen 9 7950x3d
+OS:	Windows 10 pro
+Compiled with: gcc 13.2.0
+Compiler flags: -std=c++20 -O3 -static-libgcc --static -static-libstdc++ -funroll-loops -march=x86-64 -mbmi2
+Linked with: -flto -flto-partition=one -static
+Results:
+	Titboard perft group:
+	Run 1 completed with 20859959 nps.
+	Run 2 completed with 22817194 nps.
+	Run 3 completed with 42204996 nps.
+	Run 4 completed with 21965283 nps.
+	Run 5 completed with 21770944 nps.
+	Run 6 completed with 23257480 nps.
+	All tests completed with means nps: 25479309
+
+	Pext perft group:
+	Run 1 completed with 48858269 nps.
+	Run 2 completed with 49901683 nps.
+	Run 3 completed with 58181970 nps.
+	Run 4 completed with 47108332 nps.
+	Run 5 completed with 45866928 nps.
+	Run 6 completed with 51139560 nps.
+	All tests completed with means nps: 50176123
+
+	Magic Bitboard perft group:
+	Run 1 completed with 45599755 nps.
+	Run 2 completed with 46869385 nps.
+	Run 3 completed with 57153480 nps.
+	Run 4 completed with 44104108 nps.
+	Run 5 completed with 43872982 nps.
+	Run 6 completed with 46745637 nps.
+	All tests completed with means nps: 47390891
+	
+----------------------------------------------------------------------------------------------------------------------------------------------
+CPU: Ryzen 9 5950x
+OS:	Ubuntu 23.10
+Compiled with: g++ 13.2.0
+Compiler flags: -std=c++20 -O3 -march=native -funroll-loops -mtune=native
+Linked with: -flto -flto-partition=one -static
+Results:
+	Titboard perft group:
+	Run 1 completed with 18652876 nps.
+	Run 2 completed with 19684211 nps.
+	Run 3 completed with 36981116 nps.
+	Run 4 completed with 19180560 nps.
+	Run 5 completed with 19103484 nps.
+	Run 6 completed with 20140754 nps.
+	All tests completed with means nps: 22290500
+
+	Pext perft group:
+	Run 1 completed with 39392460 nps.
+	Run 2 completed with 40452566 nps.
+	Run 3 completed with 48139295 nps.
+	Run 4 completed with 38508901 nps.
+	Run 5 completed with 36894349 nps.
+	Run 6 completed with 40414558 nps.
+	All tests completed with means nps: 40633688
+
+	Magic Bitboard perft group:
+	Run 1 completed with 36586293 nps.
+	Run 2 completed with 37227627 nps.
+	Run 3 completed with 45869401 nps.
+	Run 4 completed with 35909201 nps.
+	Run 5 completed with 35063617 nps.
+	Run 6 completed with 37278392 nps.
+	All tests completed with means nps: 37989088
