@@ -99,3 +99,36 @@ Results:
 	Run 5 completed with 35063617 nps.
 	Run 6 completed with 37278392 nps.
 	All tests completed with means nps: 37989088
+----------------------------------------------------------------------------------------------------------------------------------------------
+OS: windows 10
+CPU: i7-7500U
+Compiler: clang 16.0.5
+Compiler flags: -std=c++20 -O3 -march=native -funroll-loops -mtune=native
+Linker flags: -flto
+Results:
+    Titboard perft group:
+    Run 1 completed with 10147245 nps.
+    Run 2 completed with 11452403 nps.
+    Run 3 completed with 18047831 nps.
+    Run 4 completed with 9745337 nps.
+    Run 5 completed with 10518240 nps.
+    Run 6 completed with 10026745 nps.
+    All tests completed with means nps: 11656300
+
+    Pext perft group:
+    Run 1 completed with 17701818 nps.
+    Run 2 completed with 18210765 nps.
+    Run 3 completed with 18365517 nps.
+    Run 4 completed with 16140476 nps.
+    Run 5 completed with 18513599 nps.
+    Run 6 completed with 16657401 nps.
+    All tests completed with means nps: 17598262
+
+    Magic Bitboard perft group:
+    Run 1 completed with 18367693 nps.
+    Run 2 completed with 19493574 nps.
+    Run 3 completed with 18380049 nps.
+    Run 4 completed with 16825218 nps.
+    Run 5 completed with 18828316 nps.
+    Run 6 completed with 19564159 nps.
+    All tests completed with means nps: 18576501
