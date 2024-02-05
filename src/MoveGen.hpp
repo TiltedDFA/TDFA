@@ -459,12 +459,13 @@ namespace MoveGen
         if(!bishops) return;
 
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
 
         while(bishops)
         {
             const U8 bishop_index = Magics::FindLS1B(bishops);
 
-            BitBoard attacks = Pext::bishop_attacks(bishop_index, occupied);
+            BitBoard attacks = not_us & Pext::bishop_attacks(bishop_index, occupied);
             
             while(attacks)
             {
@@ -505,12 +506,13 @@ namespace MoveGen
         if(!rooks) return;
 
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
-        
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
+
         while(rooks)
         {
             const U8 rook_index = Magics::FindLS1B(rooks);
 
-            BitBoard attacks = Pext::rook_attacks(rook_index, occupied);
+            BitBoard attacks = not_us & Pext::rook_attacks(rook_index, occupied);
 
             while(attacks)
             {
@@ -529,12 +531,13 @@ namespace MoveGen
         if(!queens) return;
 
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
 
         while(queens)
         {
             const U8 queen_index = Magics::FindLS1B(queens);
             
-            BitBoard attacks = Pext::bishop_attacks(queen_index, occupied) | Pext::rook_attacks(queen_index, occupied);
+            BitBoard attacks = not_us & (Pext::bishop_attacks(queen_index, occupied) | Pext::rook_attacks(queen_index, occupied));
 
             while(attacks)
             {
@@ -554,11 +557,12 @@ namespace MoveGen
 
         BitBoard attacks{0};
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
 
         while(bishops)
         {
             const U8 bishop_index = Magics::FindLS1B(bishops);
-            attacks |= Pext::bishop_attacks(bishop_index, occupied);
+            attacks |= not_us & Pext::bishop_attacks(bishop_index, occupied);
             bishops = Magics::PopLS1B(bishops);
         }
         return attacks;
@@ -572,11 +576,12 @@ namespace MoveGen
 
         BitBoard attacks{0};
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
 
         while(rooks)
         {
             const U8 rook_index = Magics::FindLS1B(rooks);
-            attacks |= Pext::rook_attacks(rook_index, occupied);
+            attacks |= not_us & Pext::rook_attacks(rook_index, occupied);
             rooks = Magics::PopLS1B(rooks);
         }
         return attacks;
@@ -591,13 +596,14 @@ namespace MoveGen
         BitBoard attacks{0};
 
         const BitBoard occupied = pos->PiecesByColour<is_white>() | pos->PiecesByColour<!is_white>();
+        const BitBoard not_us = ~pos->PiecesByColour<is_white>();
   
         while(queens)
         {
             const U8 queen_index = Magics::FindLS1B(queens);
             
-            attacks |= Pext::rook_attacks(queen_index, occupied);
-            attacks |= Pext::bishop_attacks(queen_index, occupied);
+            attacks |= not_us & Pext::rook_attacks(queen_index, occupied);
+            attacks |= not_us & Pext::bishop_attacks(queen_index, occupied);
       
             queens = Magics::PopLS1B(queens);
         }

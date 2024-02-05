@@ -10,6 +10,9 @@
 #include "Uci.hpp"
 #include "TranspositionTable.hpp"
 #include "ZobristConstants.hpp"
+
+
+#if USE_TITBOARDS != 1
 void test_movegen()
 {
     std::fstream perft_file("perftsuite.epd", std::ios::in);
@@ -33,31 +36,31 @@ void test_movegen()
         if(tit_attacks_b != pext_attacks_b)
         {
             std::cout << "Fen: " << fen << "\n";
-            std::cout << "Mismatch\nExpected: \n";
+            std::cout << "Mismatch with black queen attacks\nExpected: \n";
             Debug::PrintBB(tit_attacks_b);
             std::cout << "Was: \n";
             Debug::PrintBB(pext_attacks_b);
-            return;
+            // return;
         }
          if(tit_attacks_w != pext_attacks_w)
         {
             std::cout << "Fen: " << fen << "\n";
-            std::cout << "Mismatch\n Expected: \n";
+            std::cout << "Mismatch with white queen attacks\nExpected: \n";
             Debug::PrintBB(tit_attacks_w);
             std::cout << "Was: \n";
             Debug::PrintBB(pext_attacks_w);
-            return;
+            // return;
         }
     }
 
     perft_file.close();
 }
+#endif // #if USE_TITBOARDS == 1
 int main(void)
 {
     #if USE_TITBOARDS != 1
     Pext::PextInit();
     #endif 
-    test_movegen();
-    // RunBenchmark<false>();
+    RunBenchmark<false>();
     return 0;
 }
