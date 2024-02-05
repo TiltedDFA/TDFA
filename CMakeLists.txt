@@ -9,13 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB_RECURSE MY_SOURCES "src/*.hpp", "src/*.cpp")
 
-set(CACHE CMAKE_VERBOSE_MAKEFILE ON)
-
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++20 -O3 -march=native -funroll-loops -mtune=native")
 
 add_link_options(-flto -flto-partition=one -static)
 
 add_executable(TDFA ${MY_SOURCES})
-
 
 install(TARGETS TDFA)
