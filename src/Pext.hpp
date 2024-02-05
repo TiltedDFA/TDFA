@@ -7,16 +7,17 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 
-#if USE_TITBOARDS != 1
+
 typedef uint64_t u64;
 
-extern u64 bishop_table[5248];
-extern u64 rook_table[102400];
-extern u64 slider_masks[2][64];
-extern int slider_offsets[2][64];
 
 namespace Pext
 {
+    extern u64 bishop_table[5248];
+    extern u64 rook_table[102400];
+    extern u64 slider_masks[2][64];
+    extern int slider_offsets[2][64];
+
     inline u64 left_mask(u64 bb) {
         return bb & 0x7f7f7f7f7f7f7f7f;
     }
@@ -96,6 +97,5 @@ namespace Pext
         return rook_table[slider_offsets[1][from] + _pext_u64(occupied, slider_masks[1][from])];
     }
 }
-#endif // #if USE_TITBOARDS != 1
 
 #endif //#ifndef PEXT_HPP

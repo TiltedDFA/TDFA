@@ -43,8 +43,8 @@ public:
 
     void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
-    template<bool output_perft_paths>
-    void RunPerft(int depth, Position* pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
+    template<bool output_perft_paths, SlidingGenType gen_type>
+    void RunPerft(int depth, Position* pos){ResetData(); Perft<true, output_perft_paths, gen_type>(depth, pos);}
     template<bool output_perft_paths>
     void RunBulkPerft(int depth, Position* pos){ResetData(); BulkPerft<true, output_perft_paths>(depth, pos);}
 
@@ -57,7 +57,7 @@ public:
         for(const auto& i : perft_data_) std::cout << i;
     }
 private:
-    template<bool is_root, bool output_perft_paths>
+    template<bool is_root, bool output_perft_paths, SlidingGenType gen_type>
     U64 Perft(int depth, Position* pos)
     {
         if(!depth) return 1ull;
@@ -66,29 +66,18 @@ private:
         U64 nodes{0};
 
         if(pos->WhiteToMove())
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<true, gen_type>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<false, gen_type>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
             if constexpr(is_root)
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                if(start == 2 && end == 47)
-                {
-                    PRINT("\n");
-                }
-            #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false, gen_type>(pos) : MoveGen::InCheck<true, gen_type>(pos)))
                 {
-                    const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
+                    const auto cnt = Perft<false, output_perft_paths, gen_type>(depth - 1, pos);
                     if constexpr(output_perft_paths) 
                         nodes += cnt;
                     total_nodes_ += cnt;
@@ -96,72 +85,18 @@ private:
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                assert(copy == *pos);
-            #endif
             } 
             else
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                //used for breakpointing at specific move in perft when debugging
-                // if(start == 14 && end == 6 && t == PromQueen)
-                // {
-                //     PRINT("");
-                // }
-            #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false, gen_type>(pos) : MoveGen::InCheck<true, gen_type>(pos)))
                 {
-                    nodes += Perft<false, output_perft_paths>(depth - 1, pos);
+                    nodes += Perft<false, output_perft_paths, gen_type>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                assert(copy == *pos);
-            #endif
             }
         }
 
-        return nodes;
-    }
-    template<bool is_root, bool output_perft_paths>
-    U64 BulkPerft(int depth, Position* pos)
-    {
-        assert(depth > 0);
-
-        MoveList ml{};
-
-        if(pos->WhiteToMove())
-            MoveGen::GenerateLegalMoves<true>(pos, &ml);
-        else
-            MoveGen::GenerateLegalMoves<false>(pos, &ml);
-        if(depth == 1) return ml.len();
-        U64 nodes{0};
-        
-        for(size_t i = 0; i < ml.len(); ++i)
-        {
-            if constexpr(is_root)
-            {
-                pos->MakeMove(ml[i]);
-
-                const U64 cnt = BulkPerft<false, output_perft_paths>(depth - 1, pos);
-                if constexpr(output_perft_paths) nodes += cnt;
-                total_nodes_ += cnt;
-                if constexpr(output_perft_paths) perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
-
-                pos->UnmakeMove(ml[i]);
-            } 
-            else
-            {
-                pos->MakeMove(ml[i]);
-                nodes += BulkPerft<false, output_perft_paths>(depth - 1, pos);
-                pos->UnmakeMove(ml[i]);
-            }
-        }
         return nodes;
     }
 private:
@@ -170,7 +105,7 @@ private:
 };
 
 //returns nps
-template<bool output_perft_paths>
+template<bool output_perft_paths, SlidingGenType gen_type, bool display_as_final>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
 {
     PerftHandler perft;
@@ -179,7 +114,7 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
     
     {
         Timer<std::chrono::microseconds> t(&time);
-        perft.RunPerft<output_perft_paths>(depth, &pos);
+        perft.RunPerft<output_perft_paths, gen_type>(depth, &pos);
     }
     if constexpr(output_perft_paths)
     {
@@ -188,69 +123,34 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
 
     const U64 nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);
 
-    if(expected_nodes == perft.GetNodes())
+    if constexpr(display_as_final == true)
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+        std::cout << std::format("Run {} completed with {} nps.", test_number, nps) << std::endl;
     }
     else
     {
-        std::cout << std::format("Test {} *FAILED*. Exp {}, was {}.", test_number, expected_nodes, perft.GetNodes()) << std::endl;
+        if(expected_nodes == perft.GetNodes())
+        {
+            std::cout << std::format("Test {} passed at depth {} with {} nps. Fen: '{}'", test_number, depth, nps, fen) << std::endl;
+        }
+        else
+        {
+            std::cout << std::format("Test {} *FAILED*. Exp {}, was {}. Fen: '{}'", test_number, expected_nodes, perft.GetNodes(), fen) << std::endl;
+        }
     }
     return nps;
 }
-template<bool output_perft_paths>
-U64 TestBulkPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
-{
-    PerftHandler perft;
-    Position pos(fen);
-    U64 time {1};
-    
-    {
-        Timer<std::chrono::microseconds> t(&time);
-        perft.RunBulkPerft<output_perft_paths>(depth, &pos);
-    }
-    if constexpr(output_perft_paths)
-    {
-        perft.PrintData();
-    }
-
-    const U64 nps = static_cast<double>(perft.GetNodes() * 1'000'000) / static_cast<double>(time);
-
-    if(expected_nodes == perft.GetNodes())
-    {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
-    }
-    else
-    {
-        std::cout << std::format("Test {} *FAILED*. Exp {}, was {}.", test_number, expected_nodes, perft.GetNodes()) << std::endl;
-    }
-    return nps;
-}
-template<bool output_perft_paths>
+template<SlidingGenType gen_type, bool display_as_final>
 void RunBenchmark()
 {
     U64 mean_nps{0};
 
-    mean_nps += TestPerft<output_perft_paths>(6, 119060324, 1, STARTPOS);
-    mean_nps += TestPerft<output_perft_paths>(5, 193690690, 2, KIWIPETE);
-    mean_nps += TestPerft<output_perft_paths>(7, 178633661, 3, PERFTPOS3);
-    mean_nps += TestPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
-    mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
-    mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
-
-    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
-}
-template<bool output_perft_paths>
-void RunBulkBenchmark()
-{
-    U64 mean_nps{0};
-
-    mean_nps += TestBulkPerft<output_perft_paths>(6, 119060324, 1, STARTPOS);
-    mean_nps += TestBulkPerft<output_perft_paths>(5, 193690690, 2, KIWIPETE);
-    mean_nps += TestBulkPerft<output_perft_paths>(7, 178633661, 3, PERFTPOS3);
-    mean_nps += TestBulkPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
-    mean_nps += TestBulkPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
-    mean_nps += TestBulkPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(6, 119060324, 1, STARTPOS);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(5, 193690690, 2, KIWIPETE);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(7, 178633661, 3, PERFTPOS3);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(6, 706045033, 4, PERFTPOS4);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(5, 89941194,  5, PERFTPOS5);
+    mean_nps += TestPerft<false, gen_type, display_as_final>(5, 164075551, 6, PERFTPOS6);
 
     std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
 }
@@ -298,7 +198,6 @@ bool RunPerftSuite()
         TestPerft<output_perft_paths>(depth, expected_nodes, current_perft, fen);
         ++current_perft;
     }
-
     perft_file.close();
     return true;
 }
