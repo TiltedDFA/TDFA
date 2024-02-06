@@ -132,3 +132,36 @@ Results:
     Run 5 completed with 18828316 nps.
     Run 6 completed with 19564159 nps.
     All tests completed with means nps: 18576501
+----------------------------------------------------------------------------------------------------------------------------------------------
+CPU: Ryzen 7 5700u
+OS:	Windows 10
+Compiled with: gcc 13.2.0
+Compiler flags: -std=c++20 -O3 -static-libgcc --static -static-libstdc++ -funroll-loops -march=x86-64 -mbmi2
+Linked with: -flto -flto-partition=one -static
+Results:
+    Titboard perft group:
+    Run 1 completed with 9374681 nps.
+    Run 2 completed with 11062046 nps.
+    Run 3 completed with 17015230 nps.
+    Run 4 completed with 11267998 nps.
+    Run 5 completed with 10485088 nps.
+    Run 6 completed with 11073331 nps.
+    All tests completed with means nps: 11713062
+
+    Pext perft group:
+    Run 1 completed with 6456236 nps.
+    Run 2 completed with 7074610 nps.
+    Run 3 completed with 16802160 nps.
+    Run 4 completed with 6945101 nps.
+    Run 5 completed with 6696286 nps.
+    Run 6 completed with 7023903 nps.
+    All tests completed with means nps: 8499716
+
+    Magic Bitboard perft group:
+    Run 1 completed with 20328954 nps.
+    Run 2 completed with 22151235 nps.
+    Run 3 completed with 26732481 nps.
+    Run 4 completed with 18929025 nps.
+    Run 5 completed with 20807717 nps.
+    Run 6 completed with 22100824 nps.
+    All tests completed with means nps: 21841706
