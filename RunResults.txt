@@ -165,3 +165,36 @@ Results:
     Run 5 completed with 20807717 nps.
     Run 6 completed with 22100824 nps.
     All tests completed with means nps: 21841706
+----------------------------------------------------------------------------------------------------------------------------------------------
+CPU: Ryzen 5 5600x
+OS:	Windows 10 Pro
+Compiled with: gcc 13.1.0
+Compiler flags: -std=c++20 -O3 -march=native -funroll-loops -mtune=native
+Linked with: -flto -flto-partition=one -static
+Results:
+	Titboard perft group:
+	Run 1 completed with 17844778 nps.
+	Run 2 completed with 17941358 nps.
+	Run 3 completed with 37701379 nps.
+	Run 4 completed with 18271553 nps.
+	Run 5 completed with 17346571 nps.
+	Run 6 completed with 18394664 nps.
+	All tests completed with means nps: 21250050
+
+	Pext perft group:
+	Run 1 completed with 37475743 nps.
+	Run 2 completed with 34577743 nps.
+	Run 3 completed with 43477744 nps.
+	Run 4 completed with 37165370 nps.
+	Run 5 completed with 32811434 nps.
+	Run 6 completed with 35135696 nps.
+	All tests completed with means nps: 36773955
+
+	Magic Bitboard perft group:
+	Run 1 completed with 33494190 nps.
+	Run 2 completed with 32559388 nps.
+	Run 3 completed with 42165745 nps.
+	Run 4 completed with 34508308 nps.
+	Run 5 completed with 30607588 nps.
+	Run 6 completed with 33194691 nps.
+	All tests completed with means nps: 34421651
