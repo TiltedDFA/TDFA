@@ -68,7 +68,7 @@ namespace loc
     constexpr U8 BISHOP= 2;
     constexpr U8 KNIGHT= 3;
     constexpr U8 ROOK  = 4;
-    constexpr U8 PAWN  = 5; 
+    constexpr U8 PAWN  = 5;
 }
 enum class PromType : U8
 {

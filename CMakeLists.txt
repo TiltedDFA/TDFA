@@ -7,6 +7,8 @@ set(CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
 
+set(CACHE CMAKE_VERBOSE_MAKEFILE TRUE CACHE BOOL "" FORCE)
+
 if(UNIX)
     set(CMAKE_CXX_COMPILER "g++-13" CACHE STRING "" FORCE)
 endif(UNIX)
@@ -17,11 +19,10 @@ endif(WIN32)
 
 file(GLOB_RECURSE MY_SOURCES "src/*.cpp")
 
-set(CACHE CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "" FORCE)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -gdwarf-5 -ggdb -C -O0 -Wall -Wextra -Wpedantic -save-temps -s" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static-libgcc -fno-exceptions --static -static-libstdc++ -march=native -funroll-loops -mtune=native" CACHE STRING "" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS "-flto -flto-partition=one -static" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static-libgcc -fno-exceptions --static -static-libstdc++ -march=native -flto -flto-partition=one -ffat-lto-objects -funroll-loops -mtune=native" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "-flto=jobserver -static" CACHE STRING "" FORCE)
 
 add_executable(TDFA ${MY_SOURCES})
 

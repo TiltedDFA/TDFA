@@ -25,7 +25,7 @@ namespace Debug
             current_line += "|" + std::to_string(row + 1) + " \n";
             output = current_line + output;
             current_line = "";
-        }                    
+        }
         output += "----------------\n";
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
@@ -236,7 +236,7 @@ namespace Debug
     }
     void PrintBoardGraphically(BitBoard* boards)
     {
-        constexpr const static char PIECE_TYPES_MAPPING[12] = {'k', 'q', 'b', 'n', 'r', 'p', 'K', 'Q', 'B', 'N', 'R', 'P'};
+        constinit const static char PIECE_TYPES_MAPPING[12] = {'k', 'q', 'b', 'n', 'r', 'p', 'K', 'Q', 'B', 'N', 'R', 'P'};
         char squares[64];
         std::memset(squares, '-', sizeof(squares));
         for(int i = 0; i < 12; ++i)

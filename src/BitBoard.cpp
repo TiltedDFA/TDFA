@@ -75,7 +75,7 @@ void Position::ImportFen(std::string_view fen)
     {
         switch (i)
         {
-        case '-':                
+        case '-':
             break;
         case 'K':
             info_.castling_rights_ |= Magics::CASTLE_K_W;
@@ -88,7 +88,7 @@ void Position::ImportFen(std::string_view fen)
             break;
         case 'q':
             info_.castling_rights_ |= Magics::CASTLE_Q_B;
-            break; 
+            break;
         default:
             break;
         }
@@ -123,7 +123,7 @@ void Position::MakeMove(Move m)
 {
     assert(IsOk());
     previous_state_info.push_back(info_);
- 
+
     Sq start_sq;
     Sq target_sq;
     PieceType p_type;
@@ -319,7 +319,7 @@ void Position::HashCurrentPostion()
             }
         }
     }
-    if(info_.en_passant_sq_ != Magics::EP_NULL) 
+    if(info_.en_passant_sq_ != Magics::EP_NULL)
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
 }

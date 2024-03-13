@@ -34,7 +34,7 @@ namespace Magics
     constexpr BitBoard RANK_3BB = RANK_1BB << 16;
     constexpr BitBoard RANK_4BB = RANK_1BB << 24;
     constexpr BitBoard RANK_5BB = RANK_1BB << 32;
-    constexpr BitBoard RANK_6BB = RANK_1BB << 40; 
+    constexpr BitBoard RANK_6BB = RANK_1BB << 40;
     constexpr BitBoard RANK_7BB = RANK_1BB << 48;
     constexpr BitBoard RANK_8BB = RANK_1BB << 56;
 
@@ -43,13 +43,13 @@ namespace Magics
     constexpr BitBoard CROSS_DIAG = 0x8040201008040201;         // A1 - H8
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 
-    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() | 
+    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() |
                                          SqToBB<56>() | SqToBB<63>());
     
     constexpr U8 CASTLE_K_W = 0x08;
     constexpr U8 CASTLE_Q_W = 0x04;
     constexpr U8 CASTLE_K_B = 0x02;
-    constexpr U8 CASTLE_Q_B = 0x01;    
+    constexpr U8 CASTLE_Q_B = 0x01;
     constexpr U8 CASTLE_ALL = 0x0F;
     //preserve black's right to castle
     constexpr U8 NO_CASTLE_W = (CASTLE_K_B | CASTLE_Q_B);
@@ -60,9 +60,9 @@ namespace Magics
     constexpr BitBoard ROOK_TO_FROM_B_Q = SqToBB<56>()| SqToBB<59>();
     constexpr BitBoard ROOK_TO_FROM_B_K = SqToBB<61>()| SqToBB<63>();
 
-    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] = 
-        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K}; 
-    constexpr ZobristKey CASTLING_ZOB_KEYS[5] = 
+    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] =
+        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K};
+    constexpr ZobristKey CASTLING_ZOB_KEYS[5] =
     {
         0,
         (Zobrist::PIECES[true][Rook][0]   ^ Zobrist::PIECES[true][Rook][3]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][2]  ),
@@ -89,7 +89,7 @@ namespace Magics
     //Returns the index of the most significant 1 bit.
     constexpr Sq FindMS1B(BitBoard board) noexcept {return FindLS1B(board) ^ 0x3F;}
 
-    //Returns the number without the least significant 1 bit. 
+    //Returns the number without the least significant 1 bit.
     //Not protected against 0 inputs
     constexpr BitBoard PopLS1B(BitBoard board) noexcept {return (board & (board - 1));}
 

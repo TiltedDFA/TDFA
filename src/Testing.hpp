@@ -99,7 +99,7 @@ private:
             #if TDFA_DEBUG == 1
                 assert(copy == *pos);
             #endif
-            } 
+            }
             else
             {
             #if TDFA_DEBUG == 1
@@ -154,7 +154,7 @@ private:
                 if constexpr(output_perft_paths) perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
 
                 pos->UnmakeMove(ml[i]);
-            } 
+            }
             else
             {
                 pos->MakeMove(ml[i]);

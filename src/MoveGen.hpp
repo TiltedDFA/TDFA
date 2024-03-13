@@ -78,7 +78,7 @@ inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitb
                     assert((p1 + p2 ) <= 2187);
                     result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
                 }
-               
+
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +334,7 @@ namespace MoveGen
             knights = Magics::PopLS1B(knights);
         }
     }
-   
+
     template<bool is_white>
     void KingMoves(Position const* pos, MoveList* ml) 
     {
@@ -420,7 +420,7 @@ namespace MoveGen
         }
         return attacks;
     }
-  
+
     template<bool is_white>
     constexpr BitBoard QueenAttacks(Position const* pos)
     {
@@ -430,16 +430,16 @@ namespace MoveGen
         BitBoard attacks{0};
         const BitBoard us   = pos->PiecesByColour<is_white>();
         const BitBoard them = pos->PiecesByColour<!is_white>();
-  
+
         while(queens)
         {
             const U8 queen_index = Magics::FindLS1B(queens);
             
             attacks |= GetMovesForSliding<File          >(queen_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<Rank          >(queen_index, us, them)->attacks_;
-            attacks |= GetMovesForSliding<Diagonal      >(queen_index, us, them)->attacks_;     
+            attacks |= GetMovesForSliding<Diagonal      >(queen_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<AntiDiagonal  >(queen_index, us, them)->attacks_;
-      
+
             queens = Magics::PopLS1B(queens);
         }
         return attacks;
@@ -512,7 +512,7 @@ namespace MoveGen
 
     template<bool is_white>
     constexpr void Castling(Position const* pos, MoveList* ml) noexcept
-    {   
+    {
         if(!((is_white ? 0x0C : 0x03) & pos->CastlingRights())) {return;} //checks for castling rights
         if(InCheck<is_white>(pos)) {return;} //checks if king under attack
 
@@ -540,9 +540,9 @@ namespace MoveGen
         if //queenside
         (
             (pos->CastlingRights() & (is_white ? 0x04 : 0x01)) // has rights
-            && 
+            &&
             !(rank_looked_at & 0x0E) // not blocked
-            && 
+            &&
             !(0xFF & (is_white ? enemy_attacks : enemy_attacks >> 56) & 0x0C) // not under attack by enemy
         )
         {
@@ -567,7 +567,7 @@ namespace MoveGen
     
     template<bool is_white>
     void GenerateLegalMoves(Position* __restrict__  pos, MoveList* __restrict__  ml)
-    {        
+    {
         //pseudo legal
         MoveList pseudo_legal_ml;
         GeneratePseudoLegalMoves<is_white>(pos, &pseudo_legal_ml);
@@ -578,7 +578,7 @@ namespace MoveGen
             pos->MakeMove(pseudo_legal_ml[i]);
 
             if(!InCheck<is_white>(pos))
-            { 
+            {
                 ml->add(pseudo_legal_ml[i]);
             }
             pos->UnmakeMove(pseudo_legal_ml[i]);

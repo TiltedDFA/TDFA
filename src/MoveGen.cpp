@@ -43,7 +43,7 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
     {
         const Sq index = Magics::FindLS1B(pawn_move);
         if(index > 55)
-        {   
+        {
             ml->add(Moves::EncodeMove(index - 9, index, PromQueen));
             ml->add(Moves::EncodeMove(index - 9, index, PromRook));
             ml->add(Moves::EncodeMove(index - 9, index, PromBishop));
@@ -61,7 +61,7 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
     {
         const Sq index = Magics::FindLS1B(pawn_move);
         if(index > 55)
-        {   
+        {
             ml->add(Moves::EncodeMove(index - 7, index, PromQueen));
             ml->add(Moves::EncodeMove(index - 7, index, PromRook));
             ml->add(Moves::EncodeMove(index - 7, index, PromBishop));
@@ -88,7 +88,7 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
         const Sq index = Magics::FindLS1B(pawn_move);
         ml->add(Moves::EncodeMove(index + 8, index, Pawn));
         pawn_move = Magics::PopLS1B(pawn_move);
-    } 
+    }
 
     pawn_move = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & Magics::RANK_1BB;
     while (pawn_move)
@@ -99,21 +99,21 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
         ml->add(Moves::EncodeMove(index + 8, index, PromBishop));
         ml->add(Moves::EncodeMove(index + 8, index, PromKnight));
         pawn_move = Magics::PopLS1B(pawn_move);
-    } 
+    }
     pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos->EmptySqs() & Shift<MD::SOUTH>(pos->EmptySqs()) & Magics::RANK_5BB;
     while (pawn_move)
     {
         const int index = Magics::FindLS1B(pawn_move);
         ml->add(Moves::EncodeMove(index + 16, index, Pawn));
         pawn_move = Magics::PopLS1B(pawn_move);
-    } 
+    }
 
     pawn_move = Shift<MD::SOUTH_EAST>(pawns) & capturable_squares;
     while (pawn_move)
     {
         const Sq index = Magics::FindLS1B(pawn_move);
         if(index < 8)
-        {   
+        {
             ml->add(Moves::EncodeMove(index + 7, index, PromQueen));
             ml->add(Moves::EncodeMove(index + 7, index, PromRook));
             ml->add(Moves::EncodeMove(index + 7, index, PromBishop));
@@ -124,14 +124,14 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
             ml->add(Moves::EncodeMove(index + 7, index, Pawn)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
-    } 
+    }
 
     pawn_move = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
     while (pawn_move)
     {
         const Sq index = Magics::FindLS1B(pawn_move);
         if(index < 8)
-        {  
+        {
             ml->add(Moves::EncodeMove(index + 9, index, PromQueen));
             ml->add(Moves::EncodeMove(index + 9, index, PromRook));
             ml->add(Moves::EncodeMove(index + 9, index, PromBishop));
@@ -142,5 +142,5 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
             ml->add(Moves::EncodeMove(index + 9, index, Pawn)); 
         }
         pawn_move = Magics::PopLS1B(pawn_move);
-    } 
+    }
 }

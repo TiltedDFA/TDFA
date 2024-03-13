@@ -63,7 +63,7 @@ public:
         en_passant_sq_(Magics::EP_NULL),
         captured_type_(NullPiece),
         zobrist_key_(0){}
-public: 
+public:
     U8          castling_rights_;
     U8          half_moves_;
     U8          en_passant_sq_;
@@ -151,7 +151,7 @@ public:
         full_moves_             = 0;
         rep_checker_.Reset();
         previous_state_info.clear();
-    }    
+    }
 
     void ImportFen(std::string_view fen);
 
@@ -162,7 +162,7 @@ public:
     template<bool is_white>
     constexpr BitBoard PiecesByColour()const
     {
-        return 
+        return
             pieces_[is_white][loc::KING]  |
             pieces_[is_white][loc::QUEEN] |
             pieces_[is_white][loc::BISHOP]|
@@ -255,10 +255,10 @@ public:
 private:
     void UpdateCastlingRights();
 private:
-    BitBoard pieces_[2][6];                         
-    StateInfo info_;                                
-    bool whites_turn_;                              
-    U16 full_moves_;                                                      
+    BitBoard pieces_[2][6];
+    StateInfo info_;
+    bool whites_turn_;
+    U16 full_moves_;
     std::vector<StateInfo> previous_state_info;
     ThreeFoldChecker rep_checker_;
 };
