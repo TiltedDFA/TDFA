@@ -6,7 +6,6 @@
 #include <array>
 #include <bitset>
 #include <cmath>
-#include <bit>
 #include <cassert>
 
 namespace Magics

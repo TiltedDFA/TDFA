@@ -2,7 +2,7 @@
 #include <string>
 namespace Debug
 {
-    void PrintBB(BitBoard board, int board_center, bool mirrored)
+    void PrintBB(const BitBoard board, const int board_center, const bool mirrored)
     {
         std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
@@ -30,7 +30,7 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintBB(BitBoard board, bool mirrored)
+    void PrintBB(const BitBoard board, const bool mirrored)
     {
         std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)

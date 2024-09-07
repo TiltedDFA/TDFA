@@ -38,14 +38,14 @@ namespace Zobrist
     consteval std::array<ZobristKey, 64> InitEnPassant()
     {
         U64 prng_seed{1070372};
-        std::array<ZobristKey, 64> arr;
+        std::array<ZobristKey, 64> arr{};
         for(int i = 0; i < 64; ++i) arr[i] = ZobRand64(prng_seed);
         return arr;
     }
     consteval std::array<ZobristKey, 16> InitCastling()
     {
         U64 prng_seed{1909068137};
-        std::array<ZobristKey, 16> arr;
+        std::array<ZobristKey, 16> arr{};
         for(int i = 0; i < 16; ++i) arr[i] = ZobRand64(prng_seed);
         return arr;
     }

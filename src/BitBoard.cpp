@@ -102,7 +102,7 @@ void Position::ImportFen(std::string_view fen)
         info_.en_passant_sq_ = en_passant_index;
     }
 
-    if(fen_sections.at(4) == "")
+    if(fen_sections.at(4).empty())
     {
         info_.half_moves_ = 0;
     }
@@ -110,7 +110,7 @@ void Position::ImportFen(std::string_view fen)
     {
         std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
     }
-    if(fen_sections.at(5) == "")
+    if(fen_sections.at(5).empty())
     {
         full_moves_ = 0;
     }
@@ -119,7 +119,7 @@ void Position::ImportFen(std::string_view fen)
         std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
     }
 }
-void Position::MakeMove(Move m)
+void Position::MakeMove(const Move m)
 {
     assert(IsOk());
     previous_state_info.push_back(info_);
@@ -242,7 +242,7 @@ void Position::MakeMove(Move m)
     rep_checker_.Add(info_.zobrist_key_);
     assert(IsOk());
 }
-void Position::UnmakeMove(Move m)
+void Position::UnmakeMove(const Move m)
 {
     assert(IsOk());
     whites_turn_ = !whites_turn_;

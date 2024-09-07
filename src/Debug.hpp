@@ -6,7 +6,6 @@
 #include <vector>
 #include <format>
 
-#include "Move.hpp"
 #include "Types.hpp"
 #include "BitBoard.hpp"
 #include "MagicConstants.hpp"

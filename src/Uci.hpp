@@ -8,7 +8,6 @@
 #include "MagicConstants.hpp"
 #include "Testing.hpp"
 #include "Search.hpp"
-#include "MoveGen.hpp"
 #include "TranspositionTable.hpp"
 #include <algorithm>
 #include <cctype>
@@ -28,14 +27,15 @@ public:
     void Loop();
 private:
     //helper functions
-    void HandleUci();
+    static void HandleUci();
     void HandleIsReady();
     void HandleGo(const ArgList&);
     void HandlePosition(const ArgList&);
-    void HandleStop();
+
+    static void HandleStop();
     void HandleNewGame();
     void HandleSetOption(const ArgList&);
-    void HandleBench(const ArgList&);
+    static void HandleBench(const ArgList&);
     void HandlePrint(const ArgList&);
 private:
     //mutables

@@ -8,9 +8,7 @@
 #include "MagicConstants.hpp"
 #include "BitBoard.hpp"
 #include "Move.hpp"
-#include "Debug.hpp"
 #include "MoveList.hpp"
-#include <iostream>
 
 
 inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
@@ -187,7 +185,7 @@ namespace MoveGen
     }
 
     template<AttackDirection direction>
-    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them)
+    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
     {
         if constexpr(direction == Rank)
         {

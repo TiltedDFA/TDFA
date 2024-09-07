@@ -26,7 +26,8 @@ int main(void)
     // U8 fileof = Magics::FileOf(Magics::FindLS1B(board));
     // std::cout << (int)fileof << std::endl;
     // Debug::PrintBB(board >> fileof);
-    Uci uci;
-    uci.Loop();
+    RunBenchmark<false>();
+    // Uci uci;
+    // uci.Loop();
     return 0;
 }

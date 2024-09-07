@@ -1,6 +1,6 @@
 #include "TranspositionTable.hpp"
 
-void TransposTable::Resize(size_t size_in_mB)
+void TransposTable::Resize(const size_t size_in_mB)
 {
     const size_t num_bytes = size_in_mB * 1024 * 1024;
     num_elements_ = num_bytes / sizeof(HashEntry);
@@ -9,11 +9,11 @@ void TransposTable::Resize(size_t size_in_mB)
     
     table_ptr_ = new HashEntry[num_elements_];
     
-    if(!table_ptr_)
-    {
-        std::cout << "Failed to allocate requested table" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    // if(!table_ptr_)
+    // {
+    //     std::cout << "Failed to allocate requested table" << std::endl;
+    //     exit(EXIT_FAILURE);
+    // }
     std::memset(table_ptr_, 0, num_bytes);
 }
 void TransposTable::Store(
@@ -22,8 +22,7 @@ void TransposTable::Store(
                             Move        best,
                             U8          depth,
                             BoundType   bound
-                          )
-{
+                          ) const {
     assert(num_elements_ != 0);
 
     HashEntry* entry = &table_ptr_[key % num_elements_];
@@ -41,10 +40,9 @@ void TransposTable::Store(
 HashEntry const* TransposTable::Probe(ZobristKey key)const
 {
     assert(num_elements_ != 0);
-    HashEntry* entry = &table_ptr_[key % num_elements_];
+    const HashEntry* entry = &table_ptr_[key % num_elements_];
     return (entry->key_ == key) ? entry : nullptr;
 }
-void TransposTable::Clear()
-{
+void TransposTable::Clear() const {
     std::memset(table_ptr_, 0, sizeof(HashEntry) * num_elements_);
 }

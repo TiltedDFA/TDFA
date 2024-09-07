@@ -1,12 +1,11 @@
 #include "MoveGen.hpp"
-#include <algorithm>
 using Magics::Shift;
 
 void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
 {
-    BitBoard pawns = pos->Pieces<true, loc::PAWN>();
+    const BitBoard pawns = pos->Pieces<true, loc::PAWN>();
     if(!pawns) return;
-    BitBoard pawn_move{0};
+    BitBoard pawn_move;
     const BitBoard capturable_squares = pos->PiecesByColour<false>() | (pos->EnPasBB() & ~Magics::RANK_3BB);
 
     pawn_move = Shift<MD::NORTH>(pawns) & pos->EmptySqs() & ~Magics::RANK_8BB;
@@ -77,9 +76,9 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
 
 void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
 {
-    BitBoard pawns = pos->Pieces<false, loc::PAWN>();
+    const BitBoard pawns = pos->Pieces<false, loc::PAWN>();
     if(!pawns) return;
-    BitBoard pawn_move{0};
+    BitBoard pawn_move;
     const BitBoard capturable_squares = pos->PiecesByColour<true>() | (pos->EnPasBB() & ~Magics::RANK_6BB);
 
     pawn_move = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & ~Magics::RANK_1BB;

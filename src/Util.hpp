@@ -28,7 +28,7 @@ namespace UTIL
             return 'z';
         }
     }
-    inline std::string MoveToStr(Move m)
+    inline std::string MoveToStr(const Move m)
     {
         return (Moves::IsPromotionMove(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::PType(m))) :
                                             Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)));

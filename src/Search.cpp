@@ -1,6 +1,6 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, Score beta)
+Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
     if(pos->ThreeFoldOccured()) return 0;
@@ -44,7 +44,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     {
         pos->MakeMove(list[i]);
 
-        Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
+        const Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
 
         pos->UnmakeMove(list[i]);
 
@@ -74,7 +74,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
 Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* tm)
 {
     Move last_best_move = Moves::NULL_MOVE;
-    Score last_best_eval = Eval::NEG_INF;
+    // Score last_best_eval = Eval::NEG_INF;
 
     for(U8 depth{1};;++depth)
     {
@@ -111,7 +111,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
             }
             pos->UnmakeMove(ml[i]);
         }
-        last_best_eval = best_eval;
+        Score last_best_eval = best_eval;
         last_best_move = best_move;
         std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
     }

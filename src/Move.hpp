@@ -1,11 +1,10 @@
 #ifndef MOVE_HPP
 #define MOVE_HPP
-#include <cstdint>
+
 #include <algorithm>
 #include <limits>
 
 #include "Types.hpp"
-#include "MagicConstants.hpp"
 
 /*
 Move storage: 

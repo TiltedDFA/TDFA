@@ -1,11 +1,14 @@
 #include "Uci.hpp"
+
+#include <utility>
+
 ArgList SplitArgs(std::string* inp)
 {
     ArgList ret;
 
-    if(inp->size() == 0) return {""};
+    if(inp->empty()) return {""};
 
-    std::transform(inp->cbegin(), inp->cend(), inp->begin(), [](unsigned char c){return std::tolower(c);});
+    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
     std::size_t start{0}, end{0};
 
@@ -13,13 +16,13 @@ ArgList SplitArgs(std::string* inp)
     {
         if(inp->at(end++) == ' ')
         {
-            ret.push_back({inp->c_str() + start, inp->c_str() + (end - 1)});
+            ret.emplace_back(inp->c_str() + start, inp->c_str() + (end - 1));
             start = end;
         }
     }
 
     if(inp->at(inp->size() - 1) != ' ')
-        ret.push_back({inp->c_str() + start, inp->c_str() + end});
+        ret.emplace_back(inp->c_str() + start, inp->c_str() + end);
 
     return ret;
 }
@@ -50,7 +53,7 @@ void Uci::HandleGo(const ArgList& args)
             if(args[i] == "btime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
             if(args[i] == "winc")
-                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), winc);
             if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
         }
@@ -74,7 +77,7 @@ void Uci::HandlePosition(const ArgList& args)
     {
         assert(args.size() >= 7);
 
-        std::string constructed_fen{""};
+        std::string constructed_fen;
         for(std::size_t i{2}; i < 7; ++i)
             constructed_fen += std::string(args[i]) + ' ';
 
@@ -88,7 +91,7 @@ void Uci::HandlePosition(const ArgList& args)
     }
 
     ArgList::const_iterator it;
-    if((it = std::find(args.cbegin(), args.cend(), "moves")) == args.cend()) return;
+    if((it = std::ranges::find(args, "moves")) == args.cend()) return;
     
     for(++it ;it != args.end(); ++it)
     {
@@ -144,7 +147,7 @@ void Uci::HandlePrint(const ArgList& args)
 }
 void Uci::Loop()
 {
-    std::string input{""};
+    std::string input;
     while(input != "quit")
     {
         std::getline(std::cin, input);
