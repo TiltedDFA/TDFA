@@ -1,7 +1,7 @@
 #include "MoveGen.hpp"
 using Magics::Shift;
 
-consteval std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
+static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
     for(U8 sq = 0; sq < 64; ++sq)

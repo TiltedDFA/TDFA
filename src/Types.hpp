@@ -8,9 +8,9 @@
 
 #if TDFA_DEBUG != 1
 #define NDEBUG
-#define _AT(x) [x]
+#define _AT(x) [(x)]
 #else
-#define _AT(x) .at(x)
+#define _AT(x) .at((x))
 #endif
 
 #ifdef __GNUG__
@@ -53,7 +53,7 @@ enum MD : U8
 struct move_info
 {
     constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
-    constexpr void add_move(const Move m) noexcept {encoded_move_.at(count_++) = m;}
+    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
 
     std::array<Move, 7> encoded_move_;
     U8 count_;
