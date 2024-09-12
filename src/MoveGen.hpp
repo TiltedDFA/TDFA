@@ -79,12 +79,10 @@ namespace MoveGen
             const U8 bishop_index = Magics::FindLS1B(bishops);
 
             move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(move->encoded_move_[i]);
-            
+            ml->merge(move);
+
             move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(move->encoded_move_[i]);
+            ml->merge(move);
             
             bishops = Magics::PopLS1B(bishops);
         }
@@ -104,12 +102,10 @@ namespace MoveGen
             const U8 rook_index = Magics::FindLS1B(rooks);
 
             move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i) 
-                ml->add(move->encoded_move_[i]);
+            ml->merge(move);
             
             move = GetMovesForSliding<Rank>(rook_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i) 
-                ml->add(move->encoded_move_[i]);
+            ml->merge(move);
             
             rooks = Magics::PopLS1B(rooks);
         }
@@ -129,20 +125,16 @@ namespace MoveGen
             const U8 queen_index = Magics::FindLS1B(queens);
             
             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(Moves::SetPieceType<Queen>(move->encoded_move_[i]));
+            ml->queen_merge(move);
             
             move = GetMovesForSliding<Rank>(queen_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(Moves::SetPieceType<Queen>(move->encoded_move_[i]));
+            ml->queen_merge(move);
             
             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(Moves::SetPieceType<Queen>(move->encoded_move_[i]));
+            ml->queen_merge(move);
             
             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-            for(U8 i{0}; i < move->count_; ++i)
-                ml->add(Moves::SetPieceType<Queen>(move->encoded_move_[i]));
+            ml->queen_merge(move);
             
             queens = Magics::PopLS1B(queens);
         }
