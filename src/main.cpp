@@ -27,7 +27,7 @@ int main(void)
     // std::cout << (int)fileof << std::endl;
     // Debug::PrintBB(board >> fileof);
     RunBenchmark<false>();
-    // Uci uci;
-    // uci.Loop();
+//     Uci uci;
+//     uci.Loop();
     return 0;
 }

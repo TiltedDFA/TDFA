@@ -52,6 +52,7 @@ namespace Eval
         return mobility;
     }
     template<bool is_white>
+    //0000001000000000
     constexpr Score PawnProgress(Position const* pos)
     {
         BitBoard our_pawns = pos->Pieces<is_white, loc::PAWN>();
