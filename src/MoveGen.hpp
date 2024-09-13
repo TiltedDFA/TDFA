@@ -6,7 +6,7 @@
 
 #include "Types.hpp"
 #include "MagicConstants.hpp"
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "Move.hpp"
 #include "MoveList.hpp"
 

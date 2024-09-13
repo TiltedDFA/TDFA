@@ -1,4 +1,4 @@
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include <array>
 #include <charconv>
 #include <cmath>
@@ -146,7 +146,6 @@ void Position::MakeMove(const Move m)
         info_.captured_type_ = (whites_turn_ ? RemovePiece<false>(Magics::SqToBB(capture_sq)) : RemovePiece<true>(Magics::SqToBB(capture_sq)));
         info_.zobrist_key_ ^= Zobrist::PIECES[!whites_turn_][info_.captured_type_][capture_sq];
         info_.half_moves_ = 0;
-        rep_checker_.Reset();
     }
     else
         info_.captured_type_ = NullPiece;
@@ -206,7 +205,6 @@ void Position::MakeMove(const Move m)
         pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];
         //update the key
         info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[is_castling_move];
-        rep_checker_.Reset();
     }
     else
     {
@@ -235,11 +233,9 @@ void Position::MakeMove(const Move m)
             info_.zobrist_key_ ^= Zobrist::PIECES[whites_turn_][prom_to][target_sq] ^ Zobrist::PIECES[whites_turn_][Pawn][target_sq];
         }
         info_.half_moves_ = 0;
-        rep_checker_.Reset();
     }
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
     whites_turn_ = !whites_turn_;
-    rep_checker_.Add(info_.zobrist_key_);
     assert(IsOk());
 }
 void Position::UnmakeMove(const Move m)
@@ -297,7 +293,6 @@ void Position::UnmakeMove(const Move m)
     //restore previous state
     info_ = previous_state_info.back();
     previous_state_info.pop_back();
-    rep_checker_.Pop();
     assert(IsOk());
 }
 void Position::HashCurrentPostion()

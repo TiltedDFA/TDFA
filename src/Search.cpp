@@ -3,10 +3,9 @@
 Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
-    if(pos->ThreeFoldOccured()) return 0;
 
     #if USE_TRANSPOSITION_TABLE == 1
-    BoundType hash_entry_flag = BoundType::ALPHA;
+    BoundType hash_entry_flag = BoundType::UPPER_BOUND;
 
     //tt.probe() will set entry to nullptr if not found
     if(HashEntry const* entry; (entry = tt->Probe(pos->ZKey())))
@@ -15,9 +14,9 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
         {
             if(entry->bound_ == BoundType::EXACT_VAL)
                 return entry->eval_;
-            if(entry->bound_ == BoundType::ALPHA && entry->eval_ <= alpha)
+            if(entry->bound_ == BoundType::UPPER_BOUND && entry->eval_ <= alpha)
                 return alpha;
-            if(entry->bound_ == BoundType::BETA && entry->eval_ >= beta)
+            if(entry->bound_ == BoundType::LOWER_BOUND && entry->eval_ >= beta)
                 return beta;
         }
     }
@@ -51,7 +50,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
         if(eval >= beta)
         {
             #if USE_TRANSPOSITION_TABLE == 1
-            tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::BETA);
+            tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::LOWER_BOUND);
             #endif
             return beta;
         }
@@ -96,7 +95,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
         {
             if(tm->OutOfTime()) return last_best_move;
             pos->MakeMove(ml[i]);
-            if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos)))
             {
                 //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];

@@ -7,7 +7,7 @@
 #include <format>
 
 #include "Types.hpp"
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "MagicConstants.hpp"
 
 #if TDFA_DEBUG == 1

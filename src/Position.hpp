@@ -14,46 +14,6 @@
 #include <string_view>
 #include <vector>
 
-class ThreeFoldChecker
-{
-public:
-    constexpr ThreeFoldChecker():idx_(0), three_fold_occured_(false), previous_positions_(){}
-    
-    constexpr bool ThreeFoldHappened()const
-    {
-        return three_fold_occured_;
-    };
-    constexpr void Add(ZobristKey key)
-    {
-        assert(idx_ <= 100);
-        if(three_fold_occured_) return;
-        previous_positions_[idx_++] = key;
-        if(idx_ < 3) return;
-        three_fold_occured_ = std::count(std::begin(previous_positions_), std::begin(previous_positions_) + idx_, key) >= 3;
-    }
-    constexpr void Reset()
-    {
-        three_fold_occured_ = false;
-        idx_ = 0;
-    }
-    constexpr void Pop()
-    {
-        idx_ = bool(idx_) * (idx_ - 1);
-        const ZobristKey pkey = previous_positions_[idx_];
-        three_fold_occured_ = std::count(std::begin(previous_positions_), std::begin(previous_positions_) + idx_, pkey) >= 3;
-    }
-    constexpr ThreeFoldChecker& operator=(const ThreeFoldChecker& other)
-    {
-        this->idx_                  = other.idx_;
-        this->three_fold_occured_   = other.three_fold_occured_;
-        std::memcpy(this->previous_positions_, other.previous_positions_, sizeof(previous_positions_));
-        return *this;
-    }
-private:
-    U8          idx_;
-    bool        three_fold_occured_;
-    ZobristKey  previous_positions_[100];
-};
 struct StateInfo
 {
 public:
@@ -78,8 +38,7 @@ public:
         info_({}),
         whites_turn_(true),
         full_moves_(0),
-        previous_state_info({}),
-        rep_checker_()
+        previous_state_info({})
     {
         previous_state_info.reserve(MAX_MOVES);
     }
@@ -122,7 +81,6 @@ public:
         info_.zobrist_key_      = p.info_.zobrist_key_;
         whites_turn_            = p.whites_turn_;
         full_moves_             = p.full_moves_;
-        rep_checker_            = p.rep_checker_;
     }
     
     constexpr Position& operator=(const Position& p)
@@ -135,7 +93,6 @@ public:
         info_.zobrist_key_      = p.info_.zobrist_key_;
         whites_turn_            = p.whites_turn_;
         full_moves_             = p.full_moves_;
-        rep_checker_            = p.rep_checker_;
         return *this;
     }
     
@@ -149,7 +106,6 @@ public:
         info_.zobrist_key_      = 0;
         whites_turn_            = true;
         full_moves_             = 0;
-        rep_checker_.Reset();
         previous_state_info.clear();
     }
 
@@ -198,8 +154,6 @@ public:
     constexpr U8 HalfMoves()const {return info_.half_moves_;}
 
     constexpr U16 FullMoves()const {return full_moves_;}
-
-    constexpr bool ThreeFoldOccured()const {return rep_checker_.ThreeFoldHappened();}
     
     template<bool is_white>
     constexpr PieceType TypeAtSq(Sq sq)const
@@ -260,7 +214,6 @@ private:
     bool whites_turn_;
     U16 full_moves_;
     std::vector<StateInfo> previous_state_info;
-    ThreeFoldChecker rep_checker_;
 };
 
 

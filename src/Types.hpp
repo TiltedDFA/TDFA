@@ -103,8 +103,8 @@ enum AttackDirection : U8
 enum class BoundType : U8
 {
     EXACT_VAL,  //Score is X
-    ALPHA,      //Score is at max X
-    BETA        //Score is at least X
+    UPPER_BOUND,      //Score is at max X
+    LOWER_BOUND        //Score is at least X
 };
 template<typename T>
 float FloatDiv(T dividend, T divisor)

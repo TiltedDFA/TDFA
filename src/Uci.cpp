@@ -97,8 +97,6 @@ void Uci::HandlePosition(const ArgList& args)
     {
         pos_.MakeMove(UTIL::UciToMove(*it, pos_));
     }
-    ////////////////////////////////////////////
-    std::cout << std::format("Detected three fold: {} \n", pos_.ThreeFoldOccured());
 }
 void Uci::HandleStop()
 {

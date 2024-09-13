@@ -4,7 +4,7 @@
 #include "Types.hpp"
 #include "MagicConstants.hpp"
 #include "Move.hpp"
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "Debug.hpp"
 namespace UTIL
 {

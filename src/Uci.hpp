@@ -1,7 +1,7 @@
 #ifndef UCI_HPP
 #define UCI_HPP
 
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "Debug.hpp"
 #include "Move.hpp"
 #include "Types.hpp"

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "Debug.hpp"
 #include "MagicConstants.hpp"
 #include <iostream>
