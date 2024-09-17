@@ -25,16 +25,16 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
     MoveList list;
     if(pos->WhiteToMove())
     {
-        MoveGen::GenerateLegalMoves<true>(pos, &list);
+        MoveGen::GenerateLegalMoves<White>(pos, &list);
     }
     else
     {
-        MoveGen::GenerateLegalMoves<false>(pos, &list);
+        MoveGen::GenerateLegalMoves<Black>(pos, &list);
     }
 
     if(list.len() == 0 || pos->FullMoves() >= 50)
     {
-        if(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
+        if(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos))
             return Eval::NEG_INF;
         return 0;
     }
@@ -84,18 +84,18 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
         
         if(pos->WhiteToMove())
         {
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<White>(pos, &ml);
         }
         else
         {
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<Black>(pos, &ml);
         }
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
             if(tm->OutOfTime()) return last_best_move;
             pos->MakeMove(ml[i]);
-            if(!(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos)))
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
             {
                 //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];

@@ -135,17 +135,17 @@ namespace Debug
     {
         switch (piece)
         {
-        case King:
+        case pt_King:
             return "King";
-        case Queen:
+        case pt_Queen:
             return "Queen";
-        case Bishop:
+        case pt_Bishop:
             return "Bishop";
-        case Knight:
+        case pt_Knight:
             return "Knight";
-        case Rook:
+        case pt_Rook:
             return "Rook";
-        case Pawn:
+        case pt_Pawn:
             return "Pawn";
         default:
             return "Error with piece type to string";
@@ -157,7 +157,6 @@ namespace Debug
         const std::string comma (", ");
         move_str += std::string("S: ") + std::to_string(move & Moves::START_SQ_MASK) + comma;
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
-        move_str += std::string("T: ") + PieceTypeToStr(Moves::PType(move)) + comma;
         move_str += "\n";
         PRINTNL(move_str);
     }

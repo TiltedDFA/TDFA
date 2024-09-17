@@ -139,7 +139,7 @@ void Uci::HandlePrint(const ArgList& args)
 {
     if(args[1] == "state")
     {
-        Debug::PrintBoardGraphically(pos_.GetArray());
+//        Debug::PrintBoardGraphically(pos_.GetArray());
         Debug::PrintBoardState(pos_);
     }
 }

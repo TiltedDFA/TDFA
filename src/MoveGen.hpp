@@ -13,7 +13,7 @@
 extern std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG;
 namespace MoveGen
 {
-    constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const PieceType type)
+    constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const MoveType type)
     {
         while(b)
         {
@@ -23,7 +23,7 @@ namespace MoveGen
     }
 
     template<AttackDirection direction>
-    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
+    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) 
     {
         if constexpr(direction == Rank)
         {
@@ -61,18 +61,18 @@ namespace MoveGen
         }
     }
 
-    void WhitePawnMoves(Position const* pos, MoveList* ml) noexcept;
+    void WhitePawnMoves(Position const* pos, MoveList* ml) ;
 
-    void BlackPawnMoves(Position const* pos, MoveList* ml) noexcept;
+    void BlackPawnMoves(Position const* pos, MoveList* ml) ;
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr void BishopMoves(Position const* pos, MoveList* ml)
     {
-        BitBoard bishops = pos->Pieces<is_white, Bishop>();
+        BitBoard bishops = pos->Pieces(current_turn, pt_Bishop);
         if(!bishops) return;
 
-        const BitBoard us = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(bishops)
         {
@@ -88,14 +88,14 @@ namespace MoveGen
         }
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr void RookMoves(Position const* pos, MoveList* ml)
     {
-        BitBoard rooks = pos->Pieces<is_white, Rook>();
+        BitBoard rooks = pos->Pieces(current_turn, pt_Rook);
         if(!rooks) return;
 
-        const BitBoard us = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
         
         while(rooks)
         {
@@ -111,84 +111,88 @@ namespace MoveGen
         }
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr void QueenMoves(Position const* pos, MoveList* ml)
     {
-        BitBoard queens = pos->Pieces<is_white, Queen>();
+        BitBoard queens = pos->Pieces(current_turn, pt_Queen);
         if(!queens) return;
 
-        const BitBoard us = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(queens)
         {
             const U8 queen_index = Magics::FindLS1B(queens);
             
             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<Rank>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             queens = Magics::PopLS1B(queens);
         }
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr void KnightMoves(Position const* pos, MoveList* ml)
     {
-        BitBoard knights = pos->Pieces<is_white, Knight>();
+        BitBoard knights = pos->Pieces(current_turn, pt_Knight);
         if(!knights) return;
         while(knights)
         {
             const U8 knight_index = Magics::FindLS1B(knights);
-            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~pos->PiecesByColour<is_white>();
-            GenerateMovesFromBB(possible_move, ml, knight_index, Knight);
+            const BitBoard possible_quiet_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~(pos->Pieces(current_turn) | pos->Pieces(Colour(current_turn ^ Black)));
+            const BitBoard possible_capture_moves = Magics::KNIGHT_ATTACK_MASKS[knight_index] & pos->Pieces(Colour(current_turn ^ Black));
+            GenerateMovesFromBB(possible_quiet_move, ml, knight_index, mt_Quiet);
+            GenerateMovesFromBB(possible_capture_moves, ml, knight_index, mt_Capture);
             knights = Magics::PopLS1B(knights);
         }
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     void KingMoves(Position const* pos, MoveList* ml) 
     {
-        const U8 king_index = Magics::FindLS1B(pos->Pieces<is_white, King>());
-        BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & ~pos->PiecesByColour<is_white>();
-        GenerateMovesFromBB(king_attacks, ml, king_index, King);
+        const U8 king_index = Magics::FindLS1B(pos->Pieces(current_turn, pt_King));
+        const BitBoard possible_quiet_move = Magics::KING_ATTACK_MASKS[king_index] & ~(pos->Pieces(current_turn) | pos->Pieces(Colour(current_turn ^ Black)));
+        const BitBoard possible_capture_moves = Magics::KING_ATTACK_MASKS[king_index] & pos->Pieces(Colour(current_turn ^ Black));
+        GenerateMovesFromBB(possible_quiet_move, ml, king_index, mt_Quiet);
+        GenerateMovesFromBB(possible_capture_moves, ml, king_index, mt_Capture);
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard PawnAttacks(Position const* pos)
     {
-        const BitBoard pawns = pos->Pieces<is_white, Pawn>();
+        const BitBoard pawns = pos->Pieces(current_turn, pt_Pawn);
         if(!pawns) return 0;
-        if constexpr(is_white)
+        if constexpr(current_turn == White)
         {
-            return (Magics::Shift<NORTH_EAST>(pawns) | Magics::Shift<NORTH_WEST>(pawns)) & ~pos->PiecesByColour<true>();
+            return (Magics::Shift<NORTH_EAST>(pawns) | Magics::Shift<NORTH_WEST>(pawns)) & ~pos->Pieces(White);
         }
-        return (Magics::Shift<SOUTH_EAST>(pawns) | Magics::Shift<SOUTH_WEST>(pawns)) & ~pos->PiecesByColour<false>();
+        return (Magics::Shift<SOUTH_EAST>(pawns) | Magics::Shift<SOUTH_WEST>(pawns)) & ~pos->Pieces(Black);
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard KingAttacks(Position const* pos)
     {
-        const BitBoard king_index = Magics::FindLS1B(pos->Pieces<is_white, King>());
-        return (Magics::KING_ATTACK_MASKS[king_index] & ~pos->PiecesByColour<is_white>());
+        const BitBoard king_index = Magics::FindLS1B(pos->Pieces(current_turn, pt_King));
+        return (Magics::KING_ATTACK_MASKS[king_index] & ~pos->Pieces(current_turn));
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard KnightAttacks(Position const* pos)
     {
-        BitBoard knights = pos->Pieces<is_white, Knight>();
+        BitBoard knights = pos->Pieces(current_turn, pt_Knight);
         if(!knights) return 0;
 
         BitBoard attacks{0};
-        const BitBoard them = ~pos->PiecesByColour<is_white>();
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(knights)
         {
@@ -198,15 +202,15 @@ namespace MoveGen
         return attacks;
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard BishopAttacks(Position const* pos)
     {
-        BitBoard bishops = pos->Pieces<is_white, Bishop>();
+        BitBoard bishops = pos->Pieces(current_turn, pt_Bishop);
         if(!bishops) return 0;
 
         BitBoard attacks{0};
-        const BitBoard us = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(bishops)
         {
@@ -220,15 +224,15 @@ namespace MoveGen
         return attacks;
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard RookAttacks(Position const* pos)
     {
-        BitBoard rooks = pos->Pieces<is_white, Rook>();
+        BitBoard rooks = pos->Pieces(current_turn, pt_Rook);
         if(!rooks) return 0;
         BitBoard attacks{0};
 
-        const BitBoard us = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(rooks)
         {
@@ -240,15 +244,15 @@ namespace MoveGen
         return attacks;
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr BitBoard QueenAttacks(Position const* pos)
     {
-        BitBoard queens = pos->Pieces<is_white, Queen>();
+        BitBoard queens = pos->Pieces(current_turn, pt_Queen);
         if(!queens) return 0;
 
         BitBoard attacks{0};
-        const BitBoard us   = pos->PiecesByColour<is_white>();
-        const BitBoard them = pos->PiecesByColour<!is_white>();
+        const BitBoard us = pos->Pieces(current_turn);
+        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
 
         while(queens)
         {
@@ -264,18 +268,18 @@ namespace MoveGen
         return attacks;
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     bool InCheck(Position const* pos)
     {
-        const BitBoard our_king = pos->Pieces<is_white, King>();
+        const BitBoard our_king = pos->Pieces(current_turn, pt_King);
         // us, them are variables used for sliding move gen with titboards.
         //since we want to generate moves for the opponent and see if they attack
         //our king we want the us and them variables to be inverted from our king in colour
-        const BitBoard us   = pos->PiecesByColour<!is_white>();
-        const BitBoard them = pos->PiecesByColour<is_white>();
+        const BitBoard us = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(current_turn);
 
         //Bishop and half queen
-        BitBoard bishop_queen = pos->Pieces<!is_white, Queen>() | pos->Pieces<!is_white, Bishop>();
+        BitBoard bishop_queen = pos->Pieces(current_turn, pt_Queen, pt_Bishop);
         while (bishop_queen)
         {
             const Sq piece_index = Magics::FindLS1B(bishop_queen);
@@ -285,7 +289,7 @@ namespace MoveGen
         }
         
         //rook and other half of queen
-        BitBoard rook_queen = pos->Pieces<!is_white, Queen>() | pos->Pieces<!is_white, Rook>();
+        BitBoard rook_queen = pos->Pieces(current_turn, pt_Queen, pt_Rook);
         while(rook_queen)
         {
             const Sq piece_index = Magics::FindLS1B(rook_queen);
@@ -297,7 +301,7 @@ namespace MoveGen
         }
 
         //knights
-        BitBoard knights = pos->Pieces<!is_white, Knight>();
+        BitBoard knights = pos->Pieces(current_turn, pt_Knight);
         while(knights)
         {
             if(our_king & Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)]) return true;
@@ -305,8 +309,8 @@ namespace MoveGen
         }
 
         //pawns
-        const BitBoard them_pawns = pos->Pieces<!is_white, Pawn>();
-        if constexpr (is_white)
+        const BitBoard them_pawns = pos->Pieces(Colour(current_turn ^ Black), pt_Pawn);
+        if constexpr (current_turn == White)
         {
             if(our_king & Magics::Shift<SOUTH_EAST>(them_pawns)) return true;
             if(our_king & Magics::Shift<SOUTH_WEST>(them_pawns)) return true;
@@ -318,85 +322,85 @@ namespace MoveGen
         }
 
         // king attacks
-        return (our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos->Pieces<!is_white, King>())]);
+        return (our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos->Pieces(Colour(current_turn ^ Black), pt_King))]);
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     BitBoard GenerateAllAttacks(Position const* pos)
     {
-        return (QueenAttacks<is_white>(pos) | BishopAttacks<is_white>(pos) |
-                RookAttacks<is_white>(pos)  | KnightAttacks<is_white>(pos) |
-                PawnAttacks<is_white>(pos)  | KingAttacks<is_white>(pos));
+        return (QueenAttacks<current_turn>(pos) | BishopAttacks<current_turn>(pos) |
+                RookAttacks<current_turn>(pos)  | KnightAttacks<current_turn>(pos) |
+                PawnAttacks<current_turn>(pos)  | KingAttacks<current_turn>(pos));
     }
 
-    template<bool is_white>
-    constexpr void Castling(Position const* pos, MoveList* ml) noexcept
+    template<Colour current_turn>
+    constexpr void Castling(Position const* pos, MoveList* ml) 
     {
-        if(!((is_white ? 0x0C : 0x03) & pos->CastlingRights())) {return;} //checks for castling rights
-        if(InCheck<is_white>(pos)) {return;} //checks if king under attack
+        if(!((current_turn  == White ? 0x0C : 0x03) & pos->CastlingRights())) {return;} //checks for castling rights
+        if(InCheck<current_turn>(pos)) {return;} //checks if king under attack
 
-        const BitBoard enemy_attacks = GenerateAllAttacks<!is_white>(pos);
+        const BitBoard enemy_attacks = (current_turn == White ? GenerateAllAttacks<Black>(pos) : GenerateAllAttacks<White>(pos));
 
-        const BitBoard whole_board = pos->PiecesByColour<true>() | pos->PiecesByColour<false>();
-        const U8 king_index = (is_white ? 4 : 60);
-        const U8 rank_looked_at = U8(is_white ? (whole_board & 0xFF) : whole_board >> 56);
+        const BitBoard whole_board = pos->Pieces(White) | pos->Pieces(Black);
+        const U8 king_index = (current_turn  == White ? 4 : 60);
+        const U8 rank_looked_at = U8(current_turn  == White ? (whole_board & 0xFF) : whole_board >> 56);
 
         if // kingside
         (
-            (pos->CastlingRights() & (is_white ? 0x08 : 0x02)) // has rights
+            (pos->CastlingRights() & (current_turn  == White ? 0x08 : 0x02)) // has rights
             &&
             !(rank_looked_at & 0x60) // not blocked 01100000 10010001
             &&
-            !(0xFF & (is_white ? enemy_attacks : enemy_attacks >> 56) & 0x60) // not under attack by enemy
+            !(0xFF & (current_turn  == White ? enemy_attacks : enemy_attacks >> 56) & 0x60) // not under attack by enemy
         )
         {
-            if constexpr(is_white)
-                ml->add(Moves::EncodeMove(king_index, 6, King));
+            if constexpr(current_turn  == White)
+                ml->add(Moves::EncodeMove(king_index, 6, mt_Castling));
             else
-                ml->add(Moves::EncodeMove(king_index, 62, King));
+                ml->add(Moves::EncodeMove(king_index, 62, mt_Castling));
 
         }
         if //queenside
         (
-            (pos->CastlingRights() & (is_white ? 0x04 : 0x01)) // has rights
+            (pos->CastlingRights() & (current_turn  == White ? 0x04 : 0x01)) // has rights
             &&
             !(rank_looked_at & 0x0E) // not blocked
             &&
-            !(0xFF & (is_white ? enemy_attacks : enemy_attacks >> 56) & 0x0C) // not under attack by enemy
+            !(0xFF & (current_turn  == White ? enemy_attacks : enemy_attacks >> 56) & 0x0C) // not under attack by enemy
         )
         {
-            if constexpr(is_white)
-                ml->add(Moves::EncodeMove(king_index, 2, King));
+            if constexpr(current_turn  == White)
+                ml->add(Moves::EncodeMove(king_index, 2, mt_Castling));
             else
-                ml->add(Moves::EncodeMove(king_index, 58, King));
+                ml->add(Moves::EncodeMove(king_index, 58, mt_Castling));
         }
     }
 
-    template<bool is_white>
+    template<Colour current_turn>
     constexpr void GeneratePseudoLegalMoves(Position const* __restrict__  pos, MoveList* __restrict__ ml)
     {
-        KingMoves<is_white>(pos, ml);
-        QueenMoves<is_white>(pos, ml);
-        BishopMoves<is_white>(pos, ml);
-        KnightMoves<is_white>(pos, ml);
-        RookMoves<is_white>(pos, ml);
-        (is_white ? WhitePawnMoves(pos, ml) : BlackPawnMoves(pos, ml));
-        Castling<is_white>(pos, ml);
+        KingMoves<current_turn>(pos, ml);
+        QueenMoves<current_turn>(pos, ml);
+        BishopMoves<current_turn>(pos, ml);
+        KnightMoves<current_turn>(pos, ml);
+        RookMoves<current_turn>(pos, ml);
+        (current_turn == White ? WhitePawnMoves(pos, ml) : BlackPawnMoves(pos, ml));
+        Castling<current_turn>(pos, ml);
     }
     
-    template<bool is_white>
+    template<Colour current_turn>
     void GenerateLegalMoves(Position* __restrict__  pos, MoveList* __restrict__  ml)
     {
         //pseudo legal
         MoveList pseudo_legal_ml;
-        GeneratePseudoLegalMoves<is_white>(pos, &pseudo_legal_ml);
+        GeneratePseudoLegalMoves<current_turn>(pos, &pseudo_legal_ml);
         
         //filtering
         for(size_t i = 0; i < pseudo_legal_ml.len(); ++i)
         {
             pos->MakeMove(pseudo_legal_ml[i]);
 
-            if(!InCheck<is_white>(pos))
+            if(!InCheck<current_turn>(pos))
             {
                 ml->add(pseudo_legal_ml[i]);
             }

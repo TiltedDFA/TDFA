@@ -53,5 +53,11 @@ namespace Zobrist
     constexpr inline std::array<ZobristKey, 64> EN_PASSANT = InitEnPassant();
     constexpr inline std::array<ZobristKey, 16> CASTLING = InitCastling();
     constexpr inline ZobristKey SIDE_TO_MOVE = ZobRand64NoRef(144641901);
+
+    [[nodiscard, gnu::always_inline]]
+    constexpr inline ZobristKey GetToFromPiece(Colour c, PieceType t, Sq to, Sq from)
+    {
+        return PIECES[c][t][from] ^ PIECES[c][t][to];
+    }
 }
 #endif // #ifndef ZOBRISTSCONSTANTS_HPP

@@ -25,43 +25,44 @@ void Position::ImportFen(std::string_view fen)
             --current_row;
             continue;
         }
+        const Sq square = ((current_row * 8) + current_col);
         switch (i)
         {
         case('p'):
-            pieces_[loc::BLACK][loc::PAWN]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackPawn, square);
             break;
         case('n'):
-            pieces_[loc::BLACK][loc::KNIGHT]  |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackKnight, square);
             break;
         case('b'):
-            pieces_[loc::BLACK][loc::BISHOP]  |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackBishop, square);
             break;
         case('r'):
-            pieces_[loc::BLACK][loc::ROOK]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackRook, square);
             break;
         case('q'):
-            pieces_[loc::BLACK][loc::QUEEN]   |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackQueen, square);
             break;
         case('k'):
-            pieces_[loc::BLACK][loc::KING]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_BlackKing, square);
             break;
         case('P'):
-            pieces_[loc::WHITE][loc::PAWN]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhitePawn, square);
             break;
         case('N'):
-            pieces_[loc::WHITE][loc::KNIGHT]  |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhiteKnight, square);
             break;
         case('B'):
-            pieces_[loc::WHITE][loc::BISHOP]  |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhiteBishop, square);
             break;
         case('R'):
-            pieces_[loc::WHITE][loc::ROOK]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhiteRook, square);
             break;
         case('Q'):
-            pieces_[loc::WHITE][loc::QUEEN]   |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhiteQueen, square);
             break;
         case('K'):
-            pieces_[loc::WHITE][loc::KING]    |= 1ull << ((current_row * 8) + current_col);
+            AddPiece(p_WhiteKnight, square);
             break;
         default:
             break;
@@ -69,7 +70,7 @@ void Position::ImportFen(std::string_view fen)
         ++current_col;
     }
 
-    whites_turn_ = fen_sections.at(1).at(0) == 'w';
+    colour_to_move = Colour(fen_sections.at(1).at(0) != 'w');
 
     for(const char i : fen_sections.at(2))
     {
@@ -119,175 +120,194 @@ void Position::ImportFen(std::string_view fen)
         std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
     }
 }
-void Position::MakeMove(const Move m)
+void Position::MakeMove(Move m)
 {
     assert(IsOk());
     previous_state_info.push_back(info_);
 
-    Sq start_sq;
-    Sq target_sq;
-    PieceType p_type;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &p_type);
+    const Sq from = Moves::StartSq(m);
+    const Sq to = Moves::TargetSq(m);
+    const MoveType type = Moves::GetMoveType(m);
+    const PieceType type_moved = Magics::TypeOf(PieceOn(from));
 
-    U8 is_castling_move = 0;
-    const BitBoard start_bb    = Magics::SqToBB(start_sq);
-    const BitBoard target_bb   = Magics::SqToBB(target_sq);
-    const BitBoard them_pieces = (whites_turn_ ? PiecesByColour<false>() : PiecesByColour<true>()) | (p_type == Pawn ?  EnPasBB() : 0);
+    assert(type_moved != pt_All);
+    assert(type_moved != pt_None);
 
     ++info_.half_moves_;
-
-    if(Moves::IsPromotionMove(m)) p_type = Pawn;
-
-    if((target_bb & them_pieces))
+    info_.captured_type_ = pt_None;
+    if(type_moved == pt_Pawn)
     {
-        Sq capture_sq = target_sq;
-        if(target_sq == info_.en_passant_sq_) capture_sq -= (whites_turn_ ? 8 : -8);
-
-        info_.captured_type_ = (whites_turn_ ? RemovePiece<false>(Magics::SqToBB(capture_sq)) : RemovePiece<true>(Magics::SqToBB(capture_sq)));
-        info_.zobrist_key_ ^= Zobrist::PIECES[!whites_turn_][info_.captured_type_][capture_sq];
         info_.half_moves_ = 0;
-    }
-    else
-        info_.captured_type_ = NullPiece;
-
-    //handle weird castling rights update
-    if(info_.captured_type_ == Rook && (target_bb & (Magics::ROOK_START_SQS)))
-    {
-
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        switch (target_sq)
-        {
-        case 0:  info_.castling_rights_ &= (~Magics::CASTLE_Q_W & 0xF);break;
-        case 7:  info_.castling_rights_ &= (~Magics::CASTLE_K_W & 0xF);break;
-        case 56: info_.castling_rights_ &= (~Magics::CASTLE_Q_B & 0xF);break;
-        case 63: info_.castling_rights_ &= (~Magics::CASTLE_K_B & 0xF);break;
-        }
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-    }
-    if(p_type == Rook && (start_bb & Magics::ROOK_START_SQS))
-    {
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        switch (start_sq)
-        {
-        case 0:  info_.castling_rights_ &= (~Magics::CASTLE_Q_W & 0xF);break;
-        case 7:  info_.castling_rights_ &= (~Magics::CASTLE_K_W & 0xF);break;
-        case 56: info_.castling_rights_ &= (~Magics::CASTLE_Q_B & 0xF);break;
-        case 63: info_.castling_rights_ &= (~Magics::CASTLE_K_B & 0xF);break;
-        }
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-    }
-    
-
-    if(p_type == King)
-    {
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        info_.castling_rights_ &= whites_turn_ ? Magics::NO_CASTLE_W : Magics::NO_CASTLE_B;
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        
-        switch (Magics::EncodeKing(start_sq, target_sq))
-        {
-        case Magics::EncodeKing(4, 2):   is_castling_move = 1; break;
-        case Magics::EncodeKing(4, 6):   is_castling_move = 2; break;
-        case Magics::EncodeKing(60, 58): is_castling_move = 3; break;
-        case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
-        }
     }
     if(info_.en_passant_sq_ != Magics::EP_NULL)
     {
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
         info_.en_passant_sq_ = Magics::EP_NULL;
     }
-
-    if(is_castling_move)
+    switch (type)
     {
-        //move relevant pieces
-        pieces_[whites_turn_][loc::KING] = target_bb;
-        pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];
-        //update the key
-        info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[is_castling_move];
+        case mt_Quiet:
+            if(type_moved == pt_Pawn && std::abs(from - to) == 16)
+            {
+                if (colour_to_move == White)
+                {
+                    info_.en_passant_sq_ = to - 8;
+                }
+                else
+                {
+                    info_.en_passant_sq_ = to + 8;
+                }
+                info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
+            }
+            else if (type_moved == pt_Rook && (Magics::SqToBB(from) & Magics::ROOK_START_SQS))
+            {
+                info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                switch (from)
+                {
+                    case 0:  info_.castling_rights_ &= Magics::CASTLE_NOT_Q_W;break;
+                    case 7:  info_.castling_rights_ &= Magics::CASTLE_NOT_K_W;break;
+                    case 56: info_.castling_rights_ &= Magics::CASTLE_NOT_Q_B;break;
+                    case 63: info_.castling_rights_ &= Magics::CASTLE_NOT_K_B;break;
+                }
+                info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+            }
+            break;
+        case mt_EnPassant:
+            RemovePiece(to  - (colour_to_move == White ? 8 : -8));
+            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move ^ Black][pt_Pawn][to  - (colour_to_move == White ? 8 : -8)];
+            info_.captured_type_ = pt_Pawn;
+            break;
+        case mt_Capture:
+            info_.half_moves_ = 0;
+            info_.captured_type_ = Magics::TypeOf(PieceOn(to));
+            RemovePiece(to);
+            break;
+        case mt_Castling:
+            if (colour_to_move == White)
+            {
+                if (to == 6)
+                {
+                    MovePiece(7, 5);//move rook
+                    info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[Magics::CASTLING_WHITE_KINGSIDE];
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                    info_.castling_rights_ &= Magics::CASTLE_NOT_K_W;
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                }
+                else
+                {
+                    assert(to == 2);
+                    MovePiece(0, 3);//move rook
+                    info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[Magics::CASTLING_WHITE_QUEENSIDE];
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                    info_.castling_rights_ &= Magics::CASTLE_NOT_Q_W;
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                }
+            }
+            else
+            {
+                if (to == 58)
+                {
+                    //you're working on getting new board and move system integrated
+                    MovePiece(56, 59);//move rook
+                    info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[Magics::CASTLING_BLACK_QUEENSIDE];
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                    info_.castling_rights_ &= Magics::CASTLE_NOT_Q_B;
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                }
+                else
+                {
+                    assert(to == 62);
+                    MovePiece(63, 61);//move rook
+                    info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[Magics::CASTLING_BLACK_KINGSIDE];
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                    info_.castling_rights_ &= Magics::CASTLE_NOT_K_B;
+                    info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+                }
+            }
+            goto CASTLING_JMP;
+        case mt_QueenPromotion:
+            AddPiece(MakePiece(colour_to_move, pt_Queen),to);
+            RemovePiece(from);
+            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move][pt_Queen][to] ^ Zobrist::PIECES[colour_to_move][pt_Pawn][from];
+            goto PROMOTION_JMP;
+        case mt_BishopPromotion:
+            AddPiece(MakePiece(colour_to_move, pt_Bishop),to);
+            RemovePiece(from);
+            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move][pt_Bishop][to] ^ Zobrist::PIECES[colour_to_move][pt_Pawn][from];
+            goto PROMOTION_JMP;
+        case mt_KnightPromotion:
+            AddPiece(MakePiece(colour_to_move, pt_Knight),to);
+            RemovePiece(from);
+            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move][pt_Knight][to] ^ Zobrist::PIECES[colour_to_move][pt_Pawn][from];
+            goto PROMOTION_JMP;
+        case mt_RookPromotion:
+            AddPiece(MakePiece(colour_to_move, pt_Rook),to);
+            RemovePiece(from);
+            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move][pt_Rook][to] ^ Zobrist::PIECES[colour_to_move][pt_Pawn][from];
+            goto PROMOTION_JMP;
     }
-    else
-    {
-        //move piece
-        assert((pieces_[whites_turn_][p_type] & start_bb));
-        assert(!(pieces_[whites_turn_][p_type] & target_bb));
-
-        pieces_[whites_turn_][p_type] ^= start_bb | target_bb;
-        info_.zobrist_key_ ^= Zobrist::PIECES[whites_turn_][p_type][start_sq] ^ Zobrist::PIECES[whites_turn_][p_type][target_sq];
-    }
-    
-    if(p_type == Pawn)
-    {
-        if(std::abs(start_sq - target_sq) == 16)
-        {
-            info_.en_passant_sq_ = target_sq - (whites_turn_ ? 8 : -8);
-            info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
-        }
-        else if(Moves::IsPromotionMove(m))
-        {
-            const PieceType prom_to = Moves::PTypeOfProm(m);
-
-            pieces_[whites_turn_][loc::PAWN] &= ~target_bb;
-            pieces_[whites_turn_][prom_to]   |= target_bb;
-
-            info_.zobrist_key_ ^= Zobrist::PIECES[whites_turn_][prom_to][target_sq] ^ Zobrist::PIECES[whites_turn_][Pawn][target_sq];
-        }
-        info_.half_moves_ = 0;
-    }
+    info_.zobrist_key_ ^= Zobrist::GetToFromPiece(colour_to_move, type_moved, to, from);
+CASTLING_JMP:
+    MovePiece(from, to);
+PROMOTION_JMP:
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
-    whites_turn_ = !whites_turn_;
+    colour_to_move = Colour(colour_to_move ^ Black);
     assert(IsOk());
 }
 void Position::UnmakeMove(const Move m)
 {
     assert(IsOk());
-    whites_turn_ = !whites_turn_;
+    colour_to_move = Colour(colour_to_move ^ Black);
 
-    Sq start_sq;
-    Sq target_sq;
-    PieceType p_type;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &p_type);
+    const Sq from = Moves::StartSq(m);
+    const Sq to = Moves::TargetSq(m);
+    const MoveType type = Moves::GetMoveType(m);
+    const PieceType type_moved = Magics::TypeOf(PieceOn(from));
+
 
     U8 is_castling_move = 0;
 
-    const BitBoard start_bb  = Magics::SqToBB(start_sq);
-    const BitBoard target_bb = Magics::SqToBB(target_sq);
 
-    if(Moves::IsPromotionMove(m))
+    if(Moves::IsPromotion(m))
     {
-        p_type = Pawn;
-        whites_turn_ ? RemovePiece<true>(target_bb) : RemovePiece<false>(target_bb);
-        pieces_[whites_turn_][loc::PAWN] |= target_bb;
+        RemovePiece(to);
+        AddPiece(MakePiece(colour_to_move, pt_Pawn), from);
     }
     //if castling move
-    if(p_type == King)
+    else if(type == mt_Castling)
     {
-        switch (Magics::EncodeKing(start_sq, target_sq))
+        switch (to)
         {
-        case Magics::EncodeKing(4, 2):   is_castling_move = 1; break;
-        case Magics::EncodeKing(4, 6):   is_castling_move = 2; break;
-        case Magics::EncodeKing(60, 58): is_castling_move = 3; break;
-        case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
+        case 2:
+            MovePiece(3, 0);
+            MovePiece(to, from);
+            break;
+        case 6:
+            MovePiece(7, 5);
+            MovePiece(to, from);
+            break;
+        case 58:
+            MovePiece(59, 56);
+            MovePiece(to, from);
+            break;
+        case 62:
+            MovePiece(63, 61);
+            MovePiece(to, from);
+            break;
         }
-    }
-    
-    if(is_castling_move)
-    {
-        pieces_[whites_turn_][loc::KING] = start_bb;
-        pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];
     }
     else
     {
-        pieces_[whites_turn_][p_type] ^= start_bb | target_bb;
+        MovePiece(to, from);
 
-        if(info_.captured_type_ != NullPiece)
+        if (info_.captured_type_ != pt_None)
         {
-            Sq captured_sq = target_sq;
-            if(info_.captured_type_ == Pawn && target_sq == previous_state_info.back().en_passant_sq_)
+            Sq captured_sq = to;
+            if (type == mt_EnPassant)
             {
-                captured_sq -= (whites_turn_ ? 8 : -8);
+                captured_sq -= (colour_to_move ? 8 : -8);
             }
-            pieces_[!whites_turn_][info_.captured_type_] |= Magics::SqToBB(captured_sq);
+            AddPiece(MakePiece(Colour(colour_to_move ^ Black), info_.captured_type_), captured_sq);
         }
     }
     //restore previous state
@@ -303,9 +323,9 @@ void Position::HashCurrentPostion()
 
     for(U8 clr = 0; clr < 2; ++clr)
     {
-        for(U8 type = 0; type < 6; ++type)
+        for(int type = pt_Queen; type <= pt_King; ++type)
         {
-            BitBoard piece_board = this->Pieces(clr, type);
+            BitBoard piece_board = Pieces(Colour(clr), PieceType(type));
             while(piece_board)
             {
                 const Sq idx = Magics::FindLS1B(piece_board);

@@ -12,17 +12,17 @@ namespace UTIL
     {
         return std::string{char('a' + Magics::FileOf(sq)), char('1' + Magics::RankOf(sq))};
     }
-    inline char PromotionChar(PieceType p)
+    inline char PromotionChar(MoveType p)
     {
         switch (p)
         {
-        case PromBishop:
+        case mt_BishopPromotion:
             return 'b';
-        case PromKnight:
+        case mt_KnightPromotion:
             return 'n';
-        case PromQueen:
+        case mt_QueenPromotion:
             return 'q';
-        case PromRook:
+        case mt_RookPromotion:
             return 'r';
         default:
             return 'z';
@@ -30,40 +30,27 @@ namespace UTIL
     }
     inline std::string MoveToStr(const Move m)
     {
-        return (Moves::IsPromotionMove(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::PType(m))) :
+        return (Moves::IsPromotion(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::GetMoveType(m))) :
                                             Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)));
     }
     inline Move UciToMove(const std::string_view str, const Position& pos)
     {
-        const Sq from = (str[0] - 'a') + (str[1] - '1') * 8;
-        const Sq to = (str[2] - 'a') + (str[3] - '1') * 8;
-
-        if(str.length() == 5)
+        MoveList ml;
+        if(pos.WhiteToMove())
         {
-            switch(str[4])
-            {
-            case 'q':
-                return Moves::EncodeMove(from, to, PromQueen);
-            case 'r':
-                return Moves::EncodeMove(from, to, PromRook);
-            case 'b':
-                return Moves::EncodeMove(from, to, PromBishop);
-            case 'n':
-                return Moves::EncodeMove(from, to, PromKnight);
-            default:
-                return Moves::EncodeMove(from, to, NullPiece);
-            }
+            MoveGen::GeneratePseudoLegalMoves<White>(&pos, &ml);
+        }
+        else
+        {
+            MoveGen::GeneratePseudoLegalMoves<Black>(&pos, &ml);
         }
 
-        PieceType type;
-        if(pos.WhiteToMove())
-            type = pos.TypeAtSq<true>(from);
-        else
-            type = pos.TypeAtSq<false>(from);
-
-        const Move constructed_move = Moves::EncodeMove(from, to, type);
-        Debug::PrintEncodedMoveStr(constructed_move);
-        return constructed_move;
+        for(unsigned short i : ml)
+        {
+            if(str == MoveToStr(i)) return i;
+        }
+        assert(0);
+        return Moves::NULL_MOVE;
     }
 }
 

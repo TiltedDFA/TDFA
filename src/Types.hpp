@@ -4,7 +4,7 @@
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
-#define TDFA_DEBUG 0
+#define TDFA_DEBUG 1
 
 #if TDFA_DEBUG != 1
 #define NDEBUG
@@ -53,7 +53,7 @@ enum MD : U8
 struct move_info
 {
     constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
-    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
+    inline constexpr void add_move(const Move m)  {encoded_move_ _AT(count_++) = m;}
 
     std::array<Move, 7> encoded_move_;
     U8 count_;
@@ -70,27 +70,49 @@ namespace loc
     constexpr U8 ROOK  = 4;
     constexpr U8 PAWN  = 5;
 }
-enum class PromType : U8
+enum PieceType
 {
-    NOPROMO,
-    QUEEN,
-    BISHOP,
-    KNIGHT,
-    ROOK
+    pt_Queen,
+    pt_Bishop,
+    pt_Knight,
+    pt_Rook,
+    pt_Pawn,
+    pt_King,
+    pt_All,
+    pt_None
 };
-enum PieceType : U8
+enum Colour
 {
-    King = 0,
-    Queen,
-    Bishop,
-    Knight,
-    Rook,
-    Pawn,
-    PromQueen = 0b1000,
-    PromBishop,
-    PromKnight,
-    PromRook,
-    NullPiece
+    White,
+    Black
+};
+enum Piece
+{
+    p_WhiteQueen = pt_Queen,
+    p_WhiteBishop,
+    p_WhiteKnight,
+    p_WhiteRook,
+    p_WhitePawn,
+    p_WhiteKing,
+    p_BlackQueen = pt_Queen + 8,
+    p_BlackBishop,
+    p_BlackKnight,
+    p_BlackRook,
+    p_BlackPawn,
+    p_BlackKing,
+    p_None
+};
+enum MoveType
+{
+    mt_Quiet = 0,
+    mt_EnPassant,
+    mt_Castling,
+    mt_Capture,
+    mt_Promotion = 4,
+    mt_QueenPromotion = 4,
+    mt_BishopPromotion,
+    mt_KnightPromotion,
+    mt_RookPromotion
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum AttackDirection : U8

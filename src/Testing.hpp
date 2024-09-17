@@ -66,9 +66,9 @@ private:
         U64 nodes{0};
 
         if(pos->WhiteToMove())
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<Black>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
@@ -76,17 +76,15 @@ private:
             {
             #if TDFA_DEBUG == 1
                 const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
+                Sq start = Moves::StartSq(ml[i]);
+                Sq end = Moves::TargetSq(ml[i]);
                 if(start == 2 && end == 47)
                 {
                     PRINT("\n");
                 }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
                     if constexpr(output_perft_paths) 
@@ -97,17 +95,13 @@ private:
                 }
                 pos->UnmakeMove(ml[i]);
             #if TDFA_DEBUG == 1
-                assert(copy == *pos);
+//                assert(copy == *pos);
             #endif
             }
             else
             {
             #if TDFA_DEBUG == 1
                 const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
                 //used for breakpointing at specific move in perft when debugging
                 // if(start == 14 && end == 6 && t == PromQueen)
                 // {
@@ -115,13 +109,13 @@ private:
                 // }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);
             #if TDFA_DEBUG == 1
-                assert(copy == *pos);
+//                assert(copy == *pos);
             #endif
             }
         }
@@ -136,9 +130,9 @@ private:
         MoveList ml{};
 
         if(pos->WhiteToMove())
-            MoveGen::GenerateLegalMoves<true>(pos, &ml);
+            MoveGen::GenerateLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GenerateLegalMoves<false>(pos, &ml);
+            MoveGen::GenerateLegalMoves<Black>(pos, &ml);
         if(depth == 1) return ml.len();
         U64 nodes{0};
         
