@@ -113,6 +113,7 @@ private:
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     Debug::PrintBoardGraphically(pos);
+                    Debug::PrintMove(ml[i]);
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);

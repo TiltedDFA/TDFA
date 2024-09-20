@@ -322,7 +322,7 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml)
         }
         else
         {
-            ml->add(Moves::EncodeMove(index + 7, index, mt_Quiet));
+            ml->add(Moves::EncodeMove(index + 7, index, mt_Capture));
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     }
@@ -344,7 +344,7 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml)
         }
         else
         {
-            ml->add(Moves::EncodeMove(index + 9, index, mt_Quiet));
+            ml->add(Moves::EncodeMove(index + 9, index, mt_Capture));
         }
         pawn_move = Magics::PopLS1B(pawn_move);
     }

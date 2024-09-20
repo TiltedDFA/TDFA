@@ -20,7 +20,7 @@ endif(WIN32)
 file(GLOB_RECURSE MY_SOURCES "src/*.cpp")
 
 
-set(CMAKE_CXX_FLAGS_DEBUG "-ggdb -O0 -Wall -Wextra -Wpedantic -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -Wall -Wextra -Wpedantic -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static-libgcc -fno-exceptions --static -static-libstdc++ -march=native -flto -flto-partition=one -ffat-lto-objects -funroll-loops -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
 #set(CMAKE_EXE_LINKER_FLAGS "-flto=jobserver -static" CACHE STRING "" FORCE)
 

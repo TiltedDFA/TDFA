@@ -95,7 +95,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
         {
             if(tm->OutOfTime()) return last_best_move;
             pos->MakeMove(ml[i]);
-            if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
             {
                 //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];

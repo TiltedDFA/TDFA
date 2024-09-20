@@ -35,12 +35,13 @@ namespace Debug
     //Helper function, converts a piece type to it's string representation
     std::string PieceTypeToStr(PieceType piece);
 
-    //Prints an encoded move's data out
-    void PrintEncodedMoveStr(Move move);
+    // //Prints an encoded move's data out
+    // void PrintEncodedMoveStr(Move move);
+    //
+    // //Prints an encoded move's data out in it's encoded binary form
+    // void PrintEncodedMoveBin(Move move);
 
-    //Prints an encoded move's data out in it's encoded binary form
-    void PrintEncodedMoveBin(Move move);
-
+    void PrintMove(Move);
     //More detailed version of the print bitboard function, can be used to 
     //print 2 bitboards worth of pieces
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false);

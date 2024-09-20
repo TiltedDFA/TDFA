@@ -30,6 +30,10 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
+    void PrintMove(Move m)
+    {
+        PRINTNL(std::format("To: {}, From: {}", Moves::StartSq(m), Moves::TargetSq(m)));
+    }
     void PrintBB(const BitBoard board, const bool mirrored)
     {
         std::string output{}, current_line{};
@@ -163,16 +167,6 @@ namespace Debug
     void PrintEncodedMoveBin(Move move)
     {
         PRINTNL(std::bitset<16>(move));
-    }
-    void Fun(BitBoard b)
-    {
-        for(int i = 0; i < 64; ++i)
-        {
-            if(b & (1ull << i))
-            {
-                // do stuff
-            }
-        }
     }
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored)
     {
