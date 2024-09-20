@@ -26,6 +26,8 @@ int main(void)
     // U8 fileof = Magics::FileOf(Magics::FindLS1B(board));
     // std::cout << (int)fileof << std::endl;
     // Debug::PrintBB(board >> fileof);
+//    Position p(STARTPOS);
+//    Debug::PrintBoardGraphically(&p);
     RunBenchmark<false>();
 //     Uci uci;
 //     uci.Loop();

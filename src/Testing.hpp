@@ -84,13 +84,14 @@ private:
                 }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
+                    Debug::PrintBoardGraphically(pos);
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
-                    if constexpr(output_perft_paths) 
+                    if constexpr(output_perft_paths)
                         nodes += cnt;
                     total_nodes_ += cnt;
-                    if constexpr(output_perft_paths) 
+                    if constexpr(output_perft_paths)
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
@@ -101,7 +102,7 @@ private:
             else
             {
             #if TDFA_DEBUG == 1
-                const Position copy = *pos;
+//                const Position copy = *pos;
                 //used for breakpointing at specific move in perft when debugging
                 // if(start == 14 && end == 6 && t == PromQueen)
                 // {
@@ -109,8 +110,9 @@ private:
                 // }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos)))
+                if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
+                    Debug::PrintBoardGraphically(pos);
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);

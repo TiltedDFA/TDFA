@@ -233,14 +233,14 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintBoardGraphically(BitBoard* boards)
+    void PrintBoardGraphically(Position* pos)
     {
-        constinit const static char PIECE_TYPES_MAPPING[12] = {'k', 'q', 'b', 'n', 'r', 'p', 'K', 'Q', 'B', 'N', 'R', 'P'};
+        constinit const static char PIECE_TYPES_MAPPING[12] = {'q', 'b', 'n', 'r', 'p', 'k', 'Q', 'B', 'N', 'R', 'P', 'K'};
         char squares[64];
         std::memset(squares, '-', sizeof(squares));
         for(int i = 0; i < 12; ++i)
         {
-            BitBoard current_pieces = boards[((i > 5)*6) + i % 6];
+            BitBoard current_pieces = pos->Pieces(Colour(i > 5 ? White : Black),  PieceType(i % 6));
             const char current_type = PIECE_TYPES_MAPPING[i];
             while(current_pieces)
             {

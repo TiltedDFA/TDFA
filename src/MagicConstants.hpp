@@ -127,7 +127,7 @@ namespace Magics
     constexpr Colour ColourOf(Piece p)
     {
         assert(p != p_None);
-        return Colour(p & 0b1000);
+        return Colour((p & 0b1000) >> 3);
     }
     //returns the rank of an index/square
     constexpr Sq RankOf(Sq index) {assert(ValidSq(index));return index >> 3;}

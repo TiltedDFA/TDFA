@@ -62,7 +62,7 @@ void Position::ImportFen(std::string_view fen)
             AddPiece(p_WhiteQueen, square);
             break;
         case('K'):
-            AddPiece(p_WhiteKnight, square);
+            AddPiece(p_WhiteKing, square);
             break;
         default:
             break;
