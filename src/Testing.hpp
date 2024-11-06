@@ -62,6 +62,8 @@ private:
     {
         if(!depth) return 1ull;
 
+        PRINTNL("Enter Stack");
+
         MoveList ml{};
         U64 nodes{0};
 
@@ -74,15 +76,8 @@ private:
         {
             if constexpr(is_root)
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start = Moves::StartSq(ml[i]);
-                Sq end = Moves::TargetSq(ml[i]);
-                if(start == 2 && end == 47)
-                {
-                    PRINT("\n");
-                }
-            #endif
+                Debug::PrintBoardGraphically(pos);
+                Debug::PrintMove(ml[i]);
                 pos->MakeMove(ml[i]);
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
@@ -95,34 +90,34 @@ private:
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-//                assert(copy == *pos);
-            #endif
             }
             else
             {
-            #if TDFA_DEBUG == 1
-//                const Position copy = *pos;
-                //used for breakpointing at specific move in perft when debugging
-                // if(start == 14 && end == 6 && t == PromQueen)
-                // {
-                //     PRINT("");
-                // }
-            #endif
+                const ZobristKey pos_before = pos->HashCurrentPostion();
+                PRINTNL("MoveToMake:");
+                Debug::PrintMove(ml[i]);
+                PRINTNL("PosBeforeMake:");
+                Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
+                PRINTNL("PosAfterMake:");
+                Debug::PrintBoardGraphically(pos);
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
-                    Debug::PrintBoardGraphically(pos);
-                    Debug::PrintMove(ml[i]);
+                    // PRINTNL("Move Made\n");
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
+                PRINTNL("MoveToUnMake:");
+                Debug::PrintMove(ml[i]);
+                PRINTNL("PosBeforeUnMake:");
+                Debug::PrintBoardGraphically(pos);
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-//                assert(copy == *pos);
-            #endif
+                PRINTNL("PosAfterUnMake:");
+                Debug::PrintBoardGraphically(pos);
+                assert(pos_before == pos->HashCurrentPostion());
             }
         }
 
+        PRINTNL("\nExit stack\n");
         return nodes;
     }
     template<bool is_root, bool output_perft_paths>

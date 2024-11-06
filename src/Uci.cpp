@@ -8,7 +8,7 @@ ArgList SplitArgs(std::string* inp)
 
     if(inp->empty()) return {""};
 
-    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
+    std::ranges::transform(std::as_const(*inp), inp->begin(), [](const char c){return std::tolower(c);});
 
     std::size_t start{0}, end{0};
 

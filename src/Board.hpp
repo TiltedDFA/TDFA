@@ -17,9 +17,9 @@ class Board
 public:
      inline constexpr void ResetBoard()
      {
-        std::fill(std::begin(board_),     std::end(board_),     p_None);
-        std::fill(std::begin(by_colour_), std::end(by_colour_), 0ULL);
-        std::fill(std::begin(by_type_),   std::end(by_type_),   0ULL);
+        std::ranges::fill(board_,     p_None);
+        std::ranges::fill(by_colour_, 0ULL);
+        std::ranges::fill(by_type_,   0ULL);
      }
     constexpr Board()
     {
@@ -59,11 +59,11 @@ public:
     {
         using namespace Magics;
 
-        board_[s] = p;
-
         by_type_[TypeOf(p)]     |= SqToBB(s);
         by_type_[pt_All]        |= SqToBB(s);
         by_colour_[ColourOf(p)] |= SqToBB(s);
+
+         board_[s] = p;
     }
     constexpr void RemovePiece(Sq s)
     {
@@ -94,6 +94,7 @@ public:
     {
         using namespace Magics;
         assert(board_[from] != p_None);
+        assert(to != from);
 
         const Piece p = board_[from];
         const BitBoard move = SqToBB(from) | SqToBB(to);
@@ -107,9 +108,9 @@ public:
 
     }
 private:
-    Piece    board_[64]{};
-    BitBoard by_colour_[2]{};
-    BitBoard by_type_  [7]{}; // pieces + all board
+    Piece    board_[64];
+    BitBoard by_colour_[2];
+    BitBoard by_type_  [7]; // pieces + all board
 };
 
 #endif //TDFA_BOARD_HPP

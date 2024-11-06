@@ -96,7 +96,7 @@ public:
     {
         return ((Pieces(White) & Pieces(Black)) == 0);
     }
-    void HashCurrentPostion();
+    [[maybe_unused]] ZobristKey HashCurrentPostion();
 private:
     StateInfo info_;
     Colour colour_to_move;

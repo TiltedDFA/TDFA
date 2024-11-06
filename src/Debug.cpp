@@ -30,9 +30,10 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintMove(Move m)
+    void PrintMove(const Move m)
     {
-        PRINTNL(std::format("To: {}, From: {}", Moves::StartSq(m), Moves::TargetSq(m)));
+        static constexpr std::string type_mapping[] = {"Queit", "EnPas", "Castling", "Capture", "QProm", "BProm", "NProm", "RProm"};
+        PRINTNL(std::format("From: {}, To: {}, Type: {}", Moves::StartSq(m), Moves::TargetSq(m), type_mapping[Moves::GetMoveType(m)]));
     }
     void PrintBB(const BitBoard board, const bool mirrored)
     {
@@ -244,9 +245,9 @@ namespace Debug
         std::string output;
         for(int i = 0; i < 8;++i)
         {
-            output += std::string(squares + sizeof(char)*(8*(7-i)), 8) + std::format("|{}\n",char('H'-i));
+            output += std::string(squares + sizeof(char)*(8*(7-i)), 8) + std::format("|{}|{:02}\n", char('H'-i), ((8 - i) * 8)-1);
         }
-        output += "--------\n12345678";
+        output += "12345678";
         std::cout << output << std::endl;
     }
 }

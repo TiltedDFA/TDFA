@@ -307,7 +307,7 @@ void Position::UnmakeMove(const Move m)
             {
                 captured_sq -= (colour_to_move ? 8 : -8);
             }
-            AddPiece(MakePiece(Colour(colour_to_move ^ Black), info_.captured_type_), captured_sq);
+            AddPiece(MakePiece(Colour(colour_to_move), info_.captured_type_), captured_sq);
         }
     }
     //restore previous state
@@ -315,9 +315,9 @@ void Position::UnmakeMove(const Move m)
     previous_state_info.pop_back();
     assert(IsOk());
 }
-void Position::HashCurrentPostion()
+ZobristKey Position::HashCurrentPostion()
 {
-    assert(info_.zobrist_key_ == 0);
+    // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
 
@@ -337,4 +337,5 @@ void Position::HashCurrentPostion()
     if(info_.en_passant_sq_ != Magics::EP_NULL)
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+    return info_.zobrist_key_;
 }
