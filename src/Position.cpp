@@ -173,7 +173,7 @@ void Position::MakeMove(Move m)
             }
             break;
         case mt_EnPassant:
-            RemovePiece(to  - (colour_to_move == White ? 8 : -8));
+            RemovePiece(to  - (colour_to_move == White ? -8 : 8));
             info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move ^ Black][pt_Pawn][to  - (colour_to_move == White ? 8 : -8)];
             info_.captured_type_ = pt_Pawn;
             break;
@@ -306,6 +306,7 @@ void Position::UnmakeMove(const Move m)
             if (type == mt_EnPassant)
             {
                 captured_sq -= (colour_to_move ? 8 : -8);
+                assert(info_.captured_type_ == pt_Pawn);
             }
             AddPiece(MakePiece(Colour(colour_to_move), info_.captured_type_), captured_sq);
         }

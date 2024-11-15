@@ -271,7 +271,7 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml)
     }
     if((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns)) [[unlikely]]
     {
-        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_EAST>(pawns));
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns));
         ml->add(Moves::EncodeMove(idx - 7, idx, mt_EnPassant));
     }
 }

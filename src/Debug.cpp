@@ -32,7 +32,7 @@ namespace Debug
     }
     void PrintMove(const Move m)
     {
-        static constexpr std::string type_mapping[] = {"Queit", "EnPas", "Castling", "Capture", "QProm", "BProm", "NProm", "RProm"};
+        static constexpr std::string type_mapping[] = {"Quiet", "EnPas", "Castling", "Capture", "QProm", "BProm", "NProm", "RProm"};
         PRINTNL(std::format("From: {}, To: {}, Type: {}", Moves::StartSq(m), Moves::TargetSq(m), type_mapping[Moves::GetMoveType(m)]));
     }
     void PrintBB(const BitBoard board, const bool mirrored)
@@ -230,6 +230,7 @@ namespace Debug
     }
     void PrintBoardGraphically(Position* pos)
     {
+        PRINTNL(pos->WhiteToMove() ? "White to move" : "Black to move");
         constinit const static char PIECE_TYPES_MAPPING[12] = {'q', 'b', 'n', 'r', 'p', 'k', 'Q', 'B', 'N', 'R', 'P', 'K'};
         char squares[64];
         std::memset(squares, '-', sizeof(squares));

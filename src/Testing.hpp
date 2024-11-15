@@ -103,7 +103,6 @@ private:
                 Debug::PrintBoardGraphically(pos);
                 if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
-                    // PRINTNL("Move Made\n");
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 PRINTNL("MoveToUnMake:");
@@ -121,7 +120,7 @@ private:
         return nodes;
     }
     template<bool is_root, bool output_perft_paths>
-    U64 BulkPerft(int depth, Position* pos)
+    U64 BulkPerft(const int depth, Position* pos)
     {
         assert(depth > 0);
 
