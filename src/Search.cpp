@@ -73,7 +73,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
 Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* tm)
 {
     Move last_best_move = Moves::NULL_MOVE;
-    // Score last_best_eval = Eval::NEG_INF;
+    Score last_best_eval = Eval::NEG_INF;
 
     for(U8 depth{1};;++depth)
     {
@@ -93,7 +93,11 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm->OutOfTime()) return last_best_move;
+            if(tm->OutOfTime())
+            {
+                std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
+                return last_best_move;
+            }
             pos->MakeMove(ml[i]);
             if(!(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos)))
             {
@@ -110,7 +114,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
             }
             pos->UnmakeMove(ml[i]);
         }
-        Score last_best_eval = best_eval;
+        last_best_eval = best_eval;
         last_best_move = best_move;
         std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
     }
