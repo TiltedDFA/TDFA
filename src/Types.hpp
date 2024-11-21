@@ -86,6 +86,10 @@ enum Colour
     White,
     Black
 };
+constexpr Colour operator!(const Colour c)
+{
+    return static_cast<Colour>(c ^ Black);
+}
 enum Piece
 {
     p_WhiteQueen = pt_Queen,

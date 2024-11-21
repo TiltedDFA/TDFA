@@ -93,7 +93,11 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm->OutOfTime()) return last_best_move;
+            if(tm->OutOfTime())
+            {
+                std::cout << std::format("info score cp {} depth {}\n", best_eval, depth);
+                return last_best_move;
+            }
             pos->MakeMove(ml[i]);
             if(!(pos->WhiteToMove() ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
             {

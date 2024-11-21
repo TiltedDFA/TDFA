@@ -328,7 +328,7 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml)
     }
     if((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns)) [[unlikely]]
     {
-        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::SOUTH_EAST>(pawns));
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns));
         ml->add(Moves::EncodeMove(idx + 7, idx, mt_EnPassant));
     }
     pawn_move = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
@@ -350,7 +350,7 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml)
     }
     if((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns)) [[unlikely]]
     {
-        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::SOUTH_WEST>(pawns));
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns));
         ml->add(Moves::EncodeMove(idx + 9, idx, mt_EnPassant));
     }
 }

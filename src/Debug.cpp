@@ -243,6 +243,7 @@ namespace Debug
                 squares[Magics::PopNRetLS1B(current_pieces)] = current_type;
             }
         }
+        if (pos->EnPasBB()) squares[pos->EnPasSq()] = 'Z';
         std::string output;
         for(int i = 0; i < 8;++i)
         {

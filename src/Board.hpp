@@ -55,21 +55,54 @@ public:
     {
         return Piece(t + c * 8);
     }
+#ifndef NDEBUG
+    constexpr void pedantic_check(Sq s, bool add, Piece p = Piece::p_None) const
+    {
+         const BitBoard sq_bb = Magics::SqToBB(s);
+         const PieceType pt = Magics::TypeOf(p);
+         assert(Magics::ValidSq(s));
+         if (add)
+         {
+            const Colour c = Magics::ColourOf(p);
+            assert(PieceOn(s) == p_None);                                  //no piece exists where we try to place it
+            assert(pt != PieceType::pt_All && pt != PieceType::pt_None);   //valid piece type to move
+            assert(!(by_type_[pt] & sq_bb));                               //no piece exists where we try to place it
+            assert(!(by_type_[pt_All] & sq_bb));                           //no piece exists where we try to place it
+            assert(!(by_colour_[c] & sq_bb));                              //no piece exists where we try to place it
+         }
+         else //remove/delete
+         {
+            assert(PieceOn(s) != p_None);                                 //piece exists where we try to place it
+            assert(by_type_[pt] & sq_bb);                               //piece exists where we try to place it
+            assert(by_type_[pt_All] & sq_bb);                           //piece exists where we try to place it
+            assert(by_colour_[Magics::ColourOf(PieceOn(s))] & sq_bb);                              //piece exists where we try to place it
+         }
+
+    }
+#else
+    constexpr void pedantic_check(Sq s, bool add, Piece p = Piece::p_None) const
+    {
+        return;
+    }
+#endif
     constexpr void AddPiece(Piece p, Sq s)
     {
         using namespace Magics;
+        pedantic_check(s, true, p);
 
         by_type_[TypeOf(p)]     |= SqToBB(s);
         by_type_[pt_All]        |= SqToBB(s);
         by_colour_[ColourOf(p)] |= SqToBB(s);
 
-         board_[s] = p;
+        board_[s] = p;
     }
     constexpr void RemovePiece(Sq s)
     {
         using namespace Magics;
 
         const Piece p = board_[s];
+
+        pedantic_check(s, false);
 
         by_type_[TypeOf(p)]     ^= SqToBB(s);
         by_type_[pt_All]        ^= SqToBB(s);
@@ -82,21 +115,18 @@ public:
         using namespace Magics;
 
         const Piece p = board_[s];
+        RemovePiece(s);
 
-        by_type_[TypeOf(p)]     ^= SqToBB(s);
-        by_type_[pt_All]        ^= SqToBB(s);
-        by_colour_[ColourOf(p)] ^= SqToBB(s);
-
-        board_[s] = p_None;
         return p;
     }
     constexpr void MovePiece(Sq from, Sq to)
     {
         using namespace Magics;
-        assert(board_[from] != p_None);
-        assert(to != from);
 
         const Piece p = board_[from];
+        pedantic_check(from, false);
+        pedantic_check(to, true, p);
+
         const BitBoard move = SqToBB(from) | SqToBB(to);
 
         by_type_[pt_All]           ^= move;
@@ -110,7 +140,7 @@ public:
 private:
     Piece    board_[64];
     BitBoard by_colour_[2];
-    BitBoard by_type_  [7]; // pieces + all board
+    BitBoard by_type_  [7]; // piece typee + all board
 };
 
 #endif //TDFA_BOARD_HPP

@@ -118,6 +118,7 @@ namespace Magics
     //Returns the a bitboard with a 1 bit in the location of the index provided
     constexpr BitBoard SqToBB(Sq index) {assert(ValidSq(index));return 1ull << index;}
 
+    //Returns lower 3 bits (&7)
     [[nodiscard, gnu::always_inline]]
     constexpr PieceType TypeOf(Piece p)
     {

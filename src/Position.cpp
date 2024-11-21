@@ -134,7 +134,7 @@ void Position::MakeMove(Move m)
     assert(type_moved != pt_None);
 
     ++info_.half_moves_;
-    info_.captured_type_ = pt_None;
+    info_.captured_piece = p_None;
     if(type_moved == pt_Pawn)
     {
         info_.half_moves_ = 0;
@@ -173,14 +173,13 @@ void Position::MakeMove(Move m)
             }
             break;
         case mt_EnPassant:
-            RemovePiece(to  - (colour_to_move == White ? -8 : 8));
-            info_.zobrist_key_ ^= Zobrist::PIECES[colour_to_move ^ Black][pt_Pawn][to  - (colour_to_move == White ? 8 : -8)];
-            info_.captured_type_ = pt_Pawn;
+
+            info_.zobrist_key_ ^= Zobrist::PIECES[!colour_to_move][pt_Pawn][to  - (colour_to_move == White ? 8 : -8)];
+            info_.captured_piece = PopPiece(to  - (colour_to_move == White ? 8 : -8));
             break;
         case mt_Capture:
             info_.half_moves_ = 0;
-            info_.captured_type_ = Magics::TypeOf(PieceOn(to));
-            RemovePiece(to);
+            info_.captured_piece = PopPiece(to);
             break;
         case mt_Castling:
             if (colour_to_move == White)
@@ -251,13 +250,13 @@ CASTLING_JMP:
     MovePiece(from, to);
 PROMOTION_JMP:
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
-    colour_to_move = Colour(colour_to_move ^ Black);
+    colour_to_move = Colour(!colour_to_move);
     assert(IsOk());
 }
 void Position::UnmakeMove(const Move m)
 {
     assert(IsOk());
-    colour_to_move = Colour(colour_to_move ^ Black);
+    colour_to_move = Colour(!colour_to_move);
 
     const Sq from = Moves::StartSq(m);
     const Sq to = Moves::TargetSq(m);
@@ -300,15 +299,15 @@ void Position::UnmakeMove(const Move m)
     {
         MovePiece(to, from);
 
-        if (info_.captured_type_ != pt_None)
+        if (info_.captured_piece != p_None)
         {
             Sq captured_sq = to;
             if (type == mt_EnPassant)
             {
-                captured_sq -= (colour_to_move ? 8 : -8);
-                assert(info_.captured_type_ == pt_Pawn);
+                captured_sq -= (colour_to_move == White ? 8 : -8);
+                // assert(info_.captured_type_ == pt_Pawn);
             }
-            AddPiece(MakePiece(Colour(colour_to_move), info_.captured_type_), captured_sq);
+            AddPiece(info_.captured_piece, captured_sq);
         }
     }
     //restore previous state

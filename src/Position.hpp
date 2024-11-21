@@ -22,13 +22,13 @@ public:
         castling_rights_(0),
         half_moves_(0),
         en_passant_sq_(Magics::EP_NULL),
-        captured_type_(pt_None),
+        captured_piece(p_None),
         zobrist_key_(0){}
 public:
     U8          castling_rights_;
     U8          half_moves_;
     U8          en_passant_sq_;
-    PieceType   captured_type_;
+    Piece       captured_piece;
     ZobristKey  zobrist_key_;
 };
 class Position final : public Board
@@ -56,7 +56,7 @@ public:
         info_.castling_rights_  = 0;
         info_.half_moves_       = 0;
         info_.en_passant_sq_    = Magics::EP_NULL;
-        info_.captured_type_    = pt_None;
+        info_.captured_piece    = p_None;
         info_.zobrist_key_      = 0;
         colour_to_move          = White;
         full_moves_             = 0;

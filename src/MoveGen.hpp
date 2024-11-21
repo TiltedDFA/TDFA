@@ -72,7 +72,7 @@ namespace MoveGen
         if(!bishops) return;
 
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
 
         while(bishops)
         {
@@ -95,7 +95,7 @@ namespace MoveGen
         if(!rooks) return;
 
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
         
         while(rooks)
         {
@@ -118,7 +118,7 @@ namespace MoveGen
         if(!queens) return;
 
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
 
         while(queens)
         {
@@ -148,8 +148,8 @@ namespace MoveGen
         while(knights)
         {
             const U8 knight_index = Magics::FindLS1B(knights);
-            const BitBoard possible_quiet_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~(pos->Pieces(current_turn) | pos->Pieces(Colour(current_turn ^ Black)));
-            const BitBoard possible_capture_moves = Magics::KNIGHT_ATTACK_MASKS[knight_index] & pos->Pieces(Colour(current_turn ^ Black));
+            const BitBoard possible_quiet_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~(pos->Pieces(current_turn) | pos->Pieces(!current_turn));
+            const BitBoard possible_capture_moves = Magics::KNIGHT_ATTACK_MASKS[knight_index] & pos->Pieces(!current_turn);
             GenerateMovesFromBB(possible_quiet_move, ml, knight_index, mt_Quiet);
             GenerateMovesFromBB(possible_capture_moves, ml, knight_index, mt_Capture);
             knights = Magics::PopLS1B(knights);
@@ -160,8 +160,8 @@ namespace MoveGen
     void KingMoves(Position const* pos, MoveList* ml) 
     {
         const U8 king_index = Magics::FindLS1B(pos->Pieces(current_turn, pt_King));
-        const BitBoard possible_quiet_move = Magics::KING_ATTACK_MASKS[king_index] & ~(pos->Pieces(current_turn) | pos->Pieces(Colour(current_turn ^ Black)));
-        const BitBoard possible_capture_moves = Magics::KING_ATTACK_MASKS[king_index] & pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard possible_quiet_move = Magics::KING_ATTACK_MASKS[king_index] & ~(pos->Pieces(current_turn) | pos->Pieces(!current_turn));
+        const BitBoard possible_capture_moves = Magics::KING_ATTACK_MASKS[king_index] & pos->Pieces(!current_turn);
         GenerateMovesFromBB(possible_quiet_move, ml, king_index, mt_Quiet);
         GenerateMovesFromBB(possible_capture_moves, ml, king_index, mt_Capture);
     }
@@ -192,11 +192,11 @@ namespace MoveGen
         if(!knights) return 0;
 
         BitBoard attacks{0};
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard not_us = ~pos->Pieces(current_turn);
 
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & them;
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & not_us;
             knights = Magics::PopLS1B(knights);
         }
         return attacks;
@@ -210,7 +210,7 @@ namespace MoveGen
 
         BitBoard attacks{0};
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
 
         while(bishops)
         {
@@ -232,7 +232,7 @@ namespace MoveGen
         BitBoard attacks{0};
 
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
 
         while(rooks)
         {
@@ -252,7 +252,7 @@ namespace MoveGen
 
         BitBoard attacks{0};
         const BitBoard us = pos->Pieces(current_turn);
-        const BitBoard them = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard them = pos->Pieces(!current_turn);
 
         while(queens)
         {
@@ -275,11 +275,11 @@ namespace MoveGen
         // us, them are variables used for sliding move gen with titboards.
         //since we want to generate moves for the opponent and see if they attack
         //our king we want the us and them variables to be inverted from our king in colour
-        const BitBoard us = pos->Pieces(Colour(current_turn ^ Black));
+        const BitBoard us = pos->Pieces(!current_turn);
         const BitBoard them = pos->Pieces(current_turn);
 
         //Bishop and half queen
-        BitBoard bishop_queen = pos->Pieces(current_turn, pt_Queen, pt_Bishop);
+        BitBoard bishop_queen = pos->Pieces(!current_turn, pt_Queen, pt_Bishop);
         while (bishop_queen)
         {
             const Sq piece_index = Magics::FindLS1B(bishop_queen);
@@ -289,7 +289,7 @@ namespace MoveGen
         }
         
         //rook and other half of queen
-        BitBoard rook_queen = pos->Pieces(current_turn, pt_Queen, pt_Rook);
+        BitBoard rook_queen = pos->Pieces(!current_turn, pt_Queen, pt_Rook);
         while(rook_queen)
         {
             const Sq piece_index = Magics::FindLS1B(rook_queen);
@@ -301,7 +301,7 @@ namespace MoveGen
         }
 
         //knights
-        BitBoard knights = pos->Pieces(current_turn, pt_Knight);
+        BitBoard knights = pos->Pieces(!current_turn, pt_Knight);
         while(knights)
         {
             if(our_king & Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)]) return true;
@@ -309,7 +309,7 @@ namespace MoveGen
         }
 
         //pawns
-        const BitBoard them_pawns = pos->Pieces(Colour(current_turn ^ Black), pt_Pawn);
+        const BitBoard them_pawns = pos->Pieces(!current_turn, pt_Pawn);
         if constexpr (current_turn == White)
         {
             if(our_king & Magics::Shift<SOUTH_EAST>(them_pawns)) return true;
@@ -322,7 +322,7 @@ namespace MoveGen
         }
 
         // king attacks
-        return (our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos->Pieces(Colour(current_turn ^ Black), pt_King))]);
+        return (our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos->Pieces(!current_turn, pt_King))]);
     }
 
     template<Colour current_turn>
@@ -339,7 +339,7 @@ namespace MoveGen
         if(!((current_turn  == White ? 0x0C : 0x03) & pos->CastlingRights())) {return;} //checks for castling rights
         if(InCheck<current_turn>(pos)) {return;} //checks if king under attack
 
-        const BitBoard enemy_attacks = (current_turn == White ? GenerateAllAttacks<Black>(pos) : GenerateAllAttacks<White>(pos));
+        const BitBoard enemy_attacks = GenerateAllAttacks<!current_turn>(pos);
 
         const BitBoard whole_board = pos->Pieces(White) | pos->Pieces(Black);
         const U8 king_index = (current_turn  == White ? 4 : 60);
