@@ -1,16 +1,17 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
-
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0
-#define DEVELOPER_MODE 0
+#define TDFA_DEBUG 0
 
-#if DEVELOPER_MODE != 1
+#if TDFA_DEBUG != 1
 #define NDEBUG
+#define _AT(x) [(x)]
+#else
+#define _AT(x) .at((x))
 #endif
-
 
 #ifdef __GNUG__
 #define INLINE __attribute__((always_inline))
@@ -49,11 +50,10 @@ enum MD : U8
     NORTHNORTH,
     SOUTHSOUTH
 };
-
 struct move_info
 {
     constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
-    constexpr void add_move(Move m) noexcept {encoded_move_.at(count_++) = m;}
+    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
 
     std::array<Move, 7> encoded_move_;
     U8 count_;
@@ -68,7 +68,7 @@ namespace loc
     constexpr U8 BISHOP= 2;
     constexpr U8 KNIGHT= 3;
     constexpr U8 ROOK  = 4;
-    constexpr U8 PAWN  = 5; 
+    constexpr U8 PAWN  = 5;
 }
 enum class PromType : U8
 {
@@ -103,8 +103,8 @@ enum AttackDirection : U8
 enum class BoundType : U8
 {
     EXACT_VAL,  //Score is X
-    ALPHA,      //Score is at max X
-    BETA        //Score is at least X
+    UPPER_BOUND,      //Score is at max X
+    LOWER_BOUND        //Score is at least X
 };
 template<typename T>
 float FloatDiv(T dividend, T divisor)

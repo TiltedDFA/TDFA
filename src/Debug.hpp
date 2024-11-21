@@ -4,13 +4,13 @@
 #include <bitset>
 #include <iostream>
 #include <vector>
+#include <format>
 
-#include "Move.hpp"
 #include "Types.hpp"
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include "MagicConstants.hpp"
 
-#if DEVELOPER_MODE == 1
+#if TDFA_DEBUG == 1
 #define PRINT(x) std::cout << (x)
 #define PRINTNL(x) std::cout << (x) << std::endl
 #else
@@ -51,6 +51,8 @@ namespace Debug
 
     //Prints out a uint8_t's pieces
     void PrintU8BB(U8 bb, U8 board_center, bool mirrored = false);
+
+    void PrintBoardGraphically(BitBoard* boards);
 }
 
 #endif // #ifndef DEBUG_HPP

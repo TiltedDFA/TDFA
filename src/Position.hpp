@@ -1,17 +1,18 @@
 #ifndef BITBOARD_HPP
 #define BITBOARD_HPP
 
-#include "Types.hpp"
+#include "BoardUtils.hpp"
 #include "MagicConstants.hpp"
 #include "Move.hpp"
-#include "BoardUtils.hpp"
+#include "Types.hpp"
+#include "ZobristConstants.hpp"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <functional>
 #include <iostream>
 #include <string_view>
 #include <vector>
-#include <cstring>
-#include <cassert>
-#include "ZobristConstants.hpp"
-
 
 struct StateInfo
 {
@@ -19,10 +20,10 @@ public:
     constexpr StateInfo():
         castling_rights_(0),
         half_moves_(0),
-        en_passant_sq_(255),
+        en_passant_sq_(Magics::EP_NULL),
         captured_type_(NullPiece),
         zobrist_key_(0){}
-public: 
+public:
     U8          castling_rights_;
     U8          half_moves_;
     U8          en_passant_sq_;
@@ -48,7 +49,7 @@ public:
         HashCurrentPostion();
     }
 
-#if DEVELOPER_MODE == 1
+#if TDFA_DEBUG == 1
 
     bool operator==(const Position& other)
     {
@@ -100,13 +101,13 @@ public:
         std::memset(pieces_, 0, sizeof(pieces_));
         info_.castling_rights_  = 0;
         info_.half_moves_       = 0;
-        info_.en_passant_sq_    = 255;
+        info_.en_passant_sq_    = Magics::EP_NULL;
         info_.captured_type_    = Moves::BAD_MOVE;
         info_.zobrist_key_      = 0;
         whites_turn_            = true;
         full_moves_             = 0;
         previous_state_info.clear();
-    }    
+    }
 
     void ImportFen(std::string_view fen);
 
@@ -117,7 +118,7 @@ public:
     template<bool is_white>
     constexpr BitBoard PiecesByColour()const
     {
-        return 
+        return
             pieces_[is_white][loc::KING]  |
             pieces_[is_white][loc::QUEEN] |
             pieces_[is_white][loc::BISHOP]|
@@ -140,7 +141,7 @@ public:
     
     constexpr BitBoard EmptySqs()const {return ~(PiecesByColour<true>() | PiecesByColour<false>());}
     
-    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_ != 255) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
+    constexpr BitBoard EnPasBB()const {return (info_.en_passant_sq_ != Magics::EP_NULL) ? Magics::SqToBB(info_.en_passant_sq_) : 0ull;}
 
     constexpr Sq EnPasSq()const {return info_.en_passant_sq_;}
 
@@ -153,7 +154,7 @@ public:
     constexpr U8 HalfMoves()const {return info_.half_moves_;}
 
     constexpr U16 FullMoves()const {return full_moves_;}
-
+    
     template<bool is_white>
     constexpr PieceType TypeAtSq(Sq sq)const
     {
@@ -202,13 +203,16 @@ public:
         return ((PiecesByColour<true>() & PiecesByColour<false>()) == 0);
     }
     void HashCurrentPostion();
+
+    BitBoard* GetArray(){return &pieces_[0][0];}
+    
 private:
     void UpdateCastlingRights();
 private:
-    BitBoard pieces_[2][6];                         
-    StateInfo info_;                                
-    bool whites_turn_;                              
-    U16 full_moves_;                                                      
+    BitBoard pieces_[2][6];
+    StateInfo info_;
+    bool whites_turn_;
+    U16 full_moves_;
     std::vector<StateInfo> previous_state_info;
 };
 

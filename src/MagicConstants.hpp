@@ -6,7 +6,6 @@
 #include <array>
 #include <bitset>
 #include <cmath>
-#include <bit>
 #include <cassert>
 
 namespace Magics
@@ -34,20 +33,22 @@ namespace Magics
     constexpr BitBoard RANK_3BB = RANK_1BB << 16;
     constexpr BitBoard RANK_4BB = RANK_1BB << 24;
     constexpr BitBoard RANK_5BB = RANK_1BB << 32;
-    constexpr BitBoard RANK_6BB = RANK_1BB << 40; 
+    constexpr BitBoard RANK_6BB = RANK_1BB << 40;
     constexpr BitBoard RANK_7BB = RANK_1BB << 48;
     constexpr BitBoard RANK_8BB = RANK_1BB << 56;
+
+    constexpr U8 EP_NULL = 255;
 
     constexpr BitBoard CROSS_DIAG = 0x8040201008040201;         // A1 - H8
     constexpr BitBoard ANTI_CROSS_DIAG = 0x0102040810204080;    // A8 - H1
 
-    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() | 
+    constexpr BitBoard ROOK_START_SQS = (SqToBB<0>()  | SqToBB<7>() |
                                          SqToBB<56>() | SqToBB<63>());
     
     constexpr U8 CASTLE_K_W = 0x08;
     constexpr U8 CASTLE_Q_W = 0x04;
     constexpr U8 CASTLE_K_B = 0x02;
-    constexpr U8 CASTLE_Q_B = 0x01;    
+    constexpr U8 CASTLE_Q_B = 0x01;
     constexpr U8 CASTLE_ALL = 0x0F;
     //preserve black's right to castle
     constexpr U8 NO_CASTLE_W = (CASTLE_K_B | CASTLE_Q_B);
@@ -58,9 +59,9 @@ namespace Magics
     constexpr BitBoard ROOK_TO_FROM_B_Q = SqToBB<56>()| SqToBB<59>();
     constexpr BitBoard ROOK_TO_FROM_B_K = SqToBB<61>()| SqToBB<63>();
 
-    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] = 
-        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K}; 
-    constexpr ZobristKey CASTLING_ZOB_KEYS[5] = 
+    constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] =
+        {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K};
+    constexpr ZobristKey CASTLING_ZOB_KEYS[5] =
     {
         0,
         (Zobrist::PIECES[true][Rook][0]   ^ Zobrist::PIECES[true][Rook][3]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][2]  ),
@@ -83,11 +84,11 @@ namespace Magics
 #endif
     //returns (x^y). compile time friendly.
     constexpr double pow(double x, unsigned int y) noexcept {return (y >= sizeof(unsigned)*8) ? 0 : y == 0 ? 1 : x * pow(x,y-1);}
-    //returns an 8 bit number. the 1 bits in the number show that the corrisponding file has atleast one occupying piece.
+    //returns an 8 bit number. the 1 bits in the number show that the corresponding file has at least one occupying piece.
     //Returns the index of the most significant 1 bit.
     constexpr Sq FindMS1B(BitBoard board) noexcept {return FindLS1B(board) ^ 0x3F;}
 
-    //Returns the number without the least significant 1 bit. 
+    //Returns the number without the least significant 1 bit.
     //Not protected against 0 inputs
     constexpr BitBoard PopLS1B(BitBoard board) noexcept {return (board & (board - 1));}
 
@@ -98,7 +99,7 @@ namespace Magics
         return lsb;
     }
 
-    //Returns whether the index provided is inbounds of the board
+    //Returns whether the index provided is in bounds of the board
     constexpr bool ValidSq(int index) noexcept {return index >= 0 && index < 64;}
     
     //Returns the a bitboard with a 1 bit in the location of the index provided
@@ -114,13 +115,11 @@ namespace Magics
 
     constexpr U8 BBRankOf(Sq square) noexcept {return 1 << RankOf(square);}
     
-    constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept INLINE;
     constexpr U8 CollapsedFilesIndex(BitBoard b) noexcept
     {
         return (b * FILE_ABB) >> 56;
     }
-    //returns an 8 bit number. the 1 bits in the number show that the corrisponding rank has atleast one occupying piece.
-    constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept INLINE;
+    //returns an 8 bit number. the 1 bits in the number show that the corresponding rank has at least one occupying piece.
     constexpr U8 CollapsedRanksIndex(BitBoard b) noexcept
     {
         //collapses the bb into a file
@@ -129,6 +128,12 @@ namespace Magics
         b |= b >> 2;
         b |= b >> 1;
         return ((b & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
+    }
+    constexpr U8 CollapsedRanksIndex(BitBoard b, U8 file) noexcept
+    {
+        assert(file < 8);
+        // return (((b >> file) & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
+        return ((b >> file) * ANTI_CROSS_DIAG) >> 56;
     }
     constexpr BitBoard PopMS1B(const BitBoard board) noexcept
     {

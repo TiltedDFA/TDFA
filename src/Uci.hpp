@@ -1,29 +1,54 @@
 #ifndef UCI_HPP
 #define UCI_HPP
 
+#include "Position.hpp"
+#include "Debug.hpp"
 #include "Move.hpp"
 #include "Types.hpp"
 #include "MagicConstants.hpp"
-#include "Debug.hpp"
-#include "BitBoard.hpp"
 #include "Testing.hpp"
 #include "Search.hpp"
-#include "MoveGen.hpp"
 #include "TranspositionTable.hpp"
-#include <unordered_map>
-#include <string>
-#include <iostream>
-#include <vector>
-#include <string_view>
+#include <algorithm>
+#include <cctype>
 #include <charconv>
+#include <iostream>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 using CmdMap = std::unordered_map<std::string_view, U8>;
 using ArgList = std::vector<std::string_view>;
-namespace UCI
+class Uci
 {
-    inline constexpr const char* ENGINE_NAME = "TDFA V1.0.0";
-    inline constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
-    inline const CmdMap INIT_VALUES = 
+public:
+    Uci():tt_size_(64), pos_(STARTPOS), tt_(), time_manager_(){tt_.Resize(tt_size_);}
+    void Loop();
+private:
+    //helper functions
+    static void HandleUci();
+    void HandleIsReady();
+    void HandleGo(const ArgList&);
+    void HandlePosition(const ArgList&);
+
+    static void HandleStop();
+    void HandleNewGame();
+    void HandleSetOption(const ArgList&);
+    static void HandleBench(const ArgList&);
+    void HandlePrint(const ArgList&);
+private:
+    //mutables
+    size_t tt_size_;
+    Position pos_;    
+    TransposTable tt_;
+    TimeManager time_manager_;
+    Search search_;
+private:
+    //constants
+    static constexpr const char* ENGINE_NAME = "TDFA V1.1.0";
+    static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
+    static inline const CmdMap COMMAND_VALUES = 
     {
         {"uci", 1},
         {"isready", 2},
@@ -32,22 +57,8 @@ namespace UCI
         {"stop", 5},
         {"ucinewgame", 6},
         {"setoption", 7},
-        {"bench", 8}
+        {"bench", 8},
+        {"print", 9}
     };
-    inline size_t TT_SIZE = 1024;//mb
-    
-    inline Position pos(STARTPOS);    
-    inline TransposTable transpos_table;
-    inline TimeManager time_manager;
-
-    void loop();
-    void HandleUci();
-    void HandleIsReady();
-    void HandleGo(const ArgList&);
-    void HandlePosition(const ArgList&);
-    void HandleStop();
-    void HandleNewGame();
-    void HandleSetOption(const ArgList&);
-    void HandleBench(const ArgList&);
-}
+};
 #endif // #ifndef UCI_HPP

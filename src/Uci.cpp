@@ -1,40 +1,44 @@
 #include "Uci.hpp"
-ArgList SplitArgs(std::string_view inp)
+
+#include <utility>
+
+ArgList SplitArgs(std::string* inp)
 {
     ArgList ret;
 
-    if(inp.size() == 0 ) return {""};
+    if(inp->empty()) return {""};
+
+    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
     std::size_t start{0}, end{0};
 
-    while(end < inp.size())
+    while(end < inp->size())
     {
-        if(inp[end++] == ' ')
+        if(inp->at(end++) == ' ')
         {
-            ret.push_back(inp.substr(start, end - start - 1));
+            ret.emplace_back(inp->c_str() + start, inp->c_str() + (end - 1));
             start = end;
         }
     }
 
-    if(inp[inp.size() - 1] != ' ')
-        ret.push_back(inp.substr(start, end - start));
+    if(inp->at(inp->size() - 1) != ' ')
+        ret.emplace_back(inp->c_str() + start, inp->c_str() + end);
 
     return ret;
 }
-void UCI::HandleUci()
+void Uci::HandleUci()
 {
-    std::cout << (std::string("id name ") + ENGINE_NAME + '\n');
-    std::cout << (std::string("id author ") + ENGINE_AUTHOR + '\n');
+    std::cout << (std::string("id name "    ) + ENGINE_NAME + '\n');
+    std::cout << (std::string("id author "  ) + ENGINE_AUTHOR + '\n');
+    std::cout << "option name Hash type spin default 64 min 1 max 32767\n";
     std::cout << "uciok\n";
 }
-void UCI::HandleIsReady()
+void Uci::HandleIsReady()
 {
-    time_manager.SetOptions(60'000, 0);
-    transpos_table.Resize(TT_SIZE);
+    time_manager_.SetOptions(60'000, 0);
     std::cout << "readyok\n";
-    // std::cout.flush();
 }
-void UCI::HandleGo(const ArgList& args)
+void Uci::HandleGo(const ArgList& args)
 {
     //update the time settings
     {
@@ -49,71 +53,70 @@ void UCI::HandleGo(const ArgList& args)
             if(args[i] == "btime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
             if(args[i] == "winc")
-                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), winc);
             if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
         }
-        if(pos.WhiteToMove())
+        if(pos_.WhiteToMove())
         {
-            time_manager.SetOptions(wtime, winc);
+            time_manager_.SetOptions(wtime, winc);
         }
         else
         {
-            time_manager.SetOptions(btime, binc);
+            time_manager_.SetOptions(btime, binc);
         }
     }
     //start the timer for this round of calculation
-    time_manager.StartTiming();
-    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(Search::FindBestMove(&pos, &transpos_table, &time_manager)));
+    time_manager_.StartTiming();
+    std::cout << std::format("bestmove {}\n", UTIL::MoveToStr(search_.FindBestMove(&pos_, &tt_, &time_manager_)));
     std::cout.flush();
 }
-void UCI::HandlePosition(const ArgList& args)
+void Uci::HandlePosition(const ArgList& args)
 {
     if(args[1] == "fen")
     {
-        std::string constructed_fen{""};
+        assert(args.size() >= 7);
 
+        std::string constructed_fen;
         for(std::size_t i{2}; i < 7; ++i)
             constructed_fen += std::string(args[i]) + ' ';
 
         constructed_fen += std::string(args[7]);
 
-        pos.ImportFen(constructed_fen);
+        pos_.ImportFen(constructed_fen);
     }
     else if (args[1] == "startpos")
     {
-        pos.ImportFen(STARTPOS);
+        pos_.ImportFen(STARTPOS);
     }
 
     ArgList::const_iterator it;
-    if((it = std::find(args.cbegin(), args.cend(), "moves")) == args.cend()) return;
+    if((it = std::ranges::find(args, "moves")) == args.cend()) return;
     
     for(++it ;it != args.end(); ++it)
     {
-        const Move move = UTIL::UciToMove(*it, pos);
-
-    // #if DEVELOPER_MODE == 1
-    //     // if(Moves::PType(move) == Moves::BAD_MOVE)/*handle error*/;
-    // #endif
-
-        pos.MakeMove(move);
+        pos_.MakeMove(UTIL::UciToMove(*it, pos_));
     }
 }
-void UCI::HandleStop()
+void Uci::HandleStop()
 {
 
 }
-void UCI::HandleNewGame()
+void Uci::HandleNewGame()
 {
-    pos = Position(STARTPOS);
-    transpos_table.Clear();
-    time_manager.SetOptions(60'000,0);
+    pos_ = Position(STARTPOS);
+    tt_.Clear();
+    time_manager_.SetOptions(60'000,0);
 }
-// void UCI::HandleSetOption(const ArgList& args)
-// {
-//     //there are no options to set as of this version
-// }
-void UCI::HandleBench(const ArgList& args)
+void Uci::HandleSetOption(const ArgList& args)
+{
+    if(args[2] == "hash")
+    {
+        std::from_chars(args[4].data(), args[4].data() + args[4].size(), tt_size_);
+        tt_.Resize(tt_size_);
+    }
+}
+void Uci::HandleBench(const ArgList& args)
 {
     if(args[1] != "perft") return;
 
@@ -131,20 +134,27 @@ void UCI::HandleBench(const ArgList& args)
         RunBenchmark<false>();
         std::cout << "completed perft bench\n";
     }
-    
 }
-void UCI::loop()
+void Uci::HandlePrint(const ArgList& args)
 {
-    std::string input{""};
+    if(args[1] == "state")
+    {
+        Debug::PrintBoardGraphically(pos_.GetArray());
+        Debug::PrintBoardState(pos_);
+    }
+}
+void Uci::Loop()
+{
+    std::string input;
     while(input != "quit")
     {
         std::getline(std::cin, input);
 
-        ArgList args = SplitArgs(input);
+        ArgList args = SplitArgs(&input);
 
-        const auto it = INIT_VALUES.find(args[0]);
+        const auto it = COMMAND_VALUES.find(args[0]);
 
-        if(it == INIT_VALUES.end()) continue;
+        if(it == COMMAND_VALUES.end()) continue;
         
         switch (it->second)
         {
@@ -166,11 +176,14 @@ void UCI::loop()
         case 6:
             HandleNewGame();
             break;
-        // case 7:
-        //     HandleSetOption(args);
-        //     break;
+        case 7:
+            HandleSetOption(args);
+            break;
         case 8:
             HandleBench(args);
+            break;
+        case 9:
+            HandlePrint(args);
             break;
         default:
             break;

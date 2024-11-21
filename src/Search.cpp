@@ -1,11 +1,11 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, Score beta)
+Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
 
     #if USE_TRANSPOSITION_TABLE == 1
-    BoundType hash_entry_flag = BoundType::ALPHA;
+    BoundType hash_entry_flag = BoundType::UPPER_BOUND;
 
     //tt.probe() will set entry to nullptr if not found
     if(HashEntry const* entry; (entry = tt->Probe(pos->ZKey())))
@@ -14,9 +14,9 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
         {
             if(entry->bound_ == BoundType::EXACT_VAL)
                 return entry->eval_;
-            if(entry->bound_ == BoundType::ALPHA && entry->eval_ <= alpha)
+            if(entry->bound_ == BoundType::UPPER_BOUND && entry->eval_ <= alpha)
                 return alpha;
-            if(entry->bound_ == BoundType::BETA && entry->eval_ >= beta)
+            if(entry->bound_ == BoundType::LOWER_BOUND && entry->eval_ >= beta)
                 return beta;
         }
     }
@@ -25,14 +25,14 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     MoveList list;
     if(pos->WhiteToMove())
     {
-        MoveGen::GeneratePseudoLegalMoves<true>(pos, &list);
+        MoveGen::GenerateLegalMoves<true>(pos, &list);
     }
     else
     {
-        MoveGen::GeneratePseudoLegalMoves<false>(pos, &list);
+        MoveGen::GenerateLegalMoves<false>(pos, &list);
     }
 
-    if(list.len() == 0 || pos->HalfMoves() >= 50)
+    if(list.len() == 0 || pos->FullMoves() >= 50)
     {
         if(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos))
             return Eval::NEG_INF;
@@ -43,29 +43,25 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, U8 depth, Score alpha, 
     {
         pos->MakeMove(list[i]);
 
-        if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+        const Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
+
+        pos->UnmakeMove(list[i]);
+
+        if(eval >= beta)
         {
-            Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
-
-            pos->UnmakeMove(list[i]);
-
-            if(eval >= beta)
-            {
-                #if USE_TRANSPOSITION_TABLE == 1
-                tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::BETA);
-                #endif
-                return beta;
-            }
-
-            if(eval > alpha)
-            {
-                #if USE_TRANSPOSITION_TABLE == 1
-                hash_entry_flag = BoundType::EXACT_VAL;
-                #endif
-                alpha = eval;
-            }
+            #if USE_TRANSPOSITION_TABLE == 1
+            tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::LOWER_BOUND);
+            #endif
+            return beta;
         }
-        else {pos->UnmakeMove(list[i]);}
+
+        if(eval > alpha)
+        {
+            #if USE_TRANSPOSITION_TABLE == 1
+            hash_entry_flag = BoundType::EXACT_VAL;
+            #endif
+            alpha = eval;
+        }
     }
 
     #if USE_TRANSPOSITION_TABLE == 1
@@ -97,10 +93,15 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm->OutOfTime()) return last_best_move;
-            pos->MakeMove(ml[i]);
-            if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+            if(tm->OutOfTime())
             {
+                std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
+                return last_best_move;
+            }
+            pos->MakeMove(ml[i]);
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos)))
+            {
+                //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];
 
                 const Score eval = -GoSearch(tt, pos, depth);

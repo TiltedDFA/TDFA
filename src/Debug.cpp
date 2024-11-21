@@ -1,14 +1,15 @@
 #include "Debug.hpp"
+#include <string>
 namespace Debug
 {
-    void PrintBB(BitBoard board, int board_center, bool mirrored)
+    void PrintBB(const BitBoard board, const int board_center, const bool mirrored)
     {
         std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
         {
             for(int col{0}; col < 8;++col)
             {
-                if((col + row*8) == board_center)
+                if((col + row * 8) == board_center)
                 {
                     current_line = mirrored ?   current_line + "X " : "X " + current_line;
                 }
@@ -24,12 +25,12 @@ namespace Debug
             current_line += "|" + std::to_string(row + 1) + " \n";
             output = current_line + output;
             current_line = "";
-        }                    
+        }
         output += "----------------\n";
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintBB(BitBoard board, bool mirrored)
+    void PrintBB(const BitBoard board, const bool mirrored)
     {
         std::string output{}, current_line{};
         for(int row{0}; row < 8; ++row)
@@ -84,23 +85,23 @@ namespace Debug
     }
     void PrintBoardState(const Position& pos)
     {
-        pos.WhiteToMove() ?  Debug::PrintUsThemBlank(pos.PiecesByColour<true>(), pos.PiecesByColour<false>(), true) :
-                            Debug::PrintUsThemBlank(pos.PiecesByColour<false>(), pos.PiecesByColour<true>(), true);
+        // pos.WhiteToMove() ?  Debug::PrintUsThemBlank(pos.PiecesByColour<true>(), pos.PiecesByColour<false>(), true) :
+        //                     Debug::PrintUsThemBlank(pos.PiecesByColour<false>(), pos.PiecesByColour<true>(), true);
         {
-            std::string prnt{"Castiling rights: "};
+            std::string prnt{"Castling rights: "};
             if(pos.CastlingRights() & 0x08) prnt += "Wk";
             if(pos.CastlingRights() & 0x04) prnt += "Wq";
             if(pos.CastlingRights() & 0x02) prnt += "Bk";
             if(pos.CastlingRights() & 0x01) prnt += "Bq";
-            PRINTNL(prnt);
+            std::cout << (prnt);
         }
 
-        PRINTNL("Half moves: " + std::to_string(pos.HalfMoves())); 
-        PRINTNL("Passant trgt sq: " + std::to_string(pos.EnPasSq())); 
-#if DEVELOPER_MODE == 1
-        pos.WhiteToMove() ? PRINTNL("IsWhite'sTurn") : PRINTNL("IsBlack'sTurn");
-#endif
-        PRINTNL("Full moves: " + std::to_string(pos.FullMoves())); 
+        std::cout << ("Half moves: " + std::to_string(pos.HalfMoves())) << '\n'; 
+        std::cout << ("Passant trgt sq: " + std::to_string(pos.EnPasSq())) << '\n'; 
+
+        pos.WhiteToMove() ? std::cout << ("w to move") : std::cout <<("b to move");
+        std::cout << '\n';
+        std::cout <<("Full moves: " + std::to_string(pos.FullMoves())) << '\n'; 
     }
     void PrintInduvidualPieces(const BitBoard (&board)[2][6])
     {
@@ -164,6 +165,16 @@ namespace Debug
     {
         PRINTNL(std::bitset<16>(move));
     }
+    void Fun(BitBoard b)
+    {
+        for(int i = 0; i < 64; ++i)
+        {
+            if(b & (1ull << i))
+            {
+                // do stuff
+            }
+        }
+    }
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored)
     {
         std::string output{}, current_line{};
@@ -222,6 +233,28 @@ namespace Debug
         output += "----------------\n";
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
+    }
+    void PrintBoardGraphically(BitBoard* boards)
+    {
+        constinit const static char PIECE_TYPES_MAPPING[12] = {'k', 'q', 'b', 'n', 'r', 'p', 'K', 'Q', 'B', 'N', 'R', 'P'};
+        char squares[64];
+        std::memset(squares, '-', sizeof(squares));
+        for(int i = 0; i < 12; ++i)
+        {
+            BitBoard current_pieces = boards[((i > 5)*6) + i % 6];
+            const char current_type = PIECE_TYPES_MAPPING[i];
+            while(current_pieces)
+            {
+                squares[Magics::PopNRetLS1B(current_pieces)] = current_type;
+            }
+        }
+        std::string output;
+        for(int i = 0; i < 8;++i)
+        {
+            output += std::string(squares + sizeof(char)*(8*(7-i)), 8) + std::format("|{}\n",char('H'-i));
+        }
+        output += "--------\n12345678";
+        std::cout << output << std::endl;
     }
 }
 

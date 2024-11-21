@@ -1,4 +1,4 @@
-#include "BitBoard.hpp"
+#include "Position.hpp"
 #include <array>
 #include <charconv>
 #include <cmath>
@@ -75,7 +75,7 @@ void Position::ImportFen(std::string_view fen)
     {
         switch (i)
         {
-        case '-':                
+        case '-':
             break;
         case 'K':
             info_.castling_rights_ |= Magics::CASTLE_K_W;
@@ -88,7 +88,7 @@ void Position::ImportFen(std::string_view fen)
             break;
         case 'q':
             info_.castling_rights_ |= Magics::CASTLE_Q_B;
-            break; 
+            break;
         default:
             break;
         }
@@ -102,7 +102,7 @@ void Position::ImportFen(std::string_view fen)
         info_.en_passant_sq_ = en_passant_index;
     }
 
-    if(fen_sections.at(4) == "")
+    if(fen_sections.at(4).empty())
     {
         info_.half_moves_ = 0;
     }
@@ -110,7 +110,7 @@ void Position::ImportFen(std::string_view fen)
     {
         std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
     }
-    if(fen_sections.at(5) == "")
+    if(fen_sections.at(5).empty())
     {
         full_moves_ = 0;
     }
@@ -119,11 +119,11 @@ void Position::ImportFen(std::string_view fen)
         std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
     }
 }
-void Position::MakeMove(Move m)
+void Position::MakeMove(const Move m)
 {
     assert(IsOk());
     previous_state_info.push_back(info_);
- 
+
     Sq start_sq;
     Sq target_sq;
     PieceType p_type;
@@ -192,10 +192,10 @@ void Position::MakeMove(Move m)
         case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
         }
     }
-    if(info_.en_passant_sq_ != 255)
+    if(info_.en_passant_sq_ != Magics::EP_NULL)
     {
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
-        info_.en_passant_sq_ = 255;
+        info_.en_passant_sq_ = Magics::EP_NULL;
     }
 
     if(is_castling_move)
@@ -238,7 +238,7 @@ void Position::MakeMove(Move m)
     whites_turn_ = !whites_turn_;
     assert(IsOk());
 }
-void Position::UnmakeMove(Move m)
+void Position::UnmakeMove(const Move m)
 {
     assert(IsOk());
     whites_turn_ = !whites_turn_;
@@ -297,6 +297,7 @@ void Position::UnmakeMove(Move m)
 }
 void Position::HashCurrentPostion()
 {
+    assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
 
@@ -313,7 +314,7 @@ void Position::HashCurrentPostion()
             }
         }
     }
-    if(info_.en_passant_sq_ != 0) 
+    if(info_.en_passant_sq_ != Magics::EP_NULL)
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
 }
