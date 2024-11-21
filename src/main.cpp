@@ -28,7 +28,7 @@ int main(void)
     // Debug::PrintBB(board >> fileof);
 //    Position p(STARTPOS);
 //    Debug::PrintBoardGraphically(&p);
-    RunBenchmark<false>();
+    RunBenchmark<true>();
 //     Uci uci;
 //     uci.Loop();
     return 0;

@@ -70,7 +70,7 @@ void Position::ImportFen(std::string_view fen)
         ++current_col;
     }
 
-    colour_to_move = Colour(fen_sections.at(1).at(0) != 'w');
+    colour_to_move = fen_sections.at(1).at(0) == 'w' ? White : Black;
 
     for(const char i : fen_sections.at(2))
     {
@@ -151,11 +151,11 @@ void Position::MakeMove(Move m)
             {
                 if (colour_to_move == White)
                 {
-                    info_.en_passant_sq_ = to - 8;
+                    info_.en_passant_sq_ = to + 8;
                 }
                 else
                 {
-                    info_.en_passant_sq_ = to + 8;
+                    info_.en_passant_sq_ = to - 8;
                 }
                 info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
             }
@@ -168,6 +168,7 @@ void Position::MakeMove(Move m)
                     case 7:  info_.castling_rights_ &= Magics::CASTLE_NOT_K_W;break;
                     case 56: info_.castling_rights_ &= Magics::CASTLE_NOT_Q_B;break;
                     case 63: info_.castling_rights_ &= Magics::CASTLE_NOT_K_B;break;
+                    default: break;
                 }
                 info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
             }
@@ -250,7 +251,7 @@ CASTLING_JMP:
     MovePiece(from, to);
 PROMOTION_JMP:
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
-    colour_to_move = Colour(!colour_to_move);
+    colour_to_move = !colour_to_move;
     assert(IsOk());
 }
 void Position::UnmakeMove(const Move m)

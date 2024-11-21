@@ -230,17 +230,24 @@ namespace Debug
     }
     void PrintBoardGraphically(Position* pos)
     {
+#ifdef NDEBUG
+        return;
+#endif
+
         PRINTNL(pos->WhiteToMove() ? "White to move" : "Black to move");
-        constinit const static char PIECE_TYPES_MAPPING[12] = {'q', 'b', 'n', 'r', 'p', 'k', 'Q', 'B', 'N', 'R', 'P', 'K'};
+        constinit const static char PIECE_TYPES_MAPPING[6] = {'Q', 'B', 'N', 'R', 'P', 'K'};
         char squares[64];
         std::memset(squares, '-', sizeof(squares));
-        for(int i = 0; i < 12; ++i)
+        for(int i = 0; i < 2; ++i)
         {
-            BitBoard current_pieces = pos->Pieces(Colour(i > 5 ? White : Black),  PieceType(i % 6));
-            const char current_type = PIECE_TYPES_MAPPING[i];
-            while(current_pieces)
+            for (int ii = 0; ii < 6; ++ii)
             {
-                squares[Magics::PopNRetLS1B(current_pieces)] = current_type;
+                BitBoard current_pieces = pos->Pieces(Colour(i),  PieceType(ii));
+                const char current_type = char(PIECE_TYPES_MAPPING[ii] + 32 * i);
+                while(current_pieces)
+                {
+                    squares[Magics::PopNRetLS1B(current_pieces)] = current_type;
+                }
             }
         }
         if (pos->EnPasBB()) squares[pos->EnPasSq()] = 'Z';
