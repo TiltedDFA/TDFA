@@ -74,7 +74,9 @@ namespace Eval
     constexpr Score Evaluate(Position const* pos)
     {
         UpdateData(pos);
+//        const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos); //+ PawnProgress<true>(pos);
         const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos) + PawnProgress<true>(pos);
+//        const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos);//+ PawnProgress<false>(pos);
         const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos)+ PawnProgress<false>(pos);
 
         return (white_eval - black_eval) * (pos->WhiteToMove() ? 1 : -1);

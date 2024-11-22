@@ -30,8 +30,19 @@ namespace UTIL
     }
     inline std::string MoveToStr(const Move m)
     {
-        return (Moves::IsPromotionMove(m) ? (Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)) + PromotionChar(Moves::PType(m))) :
-                                            Square(Moves::StartSq(m)) + Square(Moves::TargetSq(m)));
+        if(Moves::IsPromotionMove(m))
+        {
+            const std::string start = Square(Moves::StartSq(m));
+            const std::string end   = Square(Moves::TargetSq(m));
+            const char prom = PromotionChar(Moves::PType(m));
+            return start + end + prom;
+        }
+        else
+        {
+            const std::string start = Square(Moves::StartSq(m));
+            const std::string end   = Square(Moves::TargetSq(m));
+            return start + end;
+        }
     }
     inline Move UciToMove(const std::string_view str, const Position& pos)
     {

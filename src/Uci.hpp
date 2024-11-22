@@ -23,11 +23,11 @@ using ArgList = std::vector<std::string_view>;
 class Uci
 {
 public:
-    Uci():tt_size_(64), pos_(STARTPOS), tt_(), time_manager_(){tt_.Resize(tt_size_);}
+    Uci():tt_size_(16), pos_(STARTPOS), tt_(), time_manager_(){tt_.Resize(tt_size_);}
     void Loop();
 private:
     //helper functions
-    static void HandleUci();
+    void HandleUci();
     void HandleIsReady();
     void HandleGo(const ArgList&);
     void HandlePosition(const ArgList&);
@@ -46,7 +46,7 @@ private:
     Search search_;
 private:
     //constants
-    static constexpr const char* ENGINE_NAME = "TDFA V1.1.0";
+    static constexpr const char* ENGINE_NAME = "TDFA V1.2.0";
     static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     static inline const CmdMap COMMAND_VALUES = 
     {
@@ -58,7 +58,7 @@ private:
         {"ucinewgame", 6},
         {"setoption", 7},
         {"bench", 8},
-        {"print", 9}
+        {"print", 9},
     };
 };
 #endif // #ifndef UCI_HPP

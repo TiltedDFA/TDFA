@@ -8,7 +8,7 @@ ArgList SplitArgs(std::string* inp)
 
     if(inp->empty()) return {""};
 
-    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
+//    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
     std::size_t start{0}, end{0};
 
@@ -30,7 +30,7 @@ void Uci::HandleUci()
 {
     std::cout << (std::string("id name "    ) + ENGINE_NAME + '\n');
     std::cout << (std::string("id author "  ) + ENGINE_AUTHOR + '\n');
-    std::cout << "option name Hash type spin default 64 min 1 max 32767\n";
+    std::cout << std::format("option name Hash type spin default {} min 1 max 32767\n", tt_size_);
     std::cout << "uciok\n";
 }
 void Uci::HandleIsReady()
@@ -82,6 +82,8 @@ void Uci::HandlePosition(const ArgList& args)
             constructed_fen += std::string(args[i]) + ' ';
 
         constructed_fen += std::string(args[7]);
+
+//        PRINTNL("Here");
 
         pos_.ImportFen(constructed_fen);
     }

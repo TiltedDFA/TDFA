@@ -198,7 +198,7 @@ public:
         pieces_[is_white][loc::PAWN] &= ~attacked_sq; 
         return Pawn;
     }
-    bool IsOk()
+    bool IsOk() const
     {
         return ((PiecesByColour<true>() & PiecesByColour<false>()) == 0);
     }

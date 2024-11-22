@@ -251,9 +251,9 @@ namespace Debug
         std::string output;
         for(int i = 0; i < 8;++i)
         {
-            output += std::string(squares + sizeof(char)*(8*(7-i)), 8) + std::format("|{}\n",char('H'-i));
+            output += std::string(squares + sizeof(char)*(8*(7-i)), 8) + std::format("|{}\n",char('8'-i));
         }
-        output += "--------\n12345678";
+        output += "--------\nABCDEFGH";
         std::cout << output << std::endl;
     }
 }

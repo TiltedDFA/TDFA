@@ -25,11 +25,11 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
     MoveList list;
     if(pos->WhiteToMove())
     {
-        MoveGen::GenerateLegalMoves<true>(pos, &list);
+        MoveGen::GeneratePseudoLegalMoves<true>(pos, &list);
     }
     else
     {
-        MoveGen::GenerateLegalMoves<false>(pos, &list);
+        MoveGen::GeneratePseudoLegalMoves<false>(pos, &list);
     }
 
     if(list.len() == 0 || pos->FullMoves() >= 50)
@@ -43,24 +43,31 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
     {
         pos->MakeMove(list[i]);
 
-        const Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
-
-        pos->UnmakeMove(list[i]);
-
-        if(eval >= beta)
+        if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
         {
-            #if USE_TRANSPOSITION_TABLE == 1
-            tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::LOWER_BOUND);
+            const Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
+
+            pos->UnmakeMove(list[i]);
+
+            if (eval >= beta)
+            {
+                #if USE_TRANSPOSITION_TABLE == 1
+                tt->Store(pos->ZKey(), eval, Moves::NULL_MOVE, depth, BoundType::LOWER_BOUND);
+                #endif
+                return beta;
+            }
+
+            if (eval > alpha)
+            {
+                #if USE_TRANSPOSITION_TABLE == 1
+                hash_entry_flag = BoundType::EXACT_VAL;
             #endif
-            return beta;
+                alpha = eval;
+            }
         }
-
-        if(eval > alpha)
+        else
         {
-            #if USE_TRANSPOSITION_TABLE == 1
-            hash_entry_flag = BoundType::EXACT_VAL;
-            #endif
-            alpha = eval;
+            pos->UnmakeMove(list[i]);
         }
     }
 
@@ -72,16 +79,16 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U8 depth, Score a
 }
 Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* tm)
 {
-    Move last_best_move = Moves::NULL_MOVE;
-    Score last_best_eval = Eval::NEG_INF;
+//    Move last_best_move = Moves::NULL_MOVE;
+//    Score last_best_eval = Eval::NEG_INF;
+    Score best_eval = Eval::NEG_INF;
+    Move best_move = Moves::NULL_MOVE;
 
     for(U8 depth{1};;++depth)
     {
         MoveList ml;
 
-        Score best_eval = Eval::NEG_INF;
-        Move best_move = Moves::NULL_MOVE;
-        
+
         if(pos->WhiteToMove())
         {
             MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
@@ -93,13 +100,17 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm->OutOfTime())
+            if(tm->OutOfTime() || best_eval == Eval::POS_INF)
+//            if(0)
             {
-                std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
-                return last_best_move;
+                std::cout << std::format("info score cp {} depth {}\n", best_eval, depth);
+                #ifdef TDFA_DEBUG
+                Debug::PrintEncodedMoveStr(best_move);
+                #endif
+                return best_move;
             }
             pos->MakeMove(ml[i]);
-            if(!(pos->WhiteToMove() ? MoveGen::InCheck<true>(pos) : MoveGen::InCheck<false>(pos)))
+            if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
             {
                 //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];
@@ -114,8 +125,6 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
             }
             pos->UnmakeMove(ml[i]);
         }
-        last_best_eval = best_eval;
-        last_best_move = best_move;
-        std::cout << std::format("info score cp {} depth {}\n", last_best_eval, depth);
+        std::cout << std::format("info score cp {} depth {}\n", best_eval, depth);
     }
 }
