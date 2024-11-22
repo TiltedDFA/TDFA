@@ -65,10 +65,10 @@ private:
         MoveList ml{};
         U64 nodes{0};
 
-        if(pos->WhiteToMove())
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
+        if(pos->ColourToMove() == White)
+            MoveGen::GeneratePseudoLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<Black>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
@@ -86,7 +86,7 @@ private:
                 }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
                     if constexpr(output_perft_paths) 
@@ -115,7 +115,7 @@ private:
                 // }
             #endif
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
@@ -135,10 +135,10 @@ private:
 
         MoveList ml{};
 
-        if(pos->WhiteToMove())
-            MoveGen::GenerateLegalMoves<true>(pos, &ml);
+        if(pos->ColourToMove() == White)
+            MoveGen::GenerateLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GenerateLegalMoves<false>(pos, &ml);
+            MoveGen::GenerateLegalMoves<Black>(pos, &ml);
         if(depth == 1) return ml.len();
         U64 nodes{0};
         

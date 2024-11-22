@@ -23,7 +23,7 @@ public:
     }
     inline constexpr void queen_merge(move_info const* src)
     {
-        std::transform(src->encoded_move_.data(), src->encoded_move_.data() + src->count_, data_.data() + idx_, Moves::SetPieceType<Queen>);
+        std::transform(src->encoded_move_.data(), src->encoded_move_.data() + src->count_, data_.data() + idx_, Moves::SetPieceType<pt_Queen>);
         idx_ += src->count_;
     }
 

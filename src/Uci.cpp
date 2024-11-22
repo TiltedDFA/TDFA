@@ -57,7 +57,7 @@ void Uci::HandleGo(const ArgList& args)
             if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
         }
-        if(pos_.WhiteToMove())
+        if(pos_.ColourToMove() == White)
         {
             time_manager_.SetOptions(wtime, winc);
         }
@@ -141,7 +141,7 @@ void Uci::HandlePrint(const ArgList& args)
 {
     if(args[1] == "state")
     {
-        Debug::PrintBoardGraphically(pos_.GetArray());
+        Debug::PrintBoardGraphically(&pos_);
         Debug::PrintBoardState(pos_);
     }
 }

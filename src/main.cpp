@@ -13,7 +13,7 @@
 
 int main(void)
 {
-    // RunBenchmark<false>();
+    RunBenchmark<false>();
     // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();
     // BitBoard board = 1ull << 54;
@@ -28,7 +28,8 @@ int main(void)
     // Debug::PrintBB(board >> fileof);
 //    RunBenchmark<false>();
 //    PRINTNL(int(Moves::EncodeMove(55,48,Rook)));
-     Uci uci;
-     uci.Loop();
+    // std::ios::sync_with_stdio(false);
+    // Uci uci;
+    // uci.Loop();
     return 0;
 }

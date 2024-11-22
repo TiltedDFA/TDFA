@@ -15,7 +15,7 @@ class Search
 {
 public:
 
-    Score GoSearch(TransposTable* __restrict__  tt, Position* __restrict__  pos, U8 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+    Score GoSearch(TransposTable* __restrict__  tt, Position* __restrict__  pos, U16 depth, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
 
     Move FindBestMove(Position* __restrict__  pos, TransposTable* __restrict__  tt, TimeManager const* __restrict__ tm);
 private:

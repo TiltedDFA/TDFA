@@ -24,7 +24,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-ggdb -O0 -Wall -Wextra -Wpedantic -save-temps -fcons
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static-libgcc -fno-exceptions --static -static-libstdc++ -march=native -flto -flto-partition=one -ffat-lto-objects -funroll-loops -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "-flto=jobserver -static" CACHE STRING "" FORCE)
 
-add_executable(TDFA ${MY_SOURCES})
+add_executable(TDFA ${MY_SOURCES}
+        src/Board.hpp)
 
 
 install(TARGETS TDFA)

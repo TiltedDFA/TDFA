@@ -2,7 +2,7 @@
 #define TYPES_HPP
 
 #define USE_TITBOARDS 1
-#define USE_TRANSPOSITION_TABLE 1
+#define USE_TRANSPOSITION_TABLE 0
 #define DEBUG_TRANPOSITION_TABLE 0
 #define TDFA_DEBUG 0
 
@@ -78,19 +78,45 @@ enum class PromType : U8
     KNIGHT,
     ROOK
 };
-enum PieceType : U8
+enum PieceType
 {
-    King = 0,
-    Queen,
-    Bishop,
-    Knight,
-    Rook,
-    Pawn,
-    PromQueen = 0b1000,
-    PromBishop,
-    PromKnight,
-    PromRook,
-    NullPiece
+    pt_Queen,
+    pt_Bishop,
+    pt_Knight,
+    pt_Rook,
+    pt_Pawn,
+    pt_King,
+    pt_All,
+    pt_None,
+    pt_prom_queen = 8,
+    pt_prom_bishop,
+    pt_prom_knight,
+    pt_prom_rook,
+};
+enum Colour
+{
+    White,
+    Black
+};
+constexpr Colour operator!(const Colour c)
+{
+    return static_cast<Colour>(c ^ Black);
+}
+enum Piece
+{
+    p_WhiteQueen = pt_Queen,
+    p_WhiteBishop,
+    p_WhiteKnight,
+    p_WhiteRook,
+    p_WhitePawn,
+    p_WhiteKing,
+    p_BlackQueen = pt_Queen + 8,
+    p_BlackBishop,
+    p_BlackKnight,
+    p_BlackRook,
+    p_BlackPawn,
+    p_BlackKing,
+    p_None
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum AttackDirection : U8
@@ -102,9 +128,9 @@ enum AttackDirection : U8
 };
 enum class BoundType : U8
 {
-    EXACT_VAL,  //Score is X
-    UPPER_BOUND,      //Score is at max X
-    LOWER_BOUND        //Score is at least X
+    EXACT_VAL,          //Score is X
+    UPPER_BOUND,        //Score is at max X
+    LOWER_BOUND         //Score is at least X
 };
 template<typename T>
 float FloatDiv(T dividend, T divisor)

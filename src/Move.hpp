@@ -49,7 +49,7 @@ namespace Moves
 
     constexpr U8 StartSq(const Move move)      {return move & START_SQ_MASK;}
     
-    constexpr bool IsPromotionMove(const Move move) {return bool(move & 0x8000);}
+    constexpr bool IsPromotionMove(const Move move) {return (move >> PIECE_TYPE_SHIFT) & pt_prom_queen;}
 
     constexpr PieceType PTypeOfProm(const Move move) {return PieceType(PType(move) - 7);}
     

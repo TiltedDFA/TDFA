@@ -16,13 +16,13 @@ namespace UTIL
     {
         switch (p)
         {
-        case PromBishop:
+        case pt_prom_bishop:
             return 'b';
-        case PromKnight:
+        case pt_prom_knight:
             return 'n';
-        case PromQueen:
+        case pt_prom_queen:
             return 'q';
-        case PromRook:
+        case pt_prom_rook:
             return 'r';
         default:
             return 'z';
@@ -54,23 +54,23 @@ namespace UTIL
             switch(str[4])
             {
             case 'q':
-                return Moves::EncodeMove(from, to, PromQueen);
+                return Moves::EncodeMove(from, to, pt_prom_queen);
             case 'r':
-                return Moves::EncodeMove(from, to, PromRook);
+                return Moves::EncodeMove(from, to, pt_prom_rook);
             case 'b':
-                return Moves::EncodeMove(from, to, PromBishop);
+                return Moves::EncodeMove(from, to, pt_prom_bishop);
             case 'n':
-                return Moves::EncodeMove(from, to, PromKnight);
+                return Moves::EncodeMove(from, to, pt_prom_knight);
             default:
-                return Moves::EncodeMove(from, to, NullPiece);
+                return Moves::EncodeMove(from, to, pt_None);
             }
         }
 
-        PieceType type;
-        if(pos.WhiteToMove())
-            type = pos.TypeAtSq<true>(from);
-        else
-            type = pos.TypeAtSq<false>(from);
+        PieceType type = Magics::TypeOf(pos.PieceOn(from));
+        // if(pos.ColourToMove() == White)
+        //     type = ;
+        // else
+        //     type = pos.TypeAtSq<false>(from);
 
         const Move constructed_move = Moves::EncodeMove(from, to, type);
         Debug::PrintEncodedMoveStr(constructed_move);

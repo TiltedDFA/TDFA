@@ -99,7 +99,7 @@ namespace Debug
         std::cout << ("Half moves: " + std::to_string(pos.HalfMoves())) << '\n'; 
         std::cout << ("Passant trgt sq: " + std::to_string(pos.EnPasSq())) << '\n'; 
 
-        pos.WhiteToMove() ? std::cout << ("w to move") : std::cout <<("b to move");
+        pos.ColourToMove() == White ? std::cout << ("w to move") : std::cout <<("b to move");
         std::cout << '\n';
         std::cout <<("Full moves: " + std::to_string(pos.FullMoves())) << '\n'; 
     }
@@ -135,17 +135,17 @@ namespace Debug
     {
         switch (piece)
         {
-        case King:
+        case pt_King:
             return "King";
-        case Queen:
+        case pt_Queen:
             return "Queen";
-        case Bishop:
+        case pt_Bishop:
             return "Bishop";
-        case Knight:
+        case pt_Knight:
             return "Knight";
-        case Rook:
+        case pt_Rook:
             return "Rook";
-        case Pawn:
+        case pt_Pawn:
             return "Pawn";
         default:
             return "Error with piece type to string";
@@ -234,14 +234,16 @@ namespace Debug
         output += mirrored ? "A B C D E F G H" : "H G F E D C B A";
         PRINTNL(output);
     }
-    void PrintBoardGraphically(BitBoard* boards)
+    void PrintBoardGraphically(Position* pos)
     {
         constinit const static char PIECE_TYPES_MAPPING[12] = {'k', 'q', 'b', 'n', 'r', 'p', 'K', 'Q', 'B', 'N', 'R', 'P'};
         char squares[64];
         std::memset(squares, '-', sizeof(squares));
         for(int i = 0; i < 12; ++i)
         {
-            BitBoard current_pieces = boards[((i > 5)*6) + i % 6];
+            /////FIX ME, check if types map correctly
+
+            BitBoard current_pieces = pos->Pieces(Colour((i < 6)), PieceType( i % 6));
             const char current_type = PIECE_TYPES_MAPPING[i];
             while(current_pieces)
             {
