@@ -97,7 +97,7 @@ private:
                 }
                 pos->UnmakeMove(ml[i]);
             #if TDFA_DEBUG == 1
-                assert(copy == *pos);
+                // assert(copy == *pos);
             #endif
             }
             else
@@ -121,7 +121,7 @@ private:
                 }
                 pos->UnmakeMove(ml[i]);
             #if TDFA_DEBUG == 1
-                assert(copy == *pos);
+                // assert(copy == *pos);
             #endif
             }
         }

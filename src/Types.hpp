@@ -4,7 +4,7 @@
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 0
 #define DEBUG_TRANPOSITION_TABLE 0
-#define TDFA_DEBUG 0
+#define TDFA_DEBUG 1
 
 #if TDFA_DEBUG != 1
 #define NDEBUG
@@ -80,12 +80,14 @@ enum class PromType : U8
 };
 enum PieceType
 {
+    pt_begin_it,
+    pt_King = pt_begin_it,
     pt_Queen,
     pt_Bishop,
     pt_Knight,
     pt_Rook,
-    pt_Pawn,
-    pt_King,
+    pt_end_it,
+    pt_Pawn = pt_end_it,
     pt_All,
     pt_None,
     pt_prom_queen = 8,

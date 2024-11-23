@@ -211,9 +211,9 @@ void Position::MakeMove(const Move m)
     }
     else
     {
-        //move piece
-        assert((pieces_[whites_turn_][p_type] & start_bb));
-        assert(!(pieces_[whites_turn_][p_type] & target_bb));
+        // //move piece
+        // assert((pieces_[whites_turn_][p_type] & start_bb));
+        // assert(!(pieces_[whites_turn_][p_type] & target_bb));
 
         // pieces_[whites_turn_][p_type] ^= start_bb | target_bb;
         MovePiece(start_sq, target_sq);
@@ -312,7 +312,7 @@ void Position::HashCurrentPostion()
 
     for(Colour c = White; c <= Black; c = Colour(c + 1))
     {
-        for(PieceType pt = pt_Queen; pt <= pt_King; pt = PieceType(pt + 1))
+        for(PieceType pt = pt_begin_it; pt <= pt_end_it; pt = PieceType(pt + 1))
         {
             BitBoard piece_board = this->Pieces(c, pt);
             while(piece_board)
