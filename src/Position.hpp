@@ -94,7 +94,7 @@ public:
     */
     bool IsOk() const
     {
-        return (Pieces(White) & Pieces(Black) == 0);
+        return ((Pieces(White) & Pieces(Black)) == 0ULL);
     }
     void HashCurrentPostion();
     

@@ -106,18 +106,18 @@ constexpr Colour operator!(const Colour c)
 }
 enum Piece
 {
-    p_WhiteQueen = pt_Queen,
+    p_WhiteKing = pt_King,
+    p_WhiteQueen,
     p_WhiteBishop,
     p_WhiteKnight,
     p_WhiteRook,
     p_WhitePawn,
-    p_WhiteKing,
-    p_BlackQueen = pt_Queen + 8,
+    p_BlackKing = pt_King + 8,
+    p_BlackQueen,
     p_BlackBishop,
     p_BlackKnight,
     p_BlackRook,
     p_BlackPawn,
-    p_BlackKing,
     p_None
 };
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]

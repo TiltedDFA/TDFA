@@ -286,9 +286,9 @@ void Position::UnmakeMove(const Move m)
     }
     else
     {
-        MovePiece(start_sq, target_sq);
+        MovePiece(target_sq, start_sq);
 
-        if(info_.captured_type_ != pt_None)
+        if(info_.captured_type_ != p_None)
         {
             Sq captured_sq = target_sq;
             if(info_.captured_type_ == pt_Pawn && target_sq == previous_state_info.back().en_passant_sq_)

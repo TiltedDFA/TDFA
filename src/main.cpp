@@ -13,7 +13,7 @@
 
 int main(void)
 {
-    RunBenchmark<false>();
+    RunBenchmark<true>();
     // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();
     // BitBoard board = 1ull << 54;

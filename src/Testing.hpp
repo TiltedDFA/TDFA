@@ -74,17 +74,7 @@ private:
         {
             if constexpr(is_root)
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                if(start == 2 && end == 47)
-                {
-                    PRINT("\n");
-                }
-            #endif
+                // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
                 if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
@@ -96,33 +86,15 @@ private:
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                // assert(copy == *pos);
-            #endif
             }
             else
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                //used for breakpointing at specific move in perft when debugging
-                // if(start == 14 && end == 6 && t == PromQueen)
-                // {
-                //     PRINT("");
-                // }
-            #endif
                 pos->MakeMove(ml[i]);
                 if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                // assert(copy == *pos);
-            #endif
             }
         }
 
