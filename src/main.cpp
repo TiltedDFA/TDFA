@@ -13,6 +13,8 @@
 
 int main(void)
 {
+    Position pos;
+    assert((pos.Pieces(White) | pos.Pieces(Black)) == pos.Pieces(White, Black));
     RunBenchmark<true>();
     // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();

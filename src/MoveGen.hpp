@@ -271,8 +271,8 @@ namespace MoveGen
         // us, them are variables used for sliding move gen with titboards.
         //since we want to generate moves for the opponent and see if they attack
         //our king we want the us and them variables to be inverted from our king in colour
-        const BitBoard us   = pos->Pieces(colour_to_move);
-        const BitBoard them = pos->Pieces(!colour_to_move);
+        const BitBoard us   = pos->Pieces(!colour_to_move);
+        const BitBoard them = pos->Pieces(colour_to_move);
 
         //Bishop and half queen
         BitBoard bishop_queen = pos->Pieces(!colour_to_move, pt_Bishop, pt_Queen);

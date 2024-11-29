@@ -39,11 +39,11 @@ namespace Eval
     constexpr Score Mobility(Position const* pos)
     {
         Score mobility{0};
-        const Score num_attks_king    = Magics::PopCnt(pos->Pieces(colour_to_move, pt_King ));
-        const Score num_attks_queen   = Magics::PopCnt(pos->Pieces(colour_to_move, pt_Queen));
-        const Score num_attks_bishop  = Magics::PopCnt(pos->Pieces(colour_to_move, pt_Bishop));
-        const Score num_attks_knight  = Magics::PopCnt(pos->Pieces(colour_to_move, pt_Knight  ));
-        const Score num_attks_rook    = Magics::PopCnt(pos->Pieces(colour_to_move, pt_Rook ));
+        const Score num_attks_king    = Magics::PopCnt(MoveGen::KingAttacks<colour_to_move>(pos));
+        const Score num_attks_queen   = Magics::PopCnt(MoveGen::QueenAttacks<colour_to_move>(pos));
+        const Score num_attks_bishop  = Magics::PopCnt(MoveGen::BishopAttacks<colour_to_move>(pos));
+        const Score num_attks_knight  = Magics::PopCnt(MoveGen::KnightAttacks<colour_to_move>(pos));
+        const Score num_attks_rook    = Magics::PopCnt(MoveGen::RookAttacks<colour_to_move>(pos));
         mobility += Score(num_attks_king  * (is_middle_game ? -30 : 20));
         mobility += Score(num_attks_queen * (is_middle_game ?   3 : 10));
         mobility += Score(num_attks_bishop* (is_middle_game ?  10 : 20));

@@ -70,7 +70,7 @@ void Position::ImportFen(std::string_view fen)
         ++current_col;
     }
 
-    turn_ = fen_sections.at(1).at(0) == 'w' ? White : Black;
+    turn_ = (fen_sections _AT(1) _AT(0) == 'w') ? White : Black;
 
     for(const char i : fen_sections.at(2))
     {
@@ -145,6 +145,7 @@ void Position::MakeMove(const Move m)
         if(target_sq == info_.en_passant_sq_) capture_sq -= (turn_ == White ? 8 : -8);
 
         info_.captured_type_ = PopPiece(capture_sq);
+        assert(info_.captured_type_ != p_None);
         info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][info_.captured_type_][capture_sq];
         info_.half_moves_ = 0;
     }
@@ -165,7 +166,7 @@ void Position::MakeMove(const Move m)
         }
         info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
     }
-    if(Magics::TypeOf(info_.captured_type_) == pt_Rook && (start_bb & Magics::ROOK_START_SQS))
+    if(p_type == pt_Rook && (start_bb & Magics::ROOK_START_SQS))
     {
         info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
         switch (start_sq)
@@ -263,6 +264,7 @@ void Position::UnmakeMove(const Move m)
     {
         p_type = pt_Pawn;
         RemovePiece(target_sq);
+        AddPiece(MakePiece(turn_, pt_Pawn),target_sq);
     }
     //if castling move
     if(p_type == pt_King)
@@ -276,7 +278,7 @@ void Position::UnmakeMove(const Move m)
         }
     }
     
-    if(is_castling_move)
+    if(is_castling_move) [[unlikely]]
     {
         // pieces_[whites_turn_][loc::KING] = start_bb;
         // pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];

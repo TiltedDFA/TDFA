@@ -19,6 +19,7 @@
 #define INLINE
 #endif
 
+#include <cassert>
 #include <array>
 #include <cstdint>
 
