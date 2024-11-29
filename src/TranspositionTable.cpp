@@ -1,5 +1,11 @@
 #include "TranspositionTable.hpp"
 
+static inline constexpr uint32_t index(const ZobristKey z, const size_t s) noexcept
+{
+    //maybe uncessary assertion but on some uncommon architectures could cause issue
+    static_assert(sizeof(ZobristKey) == 8 && sizeof(size_t) == 8);
+    return (z * s ) >> 32;
+}
 void TransposTable::Resize(const size_t size_in_mB)
 {
     const size_t num_bytes = size_in_mB * 1024 * 1024;
@@ -25,7 +31,8 @@ void TransposTable::Store(
                           ) const {
     assert(num_elements_ != 0);
 
-    HashEntry* entry = &table_ptr_[key % num_elements_];
+    // HashEntry* entry = &table_ptr_[key % num_elements_];
+    HashEntry* entry = &table_ptr_[index(key, num_elements_)];
 
     #if DEBUG_TRANPOSITION_TABLE == 1
     PRINTNL(std::format("key: {}, num_elms: {}, index accessed: {}", key, num_elements_, key % num_elements_));
@@ -40,7 +47,8 @@ void TransposTable::Store(
 HashEntry const* TransposTable::Probe(ZobristKey key)const
 {
     assert(num_elements_ != 0);
-    const HashEntry* entry = &table_ptr_[key % num_elements_];
+    // const HashEntry* entry = &table_ptr_[key % num_elements_];
+    const HashEntry* entry = &table_ptr_[index(key, num_elements_)];
     return (entry->key_ == key) ? entry : nullptr;
 }
 void TransposTable::Clear() const {
