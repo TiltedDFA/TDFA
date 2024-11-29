@@ -46,7 +46,7 @@ private:
     Search search_;
 private:
     //constants
-    static constexpr const char* ENGINE_NAME = "TDFA V1.2.0";
+    static constexpr const char* ENGINE_NAME = "TDFA V1.2.1";
     static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
     static inline const CmdMap COMMAND_VALUES = 
     {

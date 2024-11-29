@@ -13,6 +13,9 @@
 
 int main(void)
 {
+    std::ios::sync_with_stdio(false);
+    // std::cin.tie(nullptr);
+    // std::ios::sync_with_stdio(true);
     // Position pos;
     // assert((pos.Pieces(White) | pos.Pieces(Black)) == pos.Pieces(White, Black));
     // RunBenchmark<false>();

@@ -396,6 +396,7 @@ namespace MoveGen
         {
             pos->MakeMove(pseudo_legal_ml[i]);
 
+            //bc templates lol
             if(!InCheck<colour_to_move>(pos))
             {
                 ml->add(pseudo_legal_ml[i]);

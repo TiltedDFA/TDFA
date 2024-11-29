@@ -94,7 +94,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
         for(size_t i{0}; i < ml.len(); ++i)
         {
-            if(tm->OutOfTime() || last_best_eval == Eval::POS_INF)
+            if(tm->OutOfTime() || last_best_eval == Eval::POS_INF || last_best_move == Eval::NEG_INF)
 //            if(0)
             {
                 std::cout << std::format("info score cp {} depth {}", last_best_eval, depth) << std::endl;
@@ -121,6 +121,6 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
         }
         last_best_eval = best_eval;
         last_best_move = best_move;
-        std::cout << std::format("info score cp {} depth {}", best_eval, depth) << std::endl;
+        std::cout << std::format("info score cp {} depth {}", last_best_eval, depth) << std::endl;
     }
 }
