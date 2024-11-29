@@ -1,5 +1,7 @@
--done------------------------------------------------------------------------resizeable TT by uci 
--done---(testing needed)-----------------------------------------------------detect 3 fold repetition
--add quiescence search 
--add Principle variation (will hopefully speed up iterative deepening)
+//probably could make new release from amount of bug fixes and improvements to movegen
+//but will refrain from officially releasing TDFA 2.0.0 until this todo list is completed - 29/11/24
+-throughly test and verify zobrist system
+-add 3 fold detection
+-rework the move && movegen system to communicate move types (quiet, capture, EP) over piece type
 -add move ordering (search is slow)
+-add quiescence search

@@ -96,7 +96,7 @@ public:
     {
         return ((Pieces(White) & Pieces(Black)) == 0ULL);
     }
-    void HashCurrentPostion();
+    ZobristKey HashCurrentPostion();
     
 private:
     void UpdateCastlingRights();

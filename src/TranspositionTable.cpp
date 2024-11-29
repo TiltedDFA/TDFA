@@ -4,7 +4,8 @@ static inline constexpr uint32_t index(const ZobristKey z, const size_t s) noexc
 {
     //maybe uncessary assertion but on some uncommon architectures could cause issue
     static_assert(sizeof(ZobristKey) == 8 && sizeof(size_t) == 8);
-    return (z * s ) >> 32;
+    // return (z * s ) >> 32;
+    return z % s;
 }
 void TransposTable::Resize(const size_t size_in_mB)
 {

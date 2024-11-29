@@ -192,6 +192,7 @@ void Position::MakeMove(const Move m)
         case Magics::EncodeKing(4, 6):   is_castling_move = 2; break;
         case Magics::EncodeKing(60, 58): is_castling_move = 3; break;
         case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
+        default: ;
         }
     }
     if(info_.en_passant_sq_ != Magics::EP_NULL)
@@ -293,7 +294,7 @@ void Position::UnmakeMove(const Move m)
         if(info_.captured_type_ != p_None)
         {
             Sq captured_sq = target_sq;
-            if(info_.captured_type_ == pt_Pawn && target_sq == previous_state_info.back().en_passant_sq_)
+            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == previous_state_info.back().en_passant_sq_)
             {
                 captured_sq -= (turn_ == White ? 8 : -8);
             }
@@ -306,9 +307,9 @@ void Position::UnmakeMove(const Move m)
     previous_state_info.pop_back();
     assert(IsOk());
 }
-void Position::HashCurrentPostion()
+ZobristKey Position::HashCurrentPostion()
 {
-    assert(info_.zobrist_key_ == 0);
+    // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
 
@@ -328,4 +329,5 @@ void Position::HashCurrentPostion()
     if(info_.en_passant_sq_ != Magics::EP_NULL)
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
     info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
+    return info_.zobrist_key_;
 }

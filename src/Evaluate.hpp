@@ -77,7 +77,7 @@ namespace Eval
 //        const Score white_eval = CountMaterial<true>(pos) + Mobility<true>(pos); //+ PawnProgress<true>(pos);
         const Score white_eval = CountMaterial<White>(pos) + Mobility<White>(pos) + PawnProgress<White>(pos);
 //        const Score black_eval = CountMaterial<false>(pos)+ Mobility<false>(pos);//+ PawnProgress<false>(pos);
-        const Score black_eval = CountMaterial<Black>(pos)+ Mobility<Black>(pos)+ PawnProgress<Black>(pos);
+        const Score black_eval = CountMaterial<Black>(pos) + Mobility<Black>(pos) + PawnProgress<Black>(pos);
 
         return (white_eval - black_eval) * (pos->ColourToMove() == White ? 1 : -1);
     }
