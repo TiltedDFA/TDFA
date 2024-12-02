@@ -13,6 +13,7 @@
 #include <fstream>
 #include "MoveGen.hpp"
 #include "MoveList.hpp"
+#include "Search.hpp"
 #include "Util.hpp"
 #include "Timer.hpp"
 
@@ -161,7 +162,22 @@ private:
     std::vector<std::string> perft_data_;
     U64 total_nodes_;
 };
-
+inline void TestSearch()
+{
+    Position pos;
+    Search search;
+    TransposTable tt;
+    TimeManager timer;
+    for (auto&& fen : {STARTPOS, KIWIPETE, PERFTPOS4})
+    {
+        timer.SetOptions(500'000, 2000);
+        tt.Resize(128);
+        timer.StartTiming();
+        pos.ImportFen(fen);
+        search.FindBestMove(&pos, &tt, &timer);
+        std::cout << "\n\nDONE\n\n" << std::endl;
+    }
+}
 //returns nps
 template<bool output_perft_paths>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
