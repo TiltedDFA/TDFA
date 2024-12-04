@@ -27,11 +27,12 @@ public:
         idx_ += src->count_;
     }
 
-    [[nodiscard]] constexpr const std::array<Move, MAX_MOVES>& all() const noexcept {return data_;}
+    [[nodiscard]] constexpr std::array<Move, MAX_MOVES>& all() noexcept {return data_;}
 
     [[nodiscard]] constexpr size_t len()const noexcept {return idx_;}
 
     [[nodiscard]] constexpr bool contains(const Move m) const {return std::ranges::find(data_, m) != data_.cend();}
+
 private:
     std::array<Move, MAX_MOVES> data_;
     size_t idx_;

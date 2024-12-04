@@ -35,10 +35,10 @@ int main(void)
     // std::cout << (int)fileof << std::endl;
     // Debug::PrintBB(board >> fileof);
     // RunBenchmark<false>();
-    TestSearch();
+    // TestSearch();
 //    PRINTNL(int(Moves::EncodeMove(55,48,Rook)));
     // std::ios::sync_with_stdio(false);
-    // Uci uci;
-    // uci.Loop();
+    Uci uci;
+    uci.Loop();
     return 0;
 }

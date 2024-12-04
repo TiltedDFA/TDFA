@@ -1,11 +1,12 @@
 #include "TranspositionTable.hpp"
 
-static inline constexpr uint32_t index(const ZobristKey z, const size_t s) noexcept
+static inline constexpr uint64_t index(const ZobristKey z, const size_t s) noexcept
 {
     //maybe uncessary assertion but on some uncommon architectures could cause issue
     static_assert(sizeof(ZobristKey) == 8 && sizeof(size_t) == 8);
     // return (z * s ) >> 32;
-    return z % s;
+    // return z % s;
+    return static_cast<uint64_t>((static_cast<unsigned __int128>(z) * static_cast<unsigned __int128>(s)) >> 64);;
 }
 void TransposTable::Resize(const size_t size_in_mB)
 {

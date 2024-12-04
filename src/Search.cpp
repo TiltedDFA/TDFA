@@ -1,9 +1,77 @@
 #include "Search.hpp"
 
-Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, Score alpha, Score beta)
+#define LOW_PRIORITY_MVV_LVA 20
+constexpr U8 PieceValVictim(PieceType pt)
+{
+    switch (pt)
+    {
+        case pt_Pawn: return 5;
+        case pt_Knight: return 4;
+        case pt_Bishop: return 3;
+        case pt_Rook: return 2;
+        case pt_Queen: return 1;
+        default: return LOW_PRIORITY_MVV_LVA;
+    }
+}
+constexpr U8 PieceValAttacker(PieceType pt)
+{
+    return 6 - int(pt);
+}
+constexpr U8 GetExchangeValue(PieceType atk, PieceType def)
+{
+    return PieceValVictim(atk)*10 - PieceValVictim(def);
+}
+static void SortMoves(MoveList* moves, Position* pos)
+{
+    // auto& ml_data = moves->all();
+    // U8 scores[MAX_MOVES];
+    // using arr_it = std::array<Move, MAX_MOVES>::iterator;
+    // std::fill_n(scores, MAX_MOVES, LOW_PRIORITY_MVV_LVA);
+    // for (size_t i = 0; i < moves->len(); ++i)
+    // {
+    //     Sq start_sq;
+    //     Sq target_sq;
+    //     PieceType p_type;
+    //     Moves::DecodeMove(ml_data _AT(i), &start_sq, &target_sq, &p_type);
+    //     if (pos->PieceOn(target_sq) != p_None)
+    //     {
+    //         scores[i] = GetExchangeValue(Magics::TypeOf(pos->PieceOn(target_sq)), Magics::TypeOf(pos->PieceOn(start_sq)));
+    //     }
+    // }
+    // std::sort(ml_data.begin(), ml_data.begin() + moves->len(),
+    //     [&scores, &ml_data](const arr_it a, const arr_it b)
+    //     {
+    //         return scores[a - ml_data.begin()] < scores[b - ml_data.begin()];
+    //     });
+    auto& ml_data = moves->all();
+    std::pair<U8, Move> scored_moves[MAX_MOVES];
+    for (size_t i = 0; i < moves->len(); ++i)
+    {
+        Sq start_sq;
+        Sq target_sq;
+        PieceType p_type;
+        Moves::DecodeMove(ml_data _AT(i), &start_sq, &target_sq, &p_type);
+        scored_moves[i].second = ml_data[i];
+        if (pos->PieceOn(target_sq) != p_None)
+        {
+            scored_moves[i].first = GetExchangeValue(Magics::TypeOf(pos->PieceOn(target_sq)), Magics::TypeOf(pos->PieceOn(start_sq)));
+        }
+        else
+        {
+            scored_moves[i].first = LOW_PRIORITY_MVV_LVA;
+        }
+    }
+    std::sort(scored_moves, scored_moves + moves->len(), [](std::pair<U8, Move> const& a, std::pair<U8, Move> const& b) {return a.first < b.first;});
+    for (size_t i = 0; i < moves->len(); ++i)
+    {
+        ml_data[i] = scored_moves[i].second;
+    }
+}
+Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeManager const* tm, Score alpha, Score beta)
 {
     if(depth == 0) return Eval::Evaluate(pos);
-
+    //discard incomplete search
+    if (tm->OutOfTime()) return Eval::NEG_INF;
     #if USE_TRANSPOSITION_TABLE == 1
     BoundType hash_entry_flag = BoundType::UPPER_BOUND;
 
@@ -31,7 +99,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, Score 
     {
         MoveGen::GenerateLegalMoves<Black>(pos, &list);
     }
-
+    SortMoves(&list, pos);
     if(list.len() == 0 || pos->HalfMoves() >= 50)
     {
         if(pos->ColourToMove() == White ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos))
@@ -43,7 +111,7 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, Score 
     {
         pos->MakeMove(list[i]);
 
-        const Score eval = -GoSearch(tt, pos, depth - 1, -beta, -alpha);
+        const Score eval = -GoSearch(tt, pos, depth - 1, tm, -beta, -alpha);
 
         pos->UnmakeMove(list[i]);
 
@@ -109,7 +177,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
                 //init best move with first legal
                 if(best_move == Moves::NULL_MOVE) best_move = ml[i];
 
-                const Score eval = -GoSearch(tt, pos, depth);
+                const Score eval = -GoSearch(tt, pos, depth, tm);
 
                 if(eval > best_eval)
                 {
