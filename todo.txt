@@ -5,3 +5,5 @@
 -rework the move && movegen system to communicate move types (quiet, capture, EP) over piece type
 -add move ordering (search is slow)
 -add quiescence search
+
+--NEED TO REVISIT HASH MOVES
