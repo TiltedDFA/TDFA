@@ -157,7 +157,7 @@ namespace Debug
         const std::string comma (", ");
         move_str += std::string("S: ") + std::to_string(move & Moves::START_SQ_MASK) + comma;
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
-        move_str += std::string("T: ") + PieceTypeToStr(Moves::PType(move)) + comma;
+        // move_str += std::string("T: ") + PieceTypeToStr(Moves::PType(move)) + comma;
         move_str += "\n";
         PRINTNL(move_str);
     }

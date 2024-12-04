@@ -13,7 +13,7 @@
 extern std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG;
 namespace MoveGen
 {
-    constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const PieceType type)
+    constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const MoveType type)
     {
         while(b)
         {
@@ -125,16 +125,16 @@ namespace MoveGen
             const U8 queen_index = Magics::FindLS1B(queens);
             
             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<Rank>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
-            ml->queen_merge(move);
+            ml->merge(move);
             
             queens = Magics::PopLS1B(queens);
         }
@@ -148,8 +148,10 @@ namespace MoveGen
         while(knights)
         {
             const U8 knight_index = Magics::FindLS1B(knights);
-            BitBoard possible_move = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~pos->Pieces(colour_to_move);
-            GenerateMovesFromBB(possible_move, ml, knight_index, pt_Knight);
+            const BitBoard possible_quiet_move      = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~pos->Pieces(White, Black);
+            const BitBoard possible_capture_moves   = Magics::KNIGHT_ATTACK_MASKS[knight_index] & pos->Pieces(!colour_to_move);
+            GenerateMovesFromBB(possible_quiet_move, ml, knight_index, mt_Quiet);
+            GenerateMovesFromBB(possible_capture_moves, ml, knight_index, mt_Capture);
             knights = Magics::PopLS1B(knights);
         }
     }
@@ -158,14 +160,16 @@ namespace MoveGen
     void KingMoves(Position const* pos, MoveList* ml) 
     {
         const U8 king_index = Magics::FindLS1B(pos->Pieces(colour_to_move, pt_King));
-        BitBoard king_attacks = Magics::KING_ATTACK_MASKS[king_index] & ~pos->Pieces(colour_to_move);
-        GenerateMovesFromBB(king_attacks, ml, king_index, pt_King);
+        const BitBoard possible_quiet_move      = Magics::KING_ATTACK_MASKS[king_index] & ~pos->Pieces(White, Black);
+        const BitBoard possible_capture_moves   = Magics::KING_ATTACK_MASKS[king_index] & pos->Pieces(!colour_to_move);
+        GenerateMovesFromBB(possible_quiet_move, ml, king_index, mt_Quiet);
+        GenerateMovesFromBB(possible_capture_moves, ml, king_index, mt_Capture);
     }
 
     template<Colour colour_to_move>
     constexpr BitBoard PawnAttacks(Position const* pos)
     {
-        const BitBoard pawns = pos->Pieces(colour_to_move, pt_Pawn);;
+        const BitBoard pawns = pos->Pieces(colour_to_move, pt_Pawn);
         if(!pawns) return 0;
         if constexpr(colour_to_move == White)
         {
@@ -351,9 +355,9 @@ namespace MoveGen
         )
         {
             if constexpr(colour_to_move == White)
-                ml->add(Moves::EncodeMove(king_index, 6, pt_King));
+                ml->add(Moves::EncodeMove(king_index, 6, mt_Castling));
             else
-                ml->add(Moves::EncodeMove(king_index, 62, pt_King));
+                ml->add(Moves::EncodeMove(king_index, 62, mt_Castling));
 
         }
         if //queenside
@@ -366,9 +370,9 @@ namespace MoveGen
         )
         {
             if constexpr(colour_to_move == White)
-                ml->add(Moves::EncodeMove(king_index, 2, pt_King));
+                ml->add(Moves::EncodeMove(king_index, 2, mt_Castling));
             else
-                ml->add(Moves::EncodeMove(king_index, 58, pt_King));
+                ml->add(Moves::EncodeMove(king_index, 58, mt_Castling));
         }
     }
 

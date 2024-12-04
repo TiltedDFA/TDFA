@@ -96,6 +96,18 @@ enum PieceType
     pt_prom_knight,
     pt_prom_rook,
 };
+enum MoveType
+{
+    mt_Quiet = 0,
+    mt_EnPassant,
+    mt_Castling,
+    mt_Capture,
+    mt_Promotion = 4,
+    mt_QueenPromotion = 4,
+    mt_BishopPromotion,
+    mt_KnightPromotion,
+    mt_RookPromotion
+};
 enum Colour
 {
     White,
@@ -121,6 +133,7 @@ enum Piece
     p_BlackPawn,
     p_None
 };
+
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum AttackDirection : U8
 {

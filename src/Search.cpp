@@ -49,8 +49,8 @@ static void SortMoves(MoveList* moves, Position* pos)
     {
         Sq start_sq;
         Sq target_sq;
-        PieceType p_type;
-        Moves::DecodeMove(ml_data _AT(i), &start_sq, &target_sq, &p_type);
+        MoveType mt;
+        Moves::DecodeMove(ml_data _AT(i), &start_sq, &target_sq, &mt);
         scored_moves[i].second = ml_data[i];
         if (pos->PieceOn(target_sq) != p_None)
         {

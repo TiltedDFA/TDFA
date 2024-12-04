@@ -199,11 +199,11 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
 
     if(expected_nodes == perft.GetNodes())
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+        std::cout << std::format("Test {} passed at depth {} with {} nps\t FEN:\'{}\'", test_number, depth, nps, fen) << std::endl;
     }
     else
     {
-        std::cout << std::format("Test {} *FAILED*. Exp {}, was {}.", test_number, expected_nodes, perft.GetNodes()) << std::endl;
+        std::cout << std::format("Test {} *FAILED* at depth {}. Exp {}, was {}\t FEN:\'{}\'", test_number, depth, expected_nodes, perft.GetNodes(), fen) << std::endl;
     }
     return nps;
 }

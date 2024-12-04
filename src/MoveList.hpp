@@ -16,14 +16,9 @@ public:
 
     constexpr Move operator[](const size_t index) const noexcept {return data_[index];}
 
-    inline constexpr void merge(move_info const* src)
+    constexpr void merge(move_info const* src)
     {
-        std::copy(src->encoded_move_.data(), src->encoded_move_.data() + src->count_, data_.data() + idx_);
-        idx_ += src->count_;
-    }
-    inline constexpr void queen_merge(move_info const* src)
-    {
-        std::transform(src->encoded_move_.data(), src->encoded_move_.data() + src->count_, data_.data() + idx_, Moves::SetPieceType<pt_Queen>);
+        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
         idx_ += src->count_;
     }
 

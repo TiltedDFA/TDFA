@@ -127,8 +127,10 @@ void Position::MakeMove(const Move m)
 
     Sq start_sq;
     Sq target_sq;
-    PieceType p_type;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &p_type);
+    MoveType mt;
+    Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
+
+    PieceType p_type = Magics::TypeOf(PieceOn(start_sq));
 
     U8 is_castling_move = 0;
     const BitBoard start_bb    = Magics::SqToBB(start_sq);
@@ -253,9 +255,10 @@ void Position::UnmakeMove(const Move m)
 
     Sq start_sq;
     Sq target_sq;
-    PieceType p_type;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &p_type);
+    MoveType mt;
+    Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
 
+    PieceType p_type = Magics::TypeOf(PieceOn(start_sq));
     U8 is_castling_move = 0;
 
     const BitBoard start_bb  = Magics::SqToBB(start_sq);
