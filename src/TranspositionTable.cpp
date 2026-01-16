@@ -22,7 +22,7 @@ void TransposTable::Resize(const size_t size_in_mB)
     //     std::cout << "Failed to allocate requested table" << std::endl;
     //     exit(EXIT_FAILURE);
     // }
-    std::memset(table_ptr_, 0, num_bytes);
+    std::memset(table_ptr_, 0, sizeof(HashEntry) * num_elements_);
 }
 void TransposTable::Store(
                             ZobristKey  key,

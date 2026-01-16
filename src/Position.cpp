@@ -148,7 +148,7 @@ void Position::MakeMove(const Move m)
 
         info_.captured_type_ = PopPiece(capture_sq);
         assert(info_.captured_type_ != p_None);
-        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][info_.captured_type_][capture_sq];
+        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][Magics::TypeOf(info_.captured_type_)][capture_sq];
         info_.half_moves_ = 0;
     }
     else
@@ -258,7 +258,7 @@ void Position::UnmakeMove(const Move m)
     MoveType mt;
     Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
 
-    PieceType p_type = Magics::TypeOf(PieceOn(start_sq));
+    PieceType p_type = Magics::TypeOf(PieceOn(target_sq));
     U8 is_castling_move = 0;
 
     const BitBoard start_bb  = Magics::SqToBB(start_sq);
