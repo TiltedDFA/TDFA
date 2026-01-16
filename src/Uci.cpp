@@ -10,19 +10,21 @@ ArgList SplitArgs(std::string* inp)
 
 //    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
-    std::size_t start{0}, end{0};
-
-    while(end < inp->size())
+    std::size_t i{0};
+    while(i < inp->size())
     {
-        if(inp->at(end++) == ' ')
-        {
-            ret.emplace_back(inp->c_str() + start, inp->c_str() + (end - 1));
-            start = end;
-        }
+        while(i < inp->size() && (*inp)[i] == ' ')
+            ++i;
+        if(i >= inp->size())
+            break;
+        const std::size_t start = i;
+        while(i < inp->size() && (*inp)[i] != ' ')
+            ++i;
+        ret.emplace_back(inp->data() + start, i - start);
     }
 
-    if(inp->at(inp->size() - 1) != ' ')
-        ret.emplace_back(inp->c_str() + start, inp->c_str() + end);
+    if(ret.empty())
+        return {""};
 
     return ret;
 }
