@@ -85,8 +85,6 @@ namespace Debug
     }
     void PrintBoardState(const Position& pos)
     {
-        // pos.WhiteToMove() ?  Debug::PrintUsThemBlank(pos.PiecesByColour<true>(), pos.PiecesByColour<false>(), true) :
-        //                     Debug::PrintUsThemBlank(pos.PiecesByColour<false>(), pos.PiecesByColour<true>(), true);
         {
             std::string prnt{"Castling rights: "};
             if(pos.CastlingRights() & 0x08) prnt += "Wk";
@@ -157,7 +155,6 @@ namespace Debug
         const std::string comma (", ");
         move_str += std::string("S: ") + std::to_string(move & Moves::START_SQ_MASK) + comma;
         move_str += std::string("E: ") + std::to_string((move & Moves::END_SQ_MASK) >> Moves::END_SQ_SHIFT) + comma;
-        // move_str += std::string("T: ") + PieceTypeToStr(Moves::PType(move)) + comma;
         move_str += "\n";
         PRINTNL(move_str);
     }
@@ -171,7 +168,6 @@ namespace Debug
         {
             if(b & (1ull << i))
             {
-                // do stuff
             }
         }
     }
@@ -241,8 +237,6 @@ namespace Debug
         std::memset(squares, '-', sizeof(squares));
         for(int i = 0; i < 12; ++i)
         {
-            /////FIX ME, check if types map correctly
-
             BitBoard current_pieces = pos->Pieces(Colour((i < 6)), PieceType( i % 6));
             const char current_type = PIECE_TYPES_MAPPING[i];
             while(current_pieces)

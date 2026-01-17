@@ -93,7 +93,6 @@ private:
         {
             if constexpr(is_root)
             {
-                // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
                 if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
@@ -108,33 +107,12 @@ private:
             }
             else
             {
-                // pos->MakeMove(ml[i]);
-                // if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
-                // {
-                //     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
-                // }
-                // pos->UnmakeMove(ml[i]);
-
-                // const ZobristKey pos_before = pos->HashCurrentPostion();
-                // PRINTNL("MoveToMake:");
-                // Debug::PrintEncodedMoveStr(ml[i]);
-                // PRINTNL("PosBeforeMake:");
-                // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
-                // PRINTNL("PosAfterMake:");
-                // Debug::PrintBoardGraphically(pos);
                 if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
-                // PRINTNL("MoveToUnMake:");
-                // Debug::PrintEncodedMoveStr(ml[i]);
-                // PRINTNL("PosBeforeUnMake:");
-                // Debug::PrintBoardGraphically(pos);
                 pos->UnmakeMove(ml[i]);
-                // PRINTNL("PosAfterUnMake:");
-                // Debug::PrintBoardGraphically(pos);
-                // assert(pos_before == pos->HashCurrentPostion());
             }
         }
 

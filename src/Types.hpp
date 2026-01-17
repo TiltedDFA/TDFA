@@ -31,7 +31,6 @@ using I16 = short;
 
 using Move      = U16;
 using BitBoard  = U64;
-// using PieceType = U8;
 using Sq        = U8;
 using Castling  = U8;
 using Score     = I16;

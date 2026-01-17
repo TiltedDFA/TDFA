@@ -62,26 +62,6 @@ constexpr U8 GetExchangeValue(PieceType atk, PieceType def)
 }
 void Search::SortMoves(MoveList* moves, Position* pos, Move tt_move, U16 ply)
 {
-    // auto& ml_data = moves->all();
-    // U8 scores[MAX_MOVES];
-    // using arr_it = std::array<Move, MAX_MOVES>::iterator;
-    // std::fill_n(scores, MAX_MOVES, LOW_PRIORITY_MVV_LVA);
-    // for (size_t i = 0; i < moves->len(); ++i)
-    // {
-    //     Sq start_sq;
-    //     Sq target_sq;
-    //     PieceType p_type;
-    //     Moves::DecodeMove(ml_data _AT(i), &start_sq, &target_sq, &p_type);
-    //     if (pos->PieceOn(target_sq) != p_None)
-    //     {
-    //         scores[i] = GetExchangeValue(Magics::TypeOf(pos->PieceOn(target_sq)), Magics::TypeOf(pos->PieceOn(start_sq)));
-    //     }
-    // }
-    // std::sort(ml_data.begin(), ml_data.begin() + moves->len(),
-    //     [&scores, &ml_data](const arr_it a, const arr_it b)
-    //     {
-    //         return scores[a - ml_data.begin()] < scores[b - ml_data.begin()];
-    //     });
     auto& ml_data = moves->all();
     std::pair<int, Move> scored_moves[MAX_MOVES];
     const Colour us = pos->ColourToMove();

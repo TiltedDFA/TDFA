@@ -8,8 +8,6 @@ ArgList SplitArgs(std::string* inp)
 
     if(inp->empty()) return {""};
 
-//    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
-
     ret.reserve(16);
 
     std::size_t i{0};
@@ -102,8 +100,6 @@ void Uci::HandlePosition(const ArgList& args)
             if(i < 7)
                 constructed_fen += ' ';
         }
-
-//        PRINTNL("Here");
 
         pos_.ImportFen(constructed_fen);
     }

@@ -77,12 +77,6 @@ namespace UTIL
             }
         }
 
-        // PieceType type = Magics::TypeOf(pos.PieceOn(from));
-        // if(pos.ColourToMove() == White)
-        //     type = ;
-        // else
-        //     type = pos.TypeAtSq<false>(from);
-
         Move constructed_move = Moves::NULL_MOVE;
         if (pos.PieceOn(to) != p_None)
         {

@@ -163,7 +163,6 @@ void Position::MakeMove(const Move m)
     else
         info_.captured_type_ = p_None;
 
-    //handle weird castling rights update
     if(Magics::TypeOf(info_.captured_type_) == pt_Rook && (target_bb & (Magics::ROOK_START_SQS)))
     {
 
@@ -215,20 +214,13 @@ void Position::MakeMove(const Move m)
     if(is_castling_move)
     {
         //move relevant pieces
-        // pieces_[whites_turn_][loc::KING] = target_bb;
         MovePiece(start_sq, target_sq);
         MovePiece(Magics::ROOK_TO_FROM_ARR[is_castling_move][0], Magics::ROOK_TO_FROM_ARR[is_castling_move][1]);
-        // assert("Double check this", 0);
         //update the key
         info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[is_castling_move];
     }
     else
     {
-        // //move piece
-        // assert((pieces_[whites_turn_][p_type] & start_bb));
-        // assert(!(pieces_[whites_turn_][p_type] & target_bb));
-
-        // pieces_[whites_turn_][p_type] ^= start_bb | target_bb;
         MovePiece(start_sq, target_sq);
         info_.zobrist_key_ ^= Zobrist::PIECES[turn_][p_type][start_sq] ^ Zobrist::PIECES[turn_][p_type][target_sq];
     }
@@ -243,9 +235,6 @@ void Position::MakeMove(const Move m)
         else if(Moves::IsPromotionMove(m))
         {
             const PieceType prom_to = Moves::PTypeOfProm(m);
-            // assert("Need to update promotion system of moves since changed piece type", 0);
-            // pieces_[whites_turn_][loc::PAWN] &= ~target_bb;
-            // pieces_[whites_turn_][prom_to]   |= target_bb;
             RemovePiece(target_sq);
             AddPiece(MakePiece(turn_, prom_to),target_sq);
 
@@ -277,7 +266,6 @@ void Position::UnmakeMove(const Move m)
         RemovePiece(target_sq);
         AddPiece(MakePiece(turn_, pt_Pawn),target_sq);
     }
-    //if castling move
     if(p_type == pt_King)
     {
         switch (Magics::EncodeKing(start_sq, target_sq))
@@ -291,11 +279,8 @@ void Position::UnmakeMove(const Move m)
     
     if(is_castling_move) [[unlikely]]
     {
-        // pieces_[whites_turn_][loc::KING] = start_bb;
-        // pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];
         MovePiece(target_sq, start_sq);
         MovePiece(Magics::ROOK_TO_FROM_ARR[is_castling_move][1], Magics::ROOK_TO_FROM_ARR[is_castling_move][0]);
-        // assert("Double check this", 0);
     }
     else
     {
@@ -308,11 +293,9 @@ void Position::UnmakeMove(const Move m)
             {
                 captured_sq -= (turn_ == White ? 8 : -8);
             }
-            // pieces_[!whites_turn_][info_.captured_type_] |= Magics::SqToBB(captured_sq);
             AddPiece(info_.captured_type_, captured_sq);
         }
     }
-    //restore previous state
     info_ = previous_state_info_[--state_ply_];
     assert(IsOk());
 }
@@ -344,7 +327,6 @@ void Position::UnmakeNullMove()
 }
 ZobristKey Position::HashCurrentPostion()
 {
-    // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
     if(turn_ == Black)
         info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;

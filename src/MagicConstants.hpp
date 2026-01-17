@@ -146,7 +146,6 @@ namespace Magics
     constexpr U8 CollapsedRanksIndex(BitBoard b, U8 file) noexcept
     {
         assert(file < 8);
-        // return (((b >> file) & FILE_ABB) * ANTI_CROSS_DIAG) >> 56;
         return ((b >> file) * ANTI_CROSS_DIAG) >> 56;
     }
     constexpr BitBoard PopMS1B(const BitBoard board) noexcept

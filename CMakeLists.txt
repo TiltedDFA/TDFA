@@ -1,32 +1,38 @@
 cmake_minimum_required(VERSION 3.16)
 project(TDFA VERSION 0.1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20 CACHE STRING "" FORCE)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
+option(TDFA_BUILD_BENCH "Build benchmark executable" ON)
+option(TDFA_STATIC "Link libstdc++/libgcc statically" ON)
 
-set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
+file(GLOB_RECURSE TDFA_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(FILTER TDFA_SOURCES EXCLUDE REGEX "src/main(_bench)?\\.cpp$")
 
-set(CACHE CMAKE_VERBOSE_MAKEFILE TRUE CACHE BOOL "" FORCE)
+add_library(tdfa_core OBJECT ${TDFA_SOURCES})
+target_include_directories(tdfa_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_options(tdfa_core PRIVATE
+    -fno-exceptions
+    -fconstexpr-ops-limit=2147483647
+    -fconstexpr-loop-limit=2147483647
+    $<$<CONFIG:Debug>:-O0 -g -Wall -Wextra -Wpedantic>
+    $<$<CONFIG:Release>:-O3 -march=native -flto -flto-partition=one -funroll-loops -mtune=native>
+)
 
-if(UNIX)
-    set(CMAKE_CXX_COMPILER "g++-13" CACHE STRING "" FORCE)
-endif(UNIX)
+add_executable(TDFA src/main.cpp $<TARGET_OBJECTS:tdfa_core>)
 
-if(WIN32)
-    set(CMAKE_CXX_COMPILER "g++" CACHE STRING "" FORCE)
-endif(WIN32)
+if(TDFA_BUILD_BENCH)
+    add_executable(TDFA_bench src/main_bench.cpp $<TARGET_OBJECTS:tdfa_core>)
+endif()
 
-file(GLOB_RECURSE MY_SOURCES "src/*.cpp")
-
-
-set(CMAKE_CXX_FLAGS_DEBUG "-ggdb -O0 -Wall -Wextra -Wpedantic -save-temps -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -static-libgcc -fno-exceptions --static -static-libstdc++ -march=native -flto -flto-partition=one -ffat-lto-objects -funroll-loops -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -fno-exceptions -march=native -flto -flto-partition=one -ffat-lto-objects -funroll-loops -mtune=native -fconstexpr-ops-limit=2147483647 -fconstexpr-loop-limit=2147483647" CACHE STRING "" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS "-flto=jobserver" CACHE STRING "" FORCE)
-
-add_executable(TDFA ${MY_SOURCES}
-        src/Board.hpp)
-
-
-install(TARGETS TDFA)
+foreach(target TDFA TDFA_bench)
+    if(TARGET ${target})
+        target_link_options(${target} PRIVATE
+            $<$<CONFIG:Release>:-flto=jobserver>
+        )
+        if(TDFA_STATIC)
+            target_link_options(${target} PRIVATE -static -static-libgcc -static-libstdc++)
+        endif()
+    endif()
+endforeach()
