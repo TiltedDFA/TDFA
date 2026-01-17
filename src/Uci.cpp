@@ -50,16 +50,25 @@ void Uci::HandleGo(const ArgList& args)
         U64 btime{60'000};
         U64 winc{0};
         U64 binc{0};
+        U64 movetime{0};
+        bool has_movetime = false;
         for(size_t i{0}; i < args.size(); ++i)
         {
+            if(i + 1 >= args.size())
+                break;
             if(args[i] == "wtime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), wtime);
-            if(args[i] == "btime")
+            else if(args[i] == "btime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
-            if(args[i] == "winc")
+            else if(args[i] == "winc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), winc);
-            if(args[i] == "binc")
+            else if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+            else if(args[i] == "movetime")
+            {
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), movetime);
+                has_movetime = true;
+            }
         }
         if(pos_.ColourToMove() == White)
         {
@@ -68,6 +77,10 @@ void Uci::HandleGo(const ArgList& args)
         else
         {
             time_manager_.SetOptions(btime, binc);
+        }
+        if(has_movetime)
+        {
+            time_manager_.SetFixedTime(movetime);
         }
     }
     //start the timer for this round of calculation

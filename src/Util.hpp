@@ -34,6 +34,10 @@ namespace UTIL
     }
     inline std::string MoveToStr(const Move m)
     {
+        if(m == Moves::NULL_MOVE)
+        {
+            return "0000";
+        }
         if(Moves::IsPromotionMove(m))
         {
             const std::string start = Square(Moves::StartSq(m));
