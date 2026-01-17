@@ -67,6 +67,10 @@ public:
     
     void UnmakeMove(Move m);
 
+    void MakeNullMove();
+
+    void UnmakeNullMove();
+
     
     constexpr BitBoard EmptySqs()const {return ~(Pieces(White, Black));}
     

@@ -316,6 +316,32 @@ void Position::UnmakeMove(const Move m)
     info_ = previous_state_info_[--state_ply_];
     assert(IsOk());
 }
+void Position::MakeNullMove()
+{
+    assert(IsOk());
+    assert(state_ply_ < MAX_PLY);
+    previous_state_info_[state_ply_++] = info_;
+
+    if(info_.en_passant_sq_ != Magics::EP_NULL)
+    {
+        info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
+        info_.en_passant_sq_ = Magics::EP_NULL;
+    }
+
+    if(info_.half_moves_ < 255)
+        ++info_.half_moves_;
+    info_.captured_type_ = p_None;
+
+    info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
+    turn_ = !turn_;
+}
+void Position::UnmakeNullMove()
+{
+    assert(state_ply_ > 0);
+    turn_ = !turn_;
+    info_ = previous_state_info_[--state_ply_];
+    assert(IsOk());
+}
 ZobristKey Position::HashCurrentPostion()
 {
     // assert(info_.zobrist_key_ == 0);

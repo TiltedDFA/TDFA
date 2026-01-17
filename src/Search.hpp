@@ -25,6 +25,7 @@ private:
     void SortMoves(MoveList* moves, Position* pos, Move tt_move, U16 ply);
     Move killer_moves_[MAX_PLY][2]{};
     U64 nodes_;
+    int history_[2][64][64]{};
     bool stop_;
 };
 

@@ -259,56 +259,41 @@ namespace MoveGen
     }
     
     template<Colour colour_to_move>
-    bool InCheck(Position const* pos)
+    inline bool SquareAttacked(Position const* pos, const Sq sq)
     {
-        const BitBoard our_king = pos->Pieces(colour_to_move, pt_King);
-        // us, them are variables used for sliding move gen with titboards.
-        //since we want to generate moves for the opponent and see if they attack
-        //our king we want the us and them variables to be inverted from our king in colour
-        const BitBoard us   = pos->Pieces(!colour_to_move);
+        const BitBoard us = pos->Pieces(!colour_to_move);
         const BitBoard them = pos->Pieces(colour_to_move);
+        const BitBoard bishop_queen = pos->Pieces(colour_to_move, pt_Bishop, pt_Queen);
+        const BitBoard rook_queen = pos->Pieces(colour_to_move, pt_Rook, pt_Queen);
+        const BitBoard sq_bb = Magics::SqToBB(sq);
 
-        //Bishop and half queen
-        BitBoard bishop_queen = pos->Pieces(!colour_to_move, pt_Bishop, pt_Queen);
-        while (bishop_queen)
-        {
-            const Sq piece_index = Magics::PopNRetLS1B(bishop_queen);
-            if(our_king & GetMovesForSliding<Diagonal       >(piece_index, us, them)->attacks_) return true;
-            if(our_king & GetMovesForSliding<AntiDiagonal   >(piece_index, us, them)->attacks_) return true;
-        }
-        
-        //rook and other half of queen
-        BitBoard rook_queen = pos->Pieces(!colour_to_move, pt_Rook, pt_Queen);
-        while(rook_queen)
-        {
-            const Sq piece_index = Magics::PopNRetLS1B(rook_queen);
+        if(GetMovesForSliding<Diagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if(GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if(GetMovesForSliding<File>(sq, us, them)->attacks_ & rook_queen) return true;
+        if(GetMovesForSliding<Rank>(sq, us, them)->attacks_ & rook_queen) return true;
 
-            if(our_king & GetMovesForSliding<File>(piece_index, us, them)->attacks_) return true;
-            if(our_king & GetMovesForSliding<Rank>(piece_index, us, them)->attacks_) return true;
-        }
+        if(Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(colour_to_move, pt_Knight)) return true;
 
-        //knights
-        BitBoard knights = pos->Pieces(!colour_to_move, pt_Knight);
-        while(knights)
-        {
-            if(our_king & Magics::KNIGHT_ATTACK_MASKS[Magics::PopNRetLS1B(knights)]) return true;
-        }
-
-        //pawns
-        const BitBoard them_pawns = pos->Pieces(!colour_to_move, pt_Pawn);
+        const BitBoard pawns = pos->Pieces(colour_to_move, pt_Pawn);
         if constexpr (colour_to_move == White)
         {
-            if(our_king & Magics::Shift<SOUTH_EAST>(them_pawns)) return true;
-            if(our_king & Magics::Shift<SOUTH_WEST>(them_pawns)) return true;
+            if(Magics::Shift<NORTH_EAST>(pawns) & sq_bb) return true;
+            if(Magics::Shift<NORTH_WEST>(pawns) & sq_bb) return true;
         }
         else
         {
-            if(our_king & Magics::Shift<NORTH_EAST>(them_pawns)) return true;
-            if(our_king & Magics::Shift<NORTH_WEST>(them_pawns)) return true;
+            if(Magics::Shift<SOUTH_EAST>(pawns) & sq_bb) return true;
+            if(Magics::Shift<SOUTH_WEST>(pawns) & sq_bb) return true;
         }
 
-        // king attacks
-        return (our_king & Magics::KING_ATTACK_MASKS[Magics::FindLS1B(pos->Pieces(!colour_to_move, pt_King))]);
+        return (Magics::KING_ATTACK_MASKS[sq] & pos->Pieces(colour_to_move, pt_King));
+    }
+
+    template<Colour colour_to_move>
+    inline bool InCheck(Position const* pos)
+    {
+        const Sq king_sq = Magics::FindLS1B(pos->Pieces(colour_to_move, pt_King));
+        return SquareAttacked<!colour_to_move>(pos, king_sq);
     }
 
     template<Colour colour_to_move>
@@ -323,42 +308,44 @@ namespace MoveGen
     constexpr void Castling(Position const* pos, MoveList* ml) noexcept
     {
         if(!((colour_to_move == White ? 0x0C : 0x03) & pos->CastlingRights())) {return;} //checks for castling rights
-        if(InCheck<colour_to_move>(pos)) {return;} //checks if king under attack
-
-        const BitBoard enemy_attacks = GenerateAllAttacks<!colour_to_move>(pos);
-
         const BitBoard whole_board = pos->Pieces(Black, White);
         const U8 king_index = (colour_to_move == White  ? 4 : 60);
         const U8 rank_looked_at = U8(colour_to_move == White  ? (whole_board & 0xFF) : whole_board >> 56);
 
-        if // kingside
-        (
-            (pos->CastlingRights() & (colour_to_move == White  ? 0x08 : 0x02)) // has rights
-            &&
-            !(rank_looked_at & 0x60) // not blocked 01100000 10010001
-            &&
-            !(0xFF & (colour_to_move == White  ? enemy_attacks : enemy_attacks >> 56) & 0x60) // not under attack by enemy
-        )
-        {
-            if constexpr(colour_to_move == White)
-                ml->add(Moves::EncodeMove(king_index, 6, mt_Castling));
-            else
-                ml->add(Moves::EncodeMove(king_index, 62, mt_Castling));
+        const U8 rights = pos->CastlingRights();
+        const bool can_kingside =
+            (rights & (colour_to_move == White  ? 0x08 : 0x02)) &&
+            !(rank_looked_at & 0x60);
+        const bool can_queenside =
+            (rights & (colour_to_move == White  ? 0x04 : 0x01)) &&
+            !(rank_looked_at & 0x0E);
 
-        }
-        if //queenside
-        (
-            (pos->CastlingRights() & (colour_to_move == White  ? 0x04 : 0x01)) // has rights
-            &&
-            !(rank_looked_at & 0x0E) // not blocked
-            &&
-            !(0xFF & (colour_to_move == White  ? enemy_attacks : enemy_attacks >> 56) & 0x0C) // not under attack by enemy
-        )
+        if(!can_kingside && !can_queenside) return;
+        if(InCheck<colour_to_move>(pos)) {return;} //checks if king under attack
+
+        if(can_kingside)
         {
-            if constexpr(colour_to_move == White)
-                ml->add(Moves::EncodeMove(king_index, 2, mt_Castling));
-            else
-                ml->add(Moves::EncodeMove(king_index, 58, mt_Castling));
+            const Sq s1 = Sq(king_index + 1);
+            const Sq s2 = Sq(king_index + 2);
+            if(!SquareAttacked<!colour_to_move>(pos, s1) && !SquareAttacked<!colour_to_move>(pos, s2))
+            {
+                if constexpr(colour_to_move == White)
+                    ml->add(Moves::EncodeMove(king_index, 6, mt_Castling));
+                else
+                    ml->add(Moves::EncodeMove(king_index, 62, mt_Castling));
+            }
+        }
+        if(can_queenside)
+        {
+            const Sq s1 = Sq(king_index - 1);
+            const Sq s2 = Sq(king_index - 2);
+            if(!SquareAttacked<!colour_to_move>(pos, s1) && !SquareAttacked<!colour_to_move>(pos, s2))
+            {
+                if constexpr(colour_to_move == White)
+                    ml->add(Moves::EncodeMove(king_index, 2, mt_Castling));
+                else
+                    ml->add(Moves::EncodeMove(king_index, 58, mt_Castling));
+            }
         }
     }
 

@@ -1,11 +1,14 @@
 #include "Search.hpp"
 
-constexpr U8 KILLER_SCORE_1 = 10;
-constexpr U8 KILLER_SCORE_2 = 12;
 #define LOW_PRIORITY_MVV_LVA 20
 constexpr U64 TIME_CHECK_MASK = 0x3FF;
 constexpr Score ASPIRATION_WINDOW = 50;
 constexpr Score MATE_SCORE = Score(Eval::POS_INF - 100);
+constexpr int HISTORY_MAX = 200000;
+constexpr int SCORE_TT_MOVE = 1000000;
+constexpr int SCORE_CAPTURE_BASE = 900000;
+constexpr int SCORE_KILLER_1 = 800000;
+constexpr int SCORE_KILLER_2 = 790000;
 static inline bool IsNoisyMove(Move m, Position const* pos)
 {
     const Sq target_sq = Moves::TargetSq(m);
@@ -80,7 +83,8 @@ void Search::SortMoves(MoveList* moves, Position* pos, Move tt_move, U16 ply)
     //         return scores[a - ml_data.begin()] < scores[b - ml_data.begin()];
     //     });
     auto& ml_data = moves->all();
-    std::pair<U8, Move> scored_moves[MAX_MOVES];
+    std::pair<int, Move> scored_moves[MAX_MOVES];
+    const Colour us = pos->ColourToMove();
     for (size_t i = 0; i < moves->len(); ++i)
     {
         Sq start_sq;
@@ -90,27 +94,28 @@ void Search::SortMoves(MoveList* moves, Position* pos, Move tt_move, U16 ply)
         scored_moves[i].second = ml_data[i];
         if (ml_data[i] == tt_move)
         {
-            scored_moves[i].first = 0;
+            scored_moves[i].first = SCORE_TT_MOVE;
         }
         else if (mt == mt_Capture || mt == mt_EnPassant || pos->PieceOn(target_sq) != p_None)
         {
             const PieceType victim = (mt == mt_EnPassant) ? pt_Pawn : Magics::TypeOf(pos->PieceOn(target_sq));
-            scored_moves[i].first = GetExchangeValue(victim, Magics::TypeOf(pos->PieceOn(start_sq)));
+            const int mvv_lva = GetExchangeValue(victim, Magics::TypeOf(pos->PieceOn(start_sq)));
+            scored_moves[i].first = SCORE_CAPTURE_BASE + (50 - mvv_lva);
         }
         else if (ply < MAX_PLY && ml_data[i] == killer_moves_[ply][0])
         {
-            scored_moves[i].first = KILLER_SCORE_1;
+            scored_moves[i].first = SCORE_KILLER_1;
         }
         else if (ply < MAX_PLY && ml_data[i] == killer_moves_[ply][1])
         {
-            scored_moves[i].first = KILLER_SCORE_2;
+            scored_moves[i].first = SCORE_KILLER_2;
         }
         else
         {
-            scored_moves[i].first = LOW_PRIORITY_MVV_LVA;
+            scored_moves[i].first = history_[us][start_sq][target_sq];
         }
     }
-    std::sort(scored_moves, scored_moves + moves->len(), [](std::pair<U8, Move> const& a, std::pair<U8, Move> const& b) {return a.first < b.first;});
+    std::sort(scored_moves, scored_moves + moves->len(), [](std::pair<int, Move> const& a, std::pair<int, Move> const& b) {return a.first > b.first;});
     for (size_t i = 0; i < moves->len(); ++i)
     {
         ml_data[i] = scored_moves[i].second;
@@ -185,7 +190,11 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
         stop_ = true;
         return Eval::NEG_INF;
     }
+    if(pos->HalfMoves() >= 50) return 0;
     if(depth == 0) return Quiescence(pos, tm, alpha, beta, ply);
+    const Colour us = pos->ColourToMove();
+    const bool in_check = (us == White) ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos);
+    const bool is_pv = (beta - alpha > 1);
     Move best_move = Moves::NULL_MOVE;
     Move tt_move = Moves::NULL_MOVE;
     #if USE_TRANSPOSITION_TABLE == 1
@@ -208,29 +217,51 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
     }
     #endif
 
-    MoveList list;
-    if(pos->ColourToMove() == White)
+    if(!in_check && !is_pv && depth > 2)
     {
-        MoveGen::GenerateLegalMoves<White>(pos, &list);
+        const BitBoard non_pawn = pos->Pieces(us, pt_Knight, pt_Bishop, pt_Rook, pt_Queen);
+        if(non_pawn)
+        {
+            const U16 reduction = (depth > 6) ? 3 : 2;
+            if(depth > reduction + 1)
+            {
+                pos->MakeNullMove();
+                const Score eval = -GoSearch(tt, pos, depth - 1 - reduction, tm, -beta, ClampScore(Score(-beta + 1)), ply + 1);
+                pos->UnmakeNullMove();
+                if(stop_) return Eval::NEG_INF;
+                if(eval >= beta) return beta;
+            }
+        }
+    }
+
+    MoveList list;
+    if(us == White)
+    {
+        MoveGen::GeneratePseudoLegalMoves<White>(pos, &list);
     }
     else
     {
-        MoveGen::GenerateLegalMoves<Black>(pos, &list);
+        MoveGen::GeneratePseudoLegalMoves<Black>(pos, &list);
     }
     if(list.len() > 1)
         SortMoves(&list, pos, tt_move, ply);
-    if(list.len() == 0 || pos->HalfMoves() >= 50)
-    {
-        if(pos->ColourToMove() == White ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos))
-            return MatedIn(ply);
-        return 0;
-    }
     
     bool first_legal = true;
+    bool legal_found = false;
+    int legal_index = 0;
     for(size_t i = 0; i < list.len(); ++i)
     {
+        const bool is_noisy = IsNoisyMove(list[i], pos);
         pos->MakeMove(list[i]);
 
+        if(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos))
+        {
+            pos->UnmakeMove(list[i]);
+            continue;
+        }
+
+        legal_found = true;
+        const int move_index = legal_index++;
         if(best_move == Moves::NULL_MOVE)
             best_move = list[i];
 
@@ -243,7 +274,22 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
         else
         {
             const Score alpha_plus_one = ClampScore(Score(alpha + 1));
-            eval = -GoSearch(tt, pos, depth - 1, tm, -alpha_plus_one, -alpha, ply + 1);
+            bool do_lmr = false;
+            if(!is_pv && !in_check && depth >= 3 && !is_noisy && move_index >= 4)
+            {
+                const bool gives_check = (pos->ColourToMove() == White) ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos);
+                if(!gives_check)
+                    do_lmr = true;
+            }
+            if(do_lmr)
+            {
+                const U16 reduction = (depth >= 6 && move_index >= 8) ? 2 : 1;
+                eval = -GoSearch(tt, pos, depth - 1 - reduction, tm, -alpha_plus_one, -alpha, ply + 1);
+            }
+            else
+            {
+                eval = -GoSearch(tt, pos, depth - 1, tm, -alpha_plus_one, -alpha, ply + 1);
+            }
             if(eval > alpha && eval < beta)
             {
                 eval = -GoSearch(tt, pos, depth - 1, tm, -beta, -alpha, ply + 1);
@@ -275,6 +321,9 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
                         killer_moves_[ply][1] = killer_moves_[ply][0];
                         killer_moves_[ply][0] = list[i];
                     }
+                    int& h = history_[us][start_sq][target_sq];
+                    h += depth * depth;
+                    if(h > HISTORY_MAX) h = HISTORY_MAX;
                 }
             }
             return beta;
@@ -291,6 +340,13 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
 
     }
 
+    if(!legal_found)
+    {
+        if(pos->ColourToMove() == White ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos))
+            return MatedIn(ply);
+        return 0;
+    }
+
     #if USE_TRANSPOSITION_TABLE == 1
     tt->Store(pos->ZKey(), ToTTScore(alpha, ply), best_move, depth, hash_entry_flag);
     #endif
@@ -302,6 +358,7 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
     nodes_ = 0;
     stop_ = false;
     std::fill(&killer_moves_[0][0], &killer_moves_[0][0] + (MAX_PLY * 2), Moves::NULL_MOVE);
+    std::fill(&history_[0][0][0], &history_[0][0][0] + (2 * 64 * 64), 0);
     Move last_best_move = Moves::NULL_MOVE;
     Score last_best_eval = Eval::NEG_INF;
 
