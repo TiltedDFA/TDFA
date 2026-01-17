@@ -53,6 +53,13 @@ enum MD : U8
     NORTHNORTH,
     SOUTHSOUTH
 };
+enum SlidingGenType : U8
+{
+    Titboards,
+    TitboardsPext,
+    PextBoards,
+    MagicBitboards,
+};
 struct move_info
 {
     constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}

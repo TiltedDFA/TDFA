@@ -1,0 +1,49 @@
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+CPU: Ryzen 9 7950x3d
+OS:	Windows 10 pro
+Compiled with: gcc 13.2.0
+Compiler flags: -std=c++20 -O3 -static-libgcc --static -ffat-lto-objects -static-libstdc++ -march=native -funroll-loops -mtune=native
+Linked with: -flto -flto-partition=one -static
+Results:
+    Titboard perft group:
+    Test 1 passed at depth 6 with 42,195,703 nps     FEN:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    Test 2 passed at depth 5 with 36,649,927 nps     FEN:'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -'
+    Test 3 passed at depth 7 with 37,685,361 nps     FEN:'8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -'
+    Test 4 passed at depth 6 with 40,163,955 nps     FEN:'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
+    Test 5 passed at depth 5 with 33,156,797 nps     FEN:'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+    Test 6 passed at depth 5 with 37,677,782 nps     FEN:'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w -
+    - 0 10'
+    All tests completed with means nps: 37,921,587
+
+    Titboard (PEXT) perft group:
+    Test 1 passed at depth 6 with 45,886,871 nps     FEN:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    Test 2 passed at depth 5 with 39,965,692 nps     FEN:'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -'
+    Test 3 passed at depth 7 with 41,762,079 nps     FEN:'8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -'
+    Test 4 passed at depth 6 with 42,124,713 nps     FEN:'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
+    Test 5 passed at depth 5 with 36,549,099 nps     FEN:'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+    Test 6 passed at depth 5 with 38,238,383 nps     FEN:'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w -
+    - 0 10'
+    All tests completed with means nps: 40,754,472
+
+    Magic Bitboard perft group:
+    Test 1 passed at depth 6 with 65,546,909 nps     FEN:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    Test 2 passed at depth 5 with 63,180,211 nps     FEN:'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -'
+    Test 3 passed at depth 7 with 56,321,215 nps     FEN:'8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -'
+    Test 4 passed at depth 6 with 53,923,957 nps     FEN:'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
+    Test 5 passed at depth 5 with 45,649,148 nps     FEN:'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+    Test 6 passed at depth 5 with 58,033,229 nps     FEN:'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w -
+    - 0 10'
+    All tests completed with means nps: 57,109,111
+
+    Pext Bitboard perft group:
+    Test 1 passed at depth 6 with 66,931,816 nps     FEN:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    Test 2 passed at depth 5 with 59,125,604 nps     FEN:'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -'
+    Test 3 passed at depth 7 with 52,480,148 nps     FEN:'8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -'
+    Test 4 passed at depth 6 with 58,847,855 nps     FEN:'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
+    Test 5 passed at depth 5 with 60,234,501 nps     FEN:'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+    Test 6 passed at depth 5 with 63,058,444 nps     FEN:'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w -
+    - 0 10'
+    All tests completed with means nps: 60,113,061
+
+----------------------------------------------------------------------------------------------------------------------------------------------

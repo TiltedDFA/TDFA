@@ -62,8 +62,8 @@ public:
 
     void ResetData(){perft_data_ = std::vector<std::string>{}; total_nodes_ = 0;}
 
-    template<bool output_perft_paths>
-    void RunPerft(int depth, Position* pos){ResetData(); Perft<true, output_perft_paths>(depth, pos);}
+    template<bool output_perft_paths, SlidingGenType gen_type>
+    void RunPerft(int depth, Position* pos){ResetData(); Perft<true, output_perft_paths, gen_type>(depth, pos);}
     template<bool output_perft_paths>
     void RunBulkPerft(int depth, Position* pos){ResetData(); BulkPerft<true, output_perft_paths>(depth, pos);}
 
@@ -76,7 +76,7 @@ public:
         for(const auto& i : perft_data_) std::cout << i;
     }
 private:
-    template<bool is_root, bool output_perft_paths>
+    template<bool is_root, bool output_perft_paths, SlidingGenType gen_type>
     U64 Perft(int depth, Position* pos)
     {
         if(!depth) return 1ull;
@@ -85,9 +85,9 @@ private:
         U64 nodes{0};
 
         if(pos->ColourToMove() == White)
-            MoveGen::GeneratePseudoLegalMoves<White>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<White, gen_type>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<Black>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<Black, gen_type>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
@@ -95,9 +95,9 @@ private:
             {
                 // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
-                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black, gen_type>(pos) : MoveGen::InCheck<White, gen_type>(pos)))
                 {
-                    const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
+                    const auto cnt = Perft<false, output_perft_paths, gen_type>(depth - 1, pos);
                     if constexpr(output_perft_paths) 
                         nodes += cnt;
                     total_nodes_ += cnt;
@@ -123,9 +123,9 @@ private:
                 pos->MakeMove(ml[i]);
                 // PRINTNL("PosAfterMake:");
                 // Debug::PrintBoardGraphically(pos);
-                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black, gen_type>(pos) : MoveGen::InCheck<White, gen_type>(pos)))
                 {
-                    nodes += Perft<false, output_perft_paths>(depth - 1, pos);
+                    nodes += Perft<false, output_perft_paths, gen_type>(depth - 1, pos);
                 }
                 // PRINTNL("MoveToUnMake:");
                 // Debug::PrintEncodedMoveStr(ml[i]);
@@ -197,7 +197,7 @@ inline void TestSearch()
     }
 }
 //returns nps
-template<bool output_perft_paths>
+template<bool output_perft_paths, SlidingGenType gen_type>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
 {
     PerftHandler perft;
@@ -206,7 +206,7 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
     
     {
         Timer<std::chrono::microseconds> t(&time);
-        perft.RunPerft<output_perft_paths>(depth, &pos);
+        perft.RunPerft<output_perft_paths, gen_type>(depth, &pos);
     }
     if constexpr(output_perft_paths)
     {
@@ -224,6 +224,11 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
         std::cout << std::format("Test {} *FAILED* at depth {}. Exp {}, was {}\t FEN:\'{}\'", test_number, depth, expected_nodes, perft.GetNodes(), fen) << std::endl;
     }
     return nps;
+}
+template<bool output_perft_paths>
+U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
+{
+    return TestPerft<output_perft_paths, Titboards>(depth, expected_nodes, test_number, fen);
 }
 template<bool output_perft_paths>
 U64 TestBulkPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
@@ -253,19 +258,24 @@ U64 TestBulkPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std
     }
     return nps;
 }
-template<bool output_perft_paths>
+template<SlidingGenType gen_type, bool output_perft_paths>
 void RunBenchmark()
 {
     U64 mean_nps{0};
 
-    mean_nps += TestPerft<output_perft_paths>(6, 119060324, 1, STARTPOS);
-    mean_nps += TestPerft<output_perft_paths>(5, 193690690, 2, KIWIPETE);
-    mean_nps += TestPerft<output_perft_paths>(7, 178633661, 3, PERFTPOS3);
-    mean_nps += TestPerft<output_perft_paths>(6, 706045033, 4, PERFTPOS4);
-    mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
-    mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(6, 119060324, 1, STARTPOS);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(5, 193690690, 2, KIWIPETE);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(7, 178633661, 3, PERFTPOS3);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(6, 706045033, 4, PERFTPOS4);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(5, 89941194,  5, PERFTPOS5);
+    mean_nps += TestPerft<output_perft_paths, gen_type>(5, 164075551, 6, PERFTPOS6);
 
     std::cout << "All tests completed with means nps: " << FormatWithCommas(mean_nps / 6) << std::endl;
+}
+template<bool output_perft_paths>
+void RunBenchmark()
+{
+    RunBenchmark<Titboards, output_perft_paths>();
 }
 template<bool output_perft_paths>
 void RunBulkBenchmark()

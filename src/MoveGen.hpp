@@ -10,6 +10,8 @@
 #include "Position.hpp"
 #include "Move.hpp"
 #include "MoveList.hpp"
+#include "Pext.hpp"
+#include "MagicBitboards.hpp"
 
 extern std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG;
 namespace MoveGen
@@ -21,6 +23,12 @@ namespace MoveGen
             ml->add(Moves::EncodeMove(from, Magics::PopNRetLS1B(b), type));
         }
     }
+
+    template<SlidingGenType gen_type>
+    inline constexpr bool IsTitboardsGen = (gen_type == Titboards || gen_type == TitboardsPext);
+
+    template<SlidingGenType gen_type>
+    inline constexpr bool TitboardUsesPext = (gen_type == TitboardsPext);
 
     template<AttackDirection direction, bool UsePext = USE_PEXT>
     inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
@@ -110,12 +118,59 @@ namespace MoveGen
         }
     }
 
+    inline void GenerateMovesFromAttacks(BitBoard attacks, BitBoard occupied, BitBoard them, MoveList* ml, Sq from)
+    {
+        const BitBoard quiets = attacks & ~occupied;
+        const BitBoard captures = attacks & them;
+        GenerateMovesFromBB(quiets, ml, from, mt_Quiet);
+        GenerateMovesFromBB(captures, ml, from, mt_Capture);
+    }
+
+    template<SlidingGenType gen_type>
+    inline BitBoard BishopAttacksFrom(Sq piece_sq, BitBoard occupied) noexcept
+    {
+        if constexpr (gen_type == PextBoards)
+        {
+            return Pext::bishop_attacks(piece_sq, occupied);
+        }
+        else
+        {
+            return MagicBitBoards::bishopAttacks(piece_sq, occupied);
+        }
+    }
+
+    template<SlidingGenType gen_type>
+    inline BitBoard RookAttacksFrom(Sq piece_sq, BitBoard occupied) noexcept
+    {
+        if constexpr (gen_type == PextBoards)
+        {
+            return Pext::rook_attacks(piece_sq, occupied);
+        }
+        else
+        {
+            return MagicBitBoards::rookAttacks(piece_sq, occupied);
+        }
+    }
+
+    template<SlidingGenType gen_type>
+    inline BitBoard QueenAttacksFrom(Sq piece_sq, BitBoard occupied) noexcept
+    {
+        if constexpr (gen_type == PextBoards)
+        {
+            return Pext::queen_attacks(piece_sq, occupied);
+        }
+        else
+        {
+            return MagicBitBoards::queenAttacks(piece_sq, occupied);
+        }
+    }
+
     void WhitePawnMoves(Position const* pos, MoveList* ml) noexcept;
 
     void BlackPawnMoves(Position const* pos, MoveList* ml) noexcept;
 
-    template<Colour colour_to_move>
-    constexpr void BishopMoves(Position const* pos, MoveList* ml)
+    template<Colour colour_to_move, bool UsePext>
+    constexpr void BishopMovesTitboards(Position const* pos, MoveList* ml)
     {
         BitBoard bishops = pos->Pieces(colour_to_move, pt_Bishop);
         if(!bishops) return;
@@ -127,16 +182,16 @@ namespace MoveGen
         {
             const U8 bishop_index = Magics::PopNRetLS1B(bishops);
 
-            move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
+            move_info const* move = GetMovesForSliding<Diagonal, UsePext>(bishop_index, us, them);
             ml->merge(move);
 
-            move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
+            move = GetMovesForSliding<AntiDiagonal, UsePext>(bishop_index, us, them);
             ml->merge(move);
         }
     }
-    
-    template<Colour colour_to_move>
-    constexpr void RookMoves(Position const* pos, MoveList* ml)
+
+    template<Colour colour_to_move, bool UsePext>
+    constexpr void RookMovesTitboards(Position const* pos, MoveList* ml)
     {
         BitBoard rooks = pos->Pieces(colour_to_move, pt_Rook);
         if(!rooks) return;
@@ -148,16 +203,16 @@ namespace MoveGen
         {
             const U8 rook_index = Magics::PopNRetLS1B(rooks);
 
-            move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
+            move_info const* move = GetMovesForSliding<File, UsePext>(rook_index, us, them);
             ml->merge(move);
             
-            move = GetMovesForSliding<Rank>(rook_index, us, them);
+            move = GetMovesForSliding<Rank, UsePext>(rook_index, us, them);
             ml->merge(move);
         }
     }
 
-    template<Colour colour_to_move>
-    constexpr void QueenMoves(Position const* pos, MoveList* ml)
+    template<Colour colour_to_move, bool UsePext>
+    constexpr void QueenMovesTitboards(Position const* pos, MoveList* ml)
     {
         BitBoard queens = pos->Pieces(colour_to_move, pt_Queen);
         if(!queens) return;
@@ -169,17 +224,110 @@ namespace MoveGen
         {
             const U8 queen_index = Magics::PopNRetLS1B(queens);
             
-            move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
+            move_info const* move = GetMovesForSliding<File, UsePext>(queen_index, us, them);
             ml->merge(move);
             
-            move = GetMovesForSliding<Rank>(queen_index, us, them);
+            move = GetMovesForSliding<Rank, UsePext>(queen_index, us, them);
             ml->merge(move);
             
-            move = GetMovesForSliding<Diagonal>(queen_index, us, them);
+            move = GetMovesForSliding<Diagonal, UsePext>(queen_index, us, them);
             ml->merge(move);
             
-            move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
+            move = GetMovesForSliding<AntiDiagonal, UsePext>(queen_index, us, them);
             ml->merge(move);
+        }
+    }
+
+    template<Colour colour_to_move>
+    constexpr void BishopMoves(Position const* pos, MoveList* ml)
+    {
+        BishopMovesTitboards<colour_to_move, USE_PEXT>(pos, ml);
+    }
+    
+    template<Colour colour_to_move>
+    constexpr void RookMoves(Position const* pos, MoveList* ml)
+    {
+        RookMovesTitboards<colour_to_move, USE_PEXT>(pos, ml);
+    }
+
+    template<Colour colour_to_move>
+    constexpr void QueenMoves(Position const* pos, MoveList* ml)
+    {
+        QueenMovesTitboards<colour_to_move, USE_PEXT>(pos, ml);
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline void BishopMoves(Position const* pos, MoveList* ml)
+    {
+        if constexpr (IsTitboardsGen<gen_type>)
+        {
+            BishopMovesTitboards<colour_to_move, TitboardUsesPext<gen_type>>(pos, ml);
+        }
+        else
+        {
+            BitBoard bishops = pos->Pieces(colour_to_move, pt_Bishop);
+            if(!bishops) return;
+
+            const BitBoard occupied = pos->Pieces(White, Black);
+            const BitBoard us = pos->Pieces(colour_to_move);
+            const BitBoard them = pos->Pieces(!colour_to_move);
+
+            while(bishops)
+            {
+                const Sq bishop_index = Magics::PopNRetLS1B(bishops);
+                BitBoard attacks = BishopAttacksFrom<gen_type>(bishop_index, occupied) & ~us;
+                GenerateMovesFromAttacks(attacks, occupied, them, ml, bishop_index);
+            }
+        }
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline void RookMoves(Position const* pos, MoveList* ml)
+    {
+        if constexpr (IsTitboardsGen<gen_type>)
+        {
+            RookMovesTitboards<colour_to_move, TitboardUsesPext<gen_type>>(pos, ml);
+        }
+        else
+        {
+            BitBoard rooks = pos->Pieces(colour_to_move, pt_Rook);
+            if(!rooks) return;
+
+            const BitBoard occupied = pos->Pieces(White, Black);
+            const BitBoard us = pos->Pieces(colour_to_move);
+            const BitBoard them = pos->Pieces(!colour_to_move);
+
+            while(rooks)
+            {
+                const Sq rook_index = Magics::PopNRetLS1B(rooks);
+                BitBoard attacks = RookAttacksFrom<gen_type>(rook_index, occupied) & ~us;
+                GenerateMovesFromAttacks(attacks, occupied, them, ml, rook_index);
+            }
+        }
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline void QueenMoves(Position const* pos, MoveList* ml)
+    {
+        if constexpr (IsTitboardsGen<gen_type>)
+        {
+            QueenMovesTitboards<colour_to_move, TitboardUsesPext<gen_type>>(pos, ml);
+        }
+        else
+        {
+            BitBoard queens = pos->Pieces(colour_to_move, pt_Queen);
+            if(!queens) return;
+
+            const BitBoard occupied = pos->Pieces(White, Black);
+            const BitBoard us = pos->Pieces(colour_to_move);
+            const BitBoard them = pos->Pieces(!colour_to_move);
+
+            while(queens)
+            {
+                const Sq queen_index = Magics::PopNRetLS1B(queens);
+                BitBoard attacks = QueenAttacksFrom<gen_type>(queen_index, occupied) & ~us;
+                GenerateMovesFromAttacks(attacks, occupied, them, ml, queen_index);
+            }
         }
     }
 
@@ -308,8 +456,8 @@ namespace MoveGen
         return attacks;
     }
     
-    template<Colour colour_to_move>
-    inline bool SquareAttacked(Position const* pos, const Sq sq)
+    template<Colour colour_to_move, bool UsePext>
+    inline bool SquareAttackedTitboards(Position const* pos, const Sq sq)
     {
         const BitBoard us = pos->Pieces(!colour_to_move);
         const BitBoard them = pos->Pieces(colour_to_move);
@@ -317,10 +465,10 @@ namespace MoveGen
         const BitBoard rook_queen = pos->Pieces(colour_to_move, pt_Rook, pt_Queen);
         const BitBoard sq_bb = Magics::SqToBB(sq);
 
-        if(GetMovesForSliding<Diagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
-        if(GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
-        if(GetMovesForSliding<File>(sq, us, them)->attacks_ & rook_queen) return true;
-        if(GetMovesForSliding<Rank>(sq, us, them)->attacks_ & rook_queen) return true;
+        if(GetMovesForSliding<Diagonal, UsePext>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if(GetMovesForSliding<AntiDiagonal, UsePext>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if(GetMovesForSliding<File, UsePext>(sq, us, them)->attacks_ & rook_queen) return true;
+        if(GetMovesForSliding<Rank, UsePext>(sq, us, them)->attacks_ & rook_queen) return true;
 
         if(Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(colour_to_move, pt_Knight)) return true;
 
@@ -340,10 +488,56 @@ namespace MoveGen
     }
 
     template<Colour colour_to_move>
+    inline bool SquareAttacked(Position const* pos, const Sq sq)
+    {
+        return SquareAttackedTitboards<colour_to_move, USE_PEXT>(pos, sq);
+    }
+
+    template<Colour colour_to_move>
     inline bool InCheck(Position const* pos)
     {
         const Sq king_sq = Magics::FindLS1B(pos->Pieces(colour_to_move, pt_King));
         return SquareAttacked<!colour_to_move>(pos, king_sq);
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline bool SquareAttacked(Position const* pos, const Sq sq)
+    {
+        if constexpr (IsTitboardsGen<gen_type>)
+        {
+            return SquareAttackedTitboards<colour_to_move, TitboardUsesPext<gen_type>>(pos, sq);
+        }
+
+        const BitBoard occupied = pos->Pieces(White, Black);
+        const BitBoard bishop_queen = pos->Pieces(colour_to_move, pt_Bishop, pt_Queen);
+        const BitBoard rook_queen = pos->Pieces(colour_to_move, pt_Rook, pt_Queen);
+
+        if(BishopAttacksFrom<gen_type>(sq, occupied) & bishop_queen) return true;
+        if(RookAttacksFrom<gen_type>(sq, occupied) & rook_queen) return true;
+
+        if(Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(colour_to_move, pt_Knight)) return true;
+
+        const BitBoard pawns = pos->Pieces(colour_to_move, pt_Pawn);
+        const BitBoard sq_bb = Magics::SqToBB(sq);
+        if constexpr (colour_to_move == White)
+        {
+            if(Magics::Shift<NORTH_EAST>(pawns) & sq_bb) return true;
+            if(Magics::Shift<NORTH_WEST>(pawns) & sq_bb) return true;
+        }
+        else
+        {
+            if(Magics::Shift<SOUTH_EAST>(pawns) & sq_bb) return true;
+            if(Magics::Shift<SOUTH_WEST>(pawns) & sq_bb) return true;
+        }
+
+        return (Magics::KING_ATTACK_MASKS[sq] & pos->Pieces(colour_to_move, pt_King));
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline bool InCheck(Position const* pos)
+    {
+        const Sq king_sq = Magics::FindLS1B(pos->Pieces(colour_to_move, pt_King));
+        return SquareAttacked<!colour_to_move, gen_type>(pos, king_sq);
     }
 
     template<Colour colour_to_move>
@@ -425,6 +619,82 @@ namespace MoveGen
 
             //bc templates lol
             if(!InCheck<colour_to_move>(pos))
+            {
+                ml->add(pseudo_legal_ml[i]);
+            }
+            pos->UnmakeMove(pseudo_legal_ml[i]);
+        }
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline void Castling(Position const* pos, MoveList* ml) noexcept
+    {
+        if(!((colour_to_move == White ? 0x0C : 0x03) & pos->CastlingRights())) {return;}
+        const BitBoard whole_board = pos->Pieces(Black, White);
+        const U8 king_index = (colour_to_move == White  ? 4 : 60);
+        const U8 rank_looked_at = U8(colour_to_move == White  ? (whole_board & 0xFF) : whole_board >> 56);
+
+        const U8 rights = pos->CastlingRights();
+        const bool can_kingside =
+            (rights & (colour_to_move == White  ? 0x08 : 0x02)) &&
+            !(rank_looked_at & 0x60);
+        const bool can_queenside =
+            (rights & (colour_to_move == White  ? 0x04 : 0x01)) &&
+            !(rank_looked_at & 0x0E);
+
+        if(!can_kingside && !can_queenside) return;
+        if(InCheck<colour_to_move, gen_type>(pos)) {return;}
+
+        if(can_kingside)
+        {
+            const Sq s1 = Sq(king_index + 1);
+            const Sq s2 = Sq(king_index + 2);
+            if(!SquareAttacked<!colour_to_move, gen_type>(pos, s1) &&
+               !SquareAttacked<!colour_to_move, gen_type>(pos, s2))
+            {
+                if constexpr(colour_to_move == White)
+                    ml->add(Moves::EncodeMove(king_index, 6, mt_Castling));
+                else
+                    ml->add(Moves::EncodeMove(king_index, 62, mt_Castling));
+            }
+        }
+        if(can_queenside)
+        {
+            const Sq s1 = Sq(king_index - 1);
+            const Sq s2 = Sq(king_index - 2);
+            if(!SquareAttacked<!colour_to_move, gen_type>(pos, s1) &&
+               !SquareAttacked<!colour_to_move, gen_type>(pos, s2))
+            {
+                if constexpr(colour_to_move == White)
+                    ml->add(Moves::EncodeMove(king_index, 2, mt_Castling));
+                else
+                    ml->add(Moves::EncodeMove(king_index, 58, mt_Castling));
+            }
+        }
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    inline void GeneratePseudoLegalMoves(Position const* __restrict__ pos, MoveList* __restrict__ ml)
+    {
+        KingMoves<colour_to_move>(pos, ml);
+        QueenMoves<colour_to_move, gen_type>(pos, ml);
+        BishopMoves<colour_to_move, gen_type>(pos, ml);
+        KnightMoves<colour_to_move>(pos, ml);
+        RookMoves<colour_to_move, gen_type>(pos, ml);
+        (colour_to_move == White ? WhitePawnMoves(pos, ml) : BlackPawnMoves(pos, ml));
+        Castling<colour_to_move, gen_type>(pos, ml);
+    }
+
+    template<Colour colour_to_move, SlidingGenType gen_type>
+    void GenerateLegalMoves(Position* __restrict__ pos, MoveList* __restrict__ ml)
+    {
+        MoveList pseudo_legal_ml;
+        GeneratePseudoLegalMoves<colour_to_move, gen_type>(pos, &pseudo_legal_ml);
+
+        for(size_t i = 0; i < pseudo_legal_ml.len(); ++i)
+        {
+            pos->MakeMove(pseudo_legal_ml[i]);
+            if(!InCheck<colour_to_move, gen_type>(pos))
             {
                 ml->add(pseudo_legal_ml[i]);
             }
