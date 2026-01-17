@@ -274,6 +274,10 @@ static std::vector<std::string> Split(const std::string& line, const std::string
         tmp.push_back(s.substr(0, pos));
         s.erase(0, pos + delimiter.length());
     }
+    if(!s.empty())
+    {
+        tmp.push_back(s);
+    }
     return tmp;
 }
 template<bool output_perft_paths>

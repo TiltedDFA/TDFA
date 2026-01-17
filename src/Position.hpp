@@ -48,7 +48,6 @@ public:
     Position(std::string_view fen) : Position()
     {
         ImportFen(fen);
-        HashCurrentPostion();
     }
     void Reset()
     {

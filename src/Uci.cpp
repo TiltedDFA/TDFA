@@ -75,15 +75,18 @@ void Uci::HandleGo(const ArgList& args)
 }
 void Uci::HandlePosition(const ArgList& args)
 {
+    if(args.size() < 2) return;
     if(args[1] == "fen")
     {
-        assert(args.size() >= 7);
+        if(args.size() < 8) return;
 
         std::string constructed_fen;
-        for(std::size_t i{2}; i < 7; ++i)
-            constructed_fen += std::string(args[i]) + ' ';
-
-        constructed_fen += std::string(args[7]);
+        for(std::size_t i{2}; i < 8; ++i)
+        {
+            constructed_fen += std::string(args[i]);
+            if(i < 7)
+                constructed_fen += ' ';
+        }
 
 //        PRINTNL("Here");
 
@@ -114,7 +117,7 @@ void Uci::HandleNewGame()
 }
 void Uci::HandleSetOption(const ArgList& args)
 {
-    if(args[2] == "hash")
+    if(args.size() >= 5 && (args[2] == "Hash" || args[2] == "hash"))
     {
         std::from_chars(args[4].data(), args[4].data() + args[4].size(), tt_size_);
         tt_.Resize(tt_size_);

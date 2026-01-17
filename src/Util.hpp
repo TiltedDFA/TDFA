@@ -16,12 +16,16 @@ namespace UTIL
     {
         switch (p)
         {
+        case pt_Bishop:
         case pt_prom_bishop:
             return 'b';
+        case pt_Knight:
         case pt_prom_knight:
             return 'n';
+        case pt_Queen:
         case pt_prom_queen:
             return 'q';
+        case pt_Rook:
         case pt_prom_rook:
             return 'r';
         default:
@@ -82,8 +86,7 @@ namespace UTIL
         }
         else if (Magics::TypeOf(pos.PieceOn(from)) == pt_Pawn)
         {
-            auto const distance = std::abs(to - from);
-            if (distance == 7 || distance == 9)
+            if(to == pos.EnPasSq())
             {
                 constructed_move = Moves::EncodeMove(from, to, mt_EnPassant);
             }

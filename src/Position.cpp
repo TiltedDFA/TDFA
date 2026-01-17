@@ -109,7 +109,10 @@ void Position::ImportFen(std::string_view fen)
     }
     else
     {
-        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
+        std::from_chars(
+            fen_sections.at(4).data(),
+            fen_sections.at(4).data() + fen_sections.at(4).size(),
+            info_.half_moves_);
     }
     if(fen_sections.at(5).empty())
     {
@@ -117,8 +120,13 @@ void Position::ImportFen(std::string_view fen)
     }
     else
     {
-        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
+        std::from_chars(
+            fen_sections.at(5).data(),
+            fen_sections.at(5).data() + fen_sections.at(5).size(),
+            full_moves_);
     }
+
+    HashCurrentPostion();
 }
 void Position::MakeMove(const Move m)
 {
@@ -314,7 +322,8 @@ ZobristKey Position::HashCurrentPostion()
 {
     // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
-    info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
+    if(turn_ == Black)
+        info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
 
     for(Colour c = White; c <= Black; c = Colour(c + 1))
     {

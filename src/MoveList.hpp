@@ -26,7 +26,7 @@ public:
 
     [[nodiscard]] constexpr size_t len()const noexcept {return idx_;}
 
-    [[nodiscard]] constexpr bool contains(const Move m) const {return std::ranges::find(data_, m) != data_.cend();}
+    [[nodiscard]] constexpr bool contains(const Move m) const {return std::ranges::find(data_.begin(), data_.begin() + idx_, m) != (data_.begin() + idx_);}
 
 private:
     std::array<Move, MAX_MOVES> data_;
