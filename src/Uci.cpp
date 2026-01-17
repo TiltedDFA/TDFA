@@ -10,6 +10,8 @@ ArgList SplitArgs(std::string* inp)
 
 //    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
+    ret.reserve(16);
+
     std::size_t i{0};
     while(i < inp->size())
     {

@@ -37,6 +37,7 @@ using Castling  = U8;
 using Score     = I16;
 
 constexpr std::size_t MAX_MOVES = 218;
+constexpr std::size_t MAX_PLY = 512;
 
 enum MD : U8
 {
@@ -79,7 +80,7 @@ enum class PromType : U8
     KNIGHT,
     ROOK
 };
-enum PieceType
+enum PieceType : U8
 {
     pt_begin_it,
     pt_King = pt_begin_it,
@@ -96,7 +97,7 @@ enum PieceType
     pt_prom_knight,
     pt_prom_rook,
 };
-enum MoveType
+enum MoveType : U8
 {
     mt_Quiet = 0,
     mt_EnPassant,
@@ -108,7 +109,7 @@ enum MoveType
     mt_KnightPromotion,
     mt_RookPromotion
 };
-enum Colour
+enum Colour : U8
 {
     White,
     Black
@@ -117,7 +118,7 @@ constexpr Colour operator!(const Colour c)
 {
     return static_cast<Colour>(c ^ Black);
 }
-enum Piece
+enum Piece : U8
 {
     p_WhiteKing = pt_King,
     p_WhiteQueen,

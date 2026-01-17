@@ -7,12 +7,12 @@
 #include "Types.hpp"
 #include "ZobristConstants.hpp"
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <functional>
 #include <iostream>
 #include <string_view>
-#include <vector>
 
 #include "Board.hpp"
 
@@ -40,10 +40,9 @@ public:
         info_({}),
         turn_(White),
         full_moves_(0),
-        previous_state_info({})
-    {
-        previous_state_info.reserve(MAX_MOVES);
-    }
+        previous_state_info_({}),
+        state_ply_(0)
+    {}
     
     Position(std::string_view fen) : Position()
     {
@@ -59,7 +58,7 @@ public:
         info_.zobrist_key_      = 0;
         turn_                   = White;
         full_moves_             = 0;
-        previous_state_info.clear();
+        state_ply_              = 0;
     }
 
     void ImportFen(std::string_view fen);
@@ -103,7 +102,8 @@ private:
     StateInfo info_;
     Colour turn_;
     U16 full_moves_;
-    std::vector<StateInfo> previous_state_info;
+    std::array<StateInfo, MAX_PLY> previous_state_info_;
+    size_t state_ply_;
 };
 
 

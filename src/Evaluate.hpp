@@ -58,7 +58,7 @@ namespace Eval
         Score bonus{0};
         while (our_pawns)
         {
-            const Sq rank = Magics::RankOf(Magics::FindLS1B(our_pawns));
+            const Sq rank = Magics::RankOf(Magics::PopNRetLS1B(our_pawns));
             if constexpr(colour_to_move == White)
             {
                 bonus += PAWN_PROGRESS_BONUS[rank];
@@ -67,7 +67,6 @@ namespace Eval
             {
                 bonus += PAWN_PROGRESS_BONUS[7-rank];
             }
-            our_pawns = Magics::PopLS1B(our_pawns);
         }
         return bonus;
     }

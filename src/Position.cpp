@@ -131,7 +131,8 @@ void Position::ImportFen(std::string_view fen)
 void Position::MakeMove(const Move m)
 {
     assert(IsOk());
-    previous_state_info.push_back(info_);
+    assert(state_ply_ < MAX_PLY);
+    previous_state_info_[state_ply_++] = info_;
 
     Sq start_sq;
     Sq target_sq;
@@ -260,6 +261,7 @@ void Position::UnmakeMove(const Move m)
 {
     assert(IsOk());
     turn_ = !turn_;
+    assert(state_ply_ > 0);
 
     Sq start_sq;
     Sq target_sq;
@@ -268,9 +270,6 @@ void Position::UnmakeMove(const Move m)
 
     PieceType p_type = Magics::TypeOf(PieceOn(target_sq));
     U8 is_castling_move = 0;
-
-    const BitBoard start_bb  = Magics::SqToBB(start_sq);
-    const BitBoard target_bb = Magics::SqToBB(target_sq);
 
     if(Moves::IsPromotionMove(m))
     {
@@ -305,7 +304,7 @@ void Position::UnmakeMove(const Move m)
         if(info_.captured_type_ != p_None)
         {
             Sq captured_sq = target_sq;
-            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == previous_state_info.back().en_passant_sq_)
+            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == previous_state_info_[state_ply_ - 1].en_passant_sq_)
             {
                 captured_sq -= (turn_ == White ? 8 : -8);
             }
@@ -314,8 +313,7 @@ void Position::UnmakeMove(const Move m)
         }
     }
     //restore previous state
-    info_ = previous_state_info.back();
-    previous_state_info.pop_back();
+    info_ = previous_state_info_[--state_ply_];
     assert(IsOk());
 }
 ZobristKey Position::HashCurrentPostion()
@@ -332,9 +330,8 @@ ZobristKey Position::HashCurrentPostion()
             BitBoard piece_board = this->Pieces(c, pt);
             while(piece_board)
             {
-                const Sq idx = Magics::FindLS1B(piece_board);
+                const Sq idx = Magics::PopNRetLS1B(piece_board);
                 info_.zobrist_key_ ^= Zobrist::PIECES[c][pt][idx];
-                piece_board = Magics::PopLS1B(piece_board);
             }
         }
     }

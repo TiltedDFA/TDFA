@@ -15,10 +15,15 @@ class Search
 {
 public:
 
-    Score GoSearch(TransposTable* __restrict__  tt, Position* __restrict__  pos, U16 depth, TimeManager const* tm, Score a = Eval::NEG_INF, Score b = Eval::POS_INF);
+    Search():nodes_(0){}
+
+    Score GoSearch(TransposTable* __restrict__  tt, Position* __restrict__  pos, U16 depth, TimeManager const* tm, Score a = Eval::NEG_INF, Score b = Eval::POS_INF, U16 ply = 0);
 
     Move FindBestMove(Position* __restrict__  pos, TransposTable* __restrict__  tt, TimeManager const* __restrict__ tm);
 private:
+    void SortMoves(MoveList* moves, Position* pos, Move tt_move, U16 ply);
+    Move killer_moves_[MAX_PLY][2]{};
+    U64 nodes_;
 };
 
 

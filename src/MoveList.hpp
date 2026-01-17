@@ -10,7 +10,7 @@
 class MoveList
 {
 public:
-    constexpr MoveList():data_({}), idx_(0ull){}
+    constexpr MoveList() noexcept : idx_(0ull) {}
 
     constexpr void add(const Move m) noexcept  {data_[idx_++] = m;}
 
@@ -25,6 +25,8 @@ public:
     [[nodiscard]] constexpr std::array<Move, MAX_MOVES>& all() noexcept {return data_;}
 
     [[nodiscard]] constexpr size_t len()const noexcept {return idx_;}
+
+    constexpr void clear() noexcept {idx_ = 0;}
 
     [[nodiscard]] constexpr bool contains(const Move m) const {return std::ranges::find(data_.begin(), data_.begin() + idx_, m) != (data_.begin() + idx_);}
 
