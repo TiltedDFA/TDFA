@@ -37,6 +37,24 @@
 #define PERFTPOS6 "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
 #define TRICKYENDGAMEPOS "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1"
 #define PERPETUALCHECK "6k1/6p1/8/6KQ/1r6/q2b4/8/8 w - - 0 1"
+
+inline std::string FormatWithCommas(U64 value)
+{
+    std::string s = std::to_string(value);
+    if(s.size() <= 3)
+        return s;
+    std::string out;
+    out.reserve(s.size() + (s.size() - 1) / 3);
+    size_t first = s.size() % 3;
+    if(first == 0) first = 3;
+    out.append(s, 0, first);
+    for(size_t i = first; i < s.size(); i += 3)
+    {
+        out.push_back(',');
+        out.append(s, i, 3);
+    }
+    return out;
+}
 class PerftHandler
 {
 public:
@@ -199,7 +217,7 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
 
     if(expected_nodes == perft.GetNodes())
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps\t FEN:\'{}\'", test_number, depth, nps, fen) << std::endl;
+        std::cout << std::format("Test {} passed at depth {} with {} nps\t FEN:\'{}\'", test_number, depth, FormatWithCommas(nps), fen) << std::endl;
     }
     else
     {
@@ -227,7 +245,7 @@ U64 TestBulkPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std
 
     if(expected_nodes == perft.GetNodes())
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, FormatWithCommas(nps)) << std::endl;
     }
     else
     {
@@ -247,7 +265,7 @@ void RunBenchmark()
     mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
     mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
-    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+    std::cout << "All tests completed with means nps: " << FormatWithCommas(mean_nps / 6) << std::endl;
 }
 template<bool output_perft_paths>
 void RunBulkBenchmark()
@@ -261,7 +279,7 @@ void RunBulkBenchmark()
     mean_nps += TestBulkPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
     mean_nps += TestBulkPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
-    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+    std::cout << "All tests completed with means nps: " << FormatWithCommas(mean_nps / 6) << std::endl;
 }
 static std::vector<std::string> Split(const std::string& line, const std::string& delimiter)
 {

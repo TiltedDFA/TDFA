@@ -23,7 +23,7 @@ int main(void)
     //tf
     // TestPerft<true>(5,5363555,1,"rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1");
     // TestPerft<true>(4,204508,1,"rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq a6 0 2");
-    RunBulkBenchmark<false>();
+    // RunBulkBenchmark<false>();
     // RunPerftSuite<false>();
     // BitBoard board = 1ull << 54;
     // std::cout << board << std::endl;
@@ -39,7 +39,7 @@ int main(void)
     // TestSearch();
 //    PRINTNL(int(Moves::EncodeMove(55,48,Rook)));
     // std::ios::sync_with_stdio(false);
-    // Uci uci;
-    // uci.Loop();
+    Uci uci;
+    uci.Loop();
     return 0;
 }
