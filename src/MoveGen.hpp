@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <immintrin.h>
 
 #include "Types.hpp"
 #include "MagicConstants.hpp"
@@ -21,15 +22,29 @@ namespace MoveGen
         }
     }
 
-    template<AttackDirection direction>
-    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
+    template<AttackDirection direction, bool UsePext = USE_PEXT>
+    inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
     {
         if constexpr(direction == Rank)
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedFilesIndex(us   & attack_mask);
-            const U8 them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
+            const U8 file_bit = U8(1u << file_of_attacker);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard rank_mask = Magics::RANK_1BB << (piece_sq & 56);
+                us_collapsed = U8(_pext_u64(us, rank_mask));
+                them_collapsed = U8(_pext_u64(them, rank_mask));
+            }
+            else
+            {
+                const U8 rank_shift = piece_sq & 56;
+                us_collapsed = U8((us >> rank_shift) & 0xFFu);
+                them_collapsed = U8((them >> rank_shift) & 0xFFu);
+            }
+            us_collapsed &= U8(~file_bit);
+            them_collapsed &= U8(~file_bit);
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
             assert(lookup_index <= 2187);
 
@@ -37,11 +52,25 @@ namespace MoveGen
         }
         else if constexpr(direction == File)
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 rank_of_attacker = Magics::RankOf(piece_sq);
             const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask, file_of_attacker);
-            const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard file_mask = Magics::FILE_ABB << file_of_attacker;
+                us_collapsed = U8(_pext_u64(us, file_mask));
+                them_collapsed = U8(_pext_u64(them, file_mask));
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            }
+            else
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask, file_of_attacker);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
+            }
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 
@@ -49,10 +78,31 @@ namespace MoveGen
         }
         else //direction == Diag || direction == Anti Diag
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 rank_of_attacker = Magics::RankOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask);
-            const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
+            const U8 file_of_attacker = Magics::FileOf(piece_sq);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                const BitBoard full_mask = attack_mask | Magics::SqToBB(piece_sq);
+                const U8 start_rank = (direction == Diagonal)
+                    ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
+                    : ((rank_of_attacker + file_of_attacker > 7)
+                        ? U8(rank_of_attacker + file_of_attacker - 7)
+                        : 0);
+                us_collapsed = U8(_pext_u64(us, full_mask) << start_rank);
+                them_collapsed = U8(_pext_u64(them, full_mask) << start_rank);
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            }
+            else
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
+            }
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 

@@ -16,10 +16,11 @@ public:
 
     constexpr Move operator[](const size_t index) const noexcept {return data_[index];}
 
-    constexpr void merge(move_info const* src)
+    INLINE void merge(move_info const* __restrict__ src) noexcept
     {
-        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
-        idx_ += src->count_;
+        const U8 count = src->count_;
+        std::memcpy(data_.data() + idx_, src->encoded_move_.data(), count * sizeof(Move));
+        idx_ += count;
     }
 
     [[nodiscard]] constexpr std::array<Move, MAX_MOVES>& all() noexcept {return data_;}

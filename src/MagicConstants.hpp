@@ -266,9 +266,28 @@ namespace Magics
 
     inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
 
+    consteval std::array<std::array<std::array<U16, 256>, 256>, 8> compute_base_3_lookup() noexcept
+    {
+        std::array<std::array<std::array<U16, 256>, 256>, 8> result{};
+        for(U8 missed_file = 0; missed_file < 8; ++missed_file)
+        {
+            for(U16 us = 0; us < 256; ++us)
+            {
+                for(U16 them = 0; them < 256; ++them)
+                {
+                    result.at(missed_file).at(us).at(them) =
+                        base_2_to_3_us[missed_file][us] + base_2_to_3_them[missed_file][them];
+                }
+            }
+        }
+        return result;
+    }
+
+    inline constexpr std::array<std::array<std::array<U16, 256>, 256>, 8> base_3_lookup = compute_base_3_lookup();
+
     inline constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square) noexcept
     {
-        return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
+        return base_3_lookup[piece_square][us][them];
     }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
