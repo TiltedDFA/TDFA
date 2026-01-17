@@ -19,6 +19,7 @@
 #define INLINE
 #endif
 
+#include <cassert>
 #include <array>
 #include <cstdint>
 
@@ -36,6 +37,7 @@ using Castling  = U8;
 using Score     = I16;
 
 constexpr std::size_t MAX_MOVES = 218;
+constexpr std::size_t MAX_PLY = 512;
 
 enum MD : U8
 {
@@ -80,18 +82,59 @@ enum class PromType : U8
 };
 enum PieceType : U8
 {
-    King = 0,
-    Queen,
-    Bishop,
-    Knight,
-    Rook,
-    Pawn,
-    PromQueen = 0b1000,
-    PromBishop,
-    PromKnight,
-    PromRook,
-    NullPiece
+    pt_begin_it,
+    pt_King = pt_begin_it,
+    pt_Queen,
+    pt_Bishop,
+    pt_Knight,
+    pt_Rook,
+    pt_end_it,
+    pt_Pawn = pt_end_it,
+    pt_All,
+    pt_None,
+    pt_prom_queen = 8,
+    pt_prom_bishop,
+    pt_prom_knight,
+    pt_prom_rook,
 };
+enum MoveType : U8
+{
+    mt_Quiet = 0,
+    mt_EnPassant,
+    mt_Castling,
+    mt_Capture,
+    mt_Promotion = 4,
+    mt_QueenPromotion = 4,
+    mt_BishopPromotion,
+    mt_KnightPromotion,
+    mt_RookPromotion
+};
+enum Colour : U8
+{
+    White,
+    Black
+};
+constexpr Colour operator!(const Colour c)
+{
+    return static_cast<Colour>(c ^ Black);
+}
+enum Piece : U8
+{
+    p_WhiteKing = pt_King,
+    p_WhiteQueen,
+    p_WhiteBishop,
+    p_WhiteKnight,
+    p_WhiteRook,
+    p_WhitePawn,
+    p_BlackKing = pt_King + 8,
+    p_BlackQueen,
+    p_BlackBishop,
+    p_BlackKnight,
+    p_BlackRook,
+    p_BlackPawn,
+    p_None
+};
+
 // This will be specfic class used to decided which direction to test the moves [sq][D::val][index]
 enum AttackDirection : U8
 {
@@ -102,9 +145,9 @@ enum AttackDirection : U8
 };
 enum class BoundType : U8
 {
-    EXACT_VAL,  //Score is X
-    UPPER_BOUND,      //Score is at max X
-    LOWER_BOUND        //Score is at least X
+    EXACT_VAL,          //Score is X
+    UPPER_BOUND,        //Score is at max X
+    LOWER_BOUND         //Score is at least X
 };
 template<typename T>
 float FloatDiv(T dividend, T divisor)

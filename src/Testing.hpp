@@ -13,6 +13,7 @@
 #include <fstream>
 #include "MoveGen.hpp"
 #include "MoveList.hpp"
+#include "Search.hpp"
 #include "Util.hpp"
 #include "Timer.hpp"
 
@@ -36,6 +37,24 @@
 #define PERFTPOS6 "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
 #define TRICKYENDGAMEPOS "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1"
 #define PERPETUALCHECK "6k1/6p1/8/6KQ/1r6/q2b4/8/8 w - - 0 1"
+
+inline std::string FormatWithCommas(U64 value)
+{
+    std::string s = std::to_string(value);
+    if(s.size() <= 3)
+        return s;
+    std::string out;
+    out.reserve(s.size() + (s.size() - 1) / 3);
+    size_t first = s.size() % 3;
+    if(first == 0) first = 3;
+    out.append(s, 0, first);
+    for(size_t i = first; i < s.size(); i += 3)
+    {
+        out.push_back(',');
+        out.append(s, i, 3);
+    }
+    return out;
+}
 class PerftHandler
 {
 public:
@@ -65,28 +84,18 @@ private:
         MoveList ml{};
         U64 nodes{0};
 
-        if(pos->WhiteToMove())
-            MoveGen::GeneratePseudoLegalMoves<true>(pos, &ml);
+        if(pos->ColourToMove() == White)
+            MoveGen::GeneratePseudoLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GeneratePseudoLegalMoves<false>(pos, &ml);
+            MoveGen::GeneratePseudoLegalMoves<Black>(pos, &ml);
         
         for(size_t i = 0; i < ml.len(); ++i)
         {
             if constexpr(is_root)
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                if(start == 2 && end == 47)
-                {
-                    PRINT("\n");
-                }
-            #endif
+                // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     const auto cnt = Perft<false, output_perft_paths>(depth - 1, pos);
                     if constexpr(output_perft_paths) 
@@ -96,33 +105,36 @@ private:
                         perft_data_.push_back(std::format("{} : {}\n", UTIL::MoveToStr(ml[i]), cnt));
                 }
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                assert(copy == *pos);
-            #endif
             }
             else
             {
-            #if TDFA_DEBUG == 1
-                const Position copy = *pos;
-                Sq start;
-                Sq end;
-                PieceType t;
-                Moves::DecodeMove(ml[i], &start, &end, &t);
-                //used for breakpointing at specific move in perft when debugging
-                // if(start == 14 && end == 6 && t == PromQueen)
+                // pos->MakeMove(ml[i]);
+                // if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 // {
-                //     PRINT("");
+                //     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 // }
-            #endif
+                // pos->UnmakeMove(ml[i]);
+
+                // const ZobristKey pos_before = pos->HashCurrentPostion();
+                // PRINTNL("MoveToMake:");
+                // Debug::PrintEncodedMoveStr(ml[i]);
+                // PRINTNL("PosBeforeMake:");
+                // Debug::PrintBoardGraphically(pos);
                 pos->MakeMove(ml[i]);
-                if(!(pos->WhiteToMove() ? MoveGen::InCheck<false>(pos) : MoveGen::InCheck<true>(pos)))
+                // PRINTNL("PosAfterMake:");
+                // Debug::PrintBoardGraphically(pos);
+                if(!(pos->ColourToMove() == White ? MoveGen::InCheck<Black>(pos) : MoveGen::InCheck<White>(pos)))
                 {
                     nodes += Perft<false, output_perft_paths>(depth - 1, pos);
                 }
+                // PRINTNL("MoveToUnMake:");
+                // Debug::PrintEncodedMoveStr(ml[i]);
+                // PRINTNL("PosBeforeUnMake:");
+                // Debug::PrintBoardGraphically(pos);
                 pos->UnmakeMove(ml[i]);
-            #if TDFA_DEBUG == 1
-                assert(copy == *pos);
-            #endif
+                // PRINTNL("PosAfterUnMake:");
+                // Debug::PrintBoardGraphically(pos);
+                // assert(pos_before == pos->HashCurrentPostion());
             }
         }
 
@@ -135,10 +147,10 @@ private:
 
         MoveList ml{};
 
-        if(pos->WhiteToMove())
-            MoveGen::GenerateLegalMoves<true>(pos, &ml);
+        if(pos->ColourToMove() == White)
+            MoveGen::GenerateLegalMoves<White>(pos, &ml);
         else
-            MoveGen::GenerateLegalMoves<false>(pos, &ml);
+            MoveGen::GenerateLegalMoves<Black>(pos, &ml);
         if(depth == 1) return ml.len();
         U64 nodes{0};
         
@@ -168,7 +180,22 @@ private:
     std::vector<std::string> perft_data_;
     U64 total_nodes_;
 };
-
+inline void TestSearch()
+{
+    Position pos;
+    Search search;
+    TransposTable tt;
+    TimeManager timer;
+    for (auto&& fen : {STARTPOS, KIWIPETE, PERFTPOS4})
+    {
+        timer.SetOptions(500'000, 2000);
+        tt.Resize(128);
+        timer.StartTiming();
+        pos.ImportFen(fen);
+        search.FindBestMove(&pos, &tt, &timer);
+        std::cout << "\n\nDONE\n\n" << std::endl;
+    }
+}
 //returns nps
 template<bool output_perft_paths>
 U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::string& fen)
@@ -190,11 +217,11 @@ U64 TestPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std::st
 
     if(expected_nodes == perft.GetNodes())
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+        std::cout << std::format("Test {} passed at depth {} with {} nps\t FEN:\'{}\'", test_number, depth, FormatWithCommas(nps), fen) << std::endl;
     }
     else
     {
-        std::cout << std::format("Test {} *FAILED*. Exp {}, was {}.", test_number, expected_nodes, perft.GetNodes()) << std::endl;
+        std::cout << std::format("Test {} *FAILED* at depth {}. Exp {}, was {}\t FEN:\'{}\'", test_number, depth, expected_nodes, perft.GetNodes(), fen) << std::endl;
     }
     return nps;
 }
@@ -218,7 +245,7 @@ U64 TestBulkPerft(unsigned depth, U64 expected_nodes, U16 test_number, const std
 
     if(expected_nodes == perft.GetNodes())
     {
-        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, nps) << std::endl;
+        std::cout << std::format("Test {} passed at depth {} with {} nps.", test_number, depth, FormatWithCommas(nps)) << std::endl;
     }
     else
     {
@@ -238,7 +265,7 @@ void RunBenchmark()
     mean_nps += TestPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
     mean_nps += TestPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
-    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+    std::cout << "All tests completed with means nps: " << FormatWithCommas(mean_nps / 6) << std::endl;
 }
 template<bool output_perft_paths>
 void RunBulkBenchmark()
@@ -252,7 +279,7 @@ void RunBulkBenchmark()
     mean_nps += TestBulkPerft<output_perft_paths>(5, 89941194,  5, PERFTPOS5);
     mean_nps += TestBulkPerft<output_perft_paths>(5, 164075551, 6, PERFTPOS6);
 
-    std::cout << "All tests completed with means nps: " << (mean_nps / 6) << std::endl;
+    std::cout << "All tests completed with means nps: " << FormatWithCommas(mean_nps / 6) << std::endl;
 }
 static std::vector<std::string> Split(const std::string& line, const std::string& delimiter)
 {
@@ -264,6 +291,10 @@ static std::vector<std::string> Split(const std::string& line, const std::string
     {
         tmp.push_back(s.substr(0, pos));
         s.erase(0, pos + delimiter.length());
+    }
+    if(!s.empty())
+    {
+        tmp.push_back(s);
     }
     return tmp;
 }

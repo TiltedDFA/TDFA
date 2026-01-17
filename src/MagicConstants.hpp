@@ -61,13 +61,15 @@ namespace Magics
 
     constexpr BitBoard ROOK_TO_FROM_ARR_BB[5] =
         {0, ROOK_TO_FROM_W_Q, ROOK_TO_FROM_W_K, ROOK_TO_FROM_B_Q, ROOK_TO_FROM_B_K};
+    constexpr Sq ROOK_TO_FROM_ARR[5][2] =
+        {{0,0}, {0,3}, {7,5}, {56,59}, {63,61}};
     constexpr ZobristKey CASTLING_ZOB_KEYS[5] =
     {
         0,
-        (Zobrist::PIECES[true][Rook][0]   ^ Zobrist::PIECES[true][Rook][3]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][2]  ),
-        (Zobrist::PIECES[true][Rook][5]   ^ Zobrist::PIECES[true][Rook][7]   ^ Zobrist::PIECES[true][King][4]   ^ Zobrist::PIECES[true][King][6]  ),
-        (Zobrist::PIECES[false][Rook][56] ^ Zobrist::PIECES[false][Rook][59] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][58]),
-        (Zobrist::PIECES[false][Rook][61] ^ Zobrist::PIECES[false][Rook][63] ^ Zobrist::PIECES[false][King][60] ^ Zobrist::PIECES[false][King][62])
+        (Zobrist::PIECES[true][pt_Rook][0]   ^ Zobrist::PIECES[true][pt_Rook][3]   ^ Zobrist::PIECES[true][pt_King][4]   ^ Zobrist::PIECES[true][pt_King][2]  ),
+        (Zobrist::PIECES[true][pt_Rook][5]   ^ Zobrist::PIECES[true][pt_Rook][7]   ^ Zobrist::PIECES[true][pt_King][4]   ^ Zobrist::PIECES[true][pt_King][6]  ),
+        (Zobrist::PIECES[false][pt_Rook][56] ^ Zobrist::PIECES[false][pt_Rook][59] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][58]),
+        (Zobrist::PIECES[false][pt_Rook][61] ^ Zobrist::PIECES[false][pt_Rook][63] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][62])
     };
     constexpr BitBoard GetLS1B(BitBoard bb) noexcept {return bb & -bb;}
 
@@ -105,6 +107,18 @@ namespace Magics
     //Returns the a bitboard with a 1 bit in the location of the index provided
     constexpr BitBoard SqToBB(Sq index) {assert(ValidSq(index));return 1ull << index;}
 
+    //Returns lower 3 bits (&7)
+    [[nodiscard, gnu::always_inline]]
+    constexpr PieceType TypeOf(Piece p)
+    {
+        return PieceType(p & 0b0111);
+    }
+    [[nodiscard, gnu::always_inline]]
+    constexpr Colour ColourOf(Piece p)
+    {
+        assert(p != p_None);
+        return Colour((p & 0b1000) >> 3);
+    }
 
     //returns the rank of an index/square
     constexpr Sq RankOf(Sq index) {assert(ValidSq(index));return index >> 3;}
@@ -222,8 +236,8 @@ namespace Magics
             for(int8_t r = rank + 1, f = file - 1; r < 8 && f >= 0; ++r, --f)   anti_cross_attacks  |= Magics::SqToBB(U8(r * 8 +f));
             for(int8_t r = rank - 1, f = file + 1; r >= 0 && f < 8; --r, ++f)   anti_cross_attacks  |= Magics::SqToBB(U8(r * 8 +f));
             
-            r_val[i][File] = (Magics::FILE_ABB << file) & ~Magics::SqToBB(i); //Rook file attacks
-            r_val[i][Rank] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::SqToBB(i); // Rook Rank attacks
+            r_val[i][File] = (Magics::FILE_ABB << file) & ~Magics::SqToBB(i); //pt_Rook file attacks
+            r_val[i][Rank] = (Magics::RANK_1BB << (8 * rank)) & ~Magics::SqToBB(i); // pt_Rook Rank attacks
             r_val[i][Diagonal] = cross_attacks & ~Magics::SqToBB(i); //Bishop cross attacks
             r_val[i][AntiDiagonal] = anti_cross_attacks & ~Magics::SqToBB(i); //Bishop anti cross attacks
         }

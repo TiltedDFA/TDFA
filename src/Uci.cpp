@@ -8,21 +8,25 @@ ArgList SplitArgs(std::string* inp)
 
     if(inp->empty()) return {""};
 
-    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
+//    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
-    std::size_t start{0}, end{0};
+    ret.reserve(16);
 
-    while(end < inp->size())
+    std::size_t i{0};
+    while(i < inp->size())
     {
-        if(inp->at(end++) == ' ')
-        {
-            ret.emplace_back(inp->c_str() + start, inp->c_str() + (end - 1));
-            start = end;
-        }
+        while(i < inp->size() && (*inp)[i] == ' ')
+            ++i;
+        if(i >= inp->size())
+            break;
+        const std::size_t start = i;
+        while(i < inp->size() && (*inp)[i] != ' ')
+            ++i;
+        ret.emplace_back(inp->data() + start, i - start);
     }
 
-    if(inp->at(inp->size() - 1) != ' ')
-        ret.emplace_back(inp->c_str() + start, inp->c_str() + end);
+    if(ret.empty())
+        return {""};
 
     return ret;
 }
@@ -30,7 +34,7 @@ void Uci::HandleUci()
 {
     std::cout << (std::string("id name "    ) + ENGINE_NAME + '\n');
     std::cout << (std::string("id author "  ) + ENGINE_AUTHOR + '\n');
-    std::cout << "option name Hash type spin default 64 min 1 max 32767\n";
+    std::cout << std::format("option name Hash type spin default {} min 1 max 32767\n", tt_size_);
     std::cout << "uciok\n";
 }
 void Uci::HandleIsReady()
@@ -46,24 +50,37 @@ void Uci::HandleGo(const ArgList& args)
         U64 btime{60'000};
         U64 winc{0};
         U64 binc{0};
+        U64 movetime{0};
+        bool has_movetime = false;
         for(size_t i{0}; i < args.size(); ++i)
         {
+            if(i + 1 >= args.size())
+                break;
             if(args[i] == "wtime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), wtime);
-            if(args[i] == "btime")
+            else if(args[i] == "btime")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), btime);
-            if(args[i] == "winc")
+            else if(args[i] == "winc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), winc);
-            if(args[i] == "binc")
+            else if(args[i] == "binc")
                 std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), binc);
+            else if(args[i] == "movetime")
+            {
+                std::from_chars(args[i + 1].data(), args[i + 1].data() + args[i + 1].size(), movetime);
+                has_movetime = true;
+            }
         }
-        if(pos_.WhiteToMove())
+        if(pos_.ColourToMove() == White)
         {
             time_manager_.SetOptions(wtime, winc);
         }
         else
         {
             time_manager_.SetOptions(btime, binc);
+        }
+        if(has_movetime)
+        {
+            time_manager_.SetFixedTime(movetime);
         }
     }
     //start the timer for this round of calculation
@@ -73,15 +90,20 @@ void Uci::HandleGo(const ArgList& args)
 }
 void Uci::HandlePosition(const ArgList& args)
 {
+    if(args.size() < 2) return;
     if(args[1] == "fen")
     {
-        assert(args.size() >= 7);
+        if(args.size() < 8) return;
 
         std::string constructed_fen;
-        for(std::size_t i{2}; i < 7; ++i)
-            constructed_fen += std::string(args[i]) + ' ';
+        for(std::size_t i{2}; i < 8; ++i)
+        {
+            constructed_fen += std::string(args[i]);
+            if(i < 7)
+                constructed_fen += ' ';
+        }
 
-        constructed_fen += std::string(args[7]);
+//        PRINTNL("Here");
 
         pos_.ImportFen(constructed_fen);
     }
@@ -110,7 +132,7 @@ void Uci::HandleNewGame()
 }
 void Uci::HandleSetOption(const ArgList& args)
 {
-    if(args[2] == "hash")
+    if(args.size() >= 5 && (args[2] == "Hash" || args[2] == "hash"))
     {
         std::from_chars(args[4].data(), args[4].data() + args[4].size(), tt_size_);
         tt_.Resize(tt_size_);
@@ -139,7 +161,7 @@ void Uci::HandlePrint(const ArgList& args)
 {
     if(args[1] == "state")
     {
-        Debug::PrintBoardGraphically(pos_.GetArray());
+        Debug::PrintBoardGraphically(&pos_);
         Debug::PrintBoardState(pos_);
     }
 }
