@@ -86,10 +86,12 @@ void Uci::HandlePosition(const ArgList& args)
 //        PRINTNL("Here");
 
         pos_.ImportFen(constructed_fen);
+        pos_.HashCurrentPostion();
     }
     else if (args[1] == "startpos")
     {
         pos_.ImportFen(STARTPOS);
+        pos_.HashCurrentPostion();
     }
 
     ArgList::const_iterator it;

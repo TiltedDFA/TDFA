@@ -174,6 +174,7 @@ inline void TestSearch()
         tt.Resize(128);
         timer.StartTiming();
         pos.ImportFen(fen);
+        pos.HashCurrentPostion();
         search.FindBestMove(&pos, &tt, &timer);
         std::cout << "\n\nDONE\n\n" << std::endl;
     }

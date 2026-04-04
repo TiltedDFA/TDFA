@@ -109,7 +109,7 @@ void Position::ImportFen(std::string_view fen)
     }
     else
     {
-        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.size(), info_.half_moves_);
+        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.at(4).size(), info_.half_moves_);
     }
     if(fen_sections.at(5).empty())
     {
@@ -117,13 +117,13 @@ void Position::ImportFen(std::string_view fen)
     }
     else
     {
-        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
+        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.at(5).size(), full_moves_);
     }
 }
 void Position::MakeMove(const Move m)
 {
     assert(IsOk());
-    previous_state_info.push_back(info_);
+    state_stack_[state_sp_++] = info_;
 
     Sq start_sq;
     Sq target_sq;
@@ -148,7 +148,7 @@ void Position::MakeMove(const Move m)
 
         info_.captured_type_ = PopPiece(capture_sq);
         assert(info_.captured_type_ != p_None);
-        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][info_.captured_type_][capture_sq];
+        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][Magics::TypeOf(info_.captured_type_)][capture_sq];
         info_.half_moves_ = 0;
     }
     else
@@ -246,6 +246,8 @@ void Position::MakeMove(const Move m)
     }
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
     turn_ = !turn_;
+    if(turn_ == White)
+        ++full_moves_;
     assert(IsOk());
 }
 void Position::UnmakeMove(const Move m)
@@ -258,11 +260,8 @@ void Position::UnmakeMove(const Move m)
     MoveType mt;
     Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
 
-    PieceType p_type = Magics::TypeOf(PieceOn(start_sq));
+    PieceType p_type = Magics::TypeOf(PieceOn(target_sq));
     U8 is_castling_move = 0;
-
-    const BitBoard start_bb  = Magics::SqToBB(start_sq);
-    const BitBoard target_bb = Magics::SqToBB(target_sq);
 
     if(Moves::IsPromotionMove(m))
     {
@@ -297,7 +296,7 @@ void Position::UnmakeMove(const Move m)
         if(info_.captured_type_ != p_None)
         {
             Sq captured_sq = target_sq;
-            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == previous_state_info.back().en_passant_sq_)
+            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == state_stack_[state_sp_ - 1].en_passant_sq_)
             {
                 captured_sq -= (turn_ == White ? 8 : -8);
             }
@@ -306,15 +305,14 @@ void Position::UnmakeMove(const Move m)
         }
     }
     //restore previous state
-    info_ = previous_state_info.back();
-    previous_state_info.pop_back();
+    info_ = state_stack_[--state_sp_];
     assert(IsOk());
 }
 ZobristKey Position::HashCurrentPostion()
 {
-    // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
-    info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
+    if(turn_ == Black)
+        info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
 
     for(Colour c = White; c <= Black; c = Colour(c + 1))
     {

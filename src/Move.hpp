@@ -26,7 +26,7 @@ namespace Moves
     constexpr U16 PIECE_TYPE_SHIFT = 12;
 
     constexpr PieceType BAD_MOVE = std::numeric_limits<PieceType>::max();
-    constexpr Move NULL_MOVE = std::numeric_limits<PieceType>::max();
+    constexpr Move NULL_MOVE = std::numeric_limits<Move>::max();
 
     constexpr Move EncodeMove(const Sq start_index, const Sq target_index, const MoveType move_type)
     {

@@ -378,3 +378,146 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
     }
 
 }
+
+// ── Capture-only pawn generation (for QSearch) ───────────────────
+void MoveGen::WhitePawnCaptures(Position const* pos, MoveList* ml) noexcept
+{
+    const BitBoard pawns = pos->Pieces(White, pt_Pawn);
+    if (!pawns) return;
+
+    const BitBoard enemies = pos->Pieces(Black);
+    BitBoard bb;
+
+    // Quiet push-promotions (rank 8)
+    bb = Shift<MD::NORTH>(pawns) & pos->EmptySqs() & Magics::RANK_8BB;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        ml->add(Moves::EncodeMove(idx - 8, idx, mt_QueenPromotion));
+        ml->add(Moves::EncodeMove(idx - 8, idx, mt_KnightPromotion));
+        ml->add(Moves::EncodeMove(idx - 8, idx, mt_RookPromotion));
+        ml->add(Moves::EncodeMove(idx - 8, idx, mt_BishopPromotion));
+        bb = Magics::PopLS1B(bb);
+    }
+
+    // NE captures
+    bb = Shift<MD::NORTH_EAST>(pawns) & enemies;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        if (idx > 55)
+        {
+            ml->add(Moves::EncodeMove(idx - 9, idx, mt_QueenPromotion));
+            ml->add(Moves::EncodeMove(idx - 9, idx, mt_KnightPromotion));
+            ml->add(Moves::EncodeMove(idx - 9, idx, mt_RookPromotion));
+            ml->add(Moves::EncodeMove(idx - 9, idx, mt_BishopPromotion));
+        }
+        else
+        {
+            ml->add(Moves::EncodeMove(idx - 9, idx, mt_Capture));
+        }
+        bb = Magics::PopLS1B(bb);
+    }
+
+    if ((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_EAST>(pawns)) [[unlikely]]
+    {
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_EAST>(pawns));
+        ml->add(Moves::EncodeMove(idx - 9, idx, mt_EnPassant));
+    }
+
+    // NW captures
+    bb = Shift<MD::NORTH_WEST>(pawns) & enemies;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        if (idx > 55)
+        {
+            ml->add(Moves::EncodeMove(idx - 7, idx, mt_QueenPromotion));
+            ml->add(Moves::EncodeMove(idx - 7, idx, mt_KnightPromotion));
+            ml->add(Moves::EncodeMove(idx - 7, idx, mt_RookPromotion));
+            ml->add(Moves::EncodeMove(idx - 7, idx, mt_BishopPromotion));
+        }
+        else
+        {
+            ml->add(Moves::EncodeMove(idx - 7, idx, mt_Capture));
+        }
+        bb = Magics::PopLS1B(bb);
+    }
+
+    if ((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns)) [[unlikely]]
+    {
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns));
+        ml->add(Moves::EncodeMove(idx - 7, idx, mt_EnPassant));
+    }
+}
+
+void MoveGen::BlackPawnCaptures(Position const* pos, MoveList* ml) noexcept
+{
+    const BitBoard pawns = pos->Pieces(Black, pt_Pawn);
+    if (!pawns) return;
+
+    const BitBoard enemies = pos->Pieces(White);
+    BitBoard bb;
+
+    // Quiet push-promotions (rank 1)
+    bb = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & Magics::RANK_1BB;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        ml->add(Moves::EncodeMove(idx + 8, idx, mt_QueenPromotion));
+        ml->add(Moves::EncodeMove(idx + 8, idx, mt_KnightPromotion));
+        ml->add(Moves::EncodeMove(idx + 8, idx, mt_RookPromotion));
+        ml->add(Moves::EncodeMove(idx + 8, idx, mt_BishopPromotion));
+        bb = Magics::PopLS1B(bb);
+    }
+
+    // SE captures
+    bb = Shift<MD::SOUTH_EAST>(pawns) & enemies;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        if (idx < 8)
+        {
+            ml->add(Moves::EncodeMove(idx + 7, idx, mt_QueenPromotion));
+            ml->add(Moves::EncodeMove(idx + 7, idx, mt_KnightPromotion));
+            ml->add(Moves::EncodeMove(idx + 7, idx, mt_RookPromotion));
+            ml->add(Moves::EncodeMove(idx + 7, idx, mt_BishopPromotion));
+        }
+        else
+        {
+            ml->add(Moves::EncodeMove(idx + 7, idx, mt_Capture));
+        }
+        bb = Magics::PopLS1B(bb);
+    }
+
+    if ((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns)) [[unlikely]]
+    {
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns));
+        ml->add(Moves::EncodeMove(idx + 7, idx, mt_EnPassant));
+    }
+
+    // SW captures
+    bb = Shift<MD::SOUTH_WEST>(pawns) & enemies;
+    while (bb)
+    {
+        const Sq idx = Magics::FindLS1B(bb);
+        if (idx < 8)
+        {
+            ml->add(Moves::EncodeMove(idx + 9, idx, mt_QueenPromotion));
+            ml->add(Moves::EncodeMove(idx + 9, idx, mt_KnightPromotion));
+            ml->add(Moves::EncodeMove(idx + 9, idx, mt_RookPromotion));
+            ml->add(Moves::EncodeMove(idx + 9, idx, mt_BishopPromotion));
+        }
+        else
+        {
+            ml->add(Moves::EncodeMove(idx + 9, idx, mt_Capture));
+        }
+        bb = Magics::PopLS1B(bb);
+    }
+
+    if ((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns)) [[unlikely]]
+    {
+        const Sq idx = Magics::FindLS1B((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns));
+        ml->add(Moves::EncodeMove(idx + 9, idx, mt_EnPassant));
+    }
+}

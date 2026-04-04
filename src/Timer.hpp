@@ -33,8 +33,7 @@ private:
 class TimeManager
 {
 private:
-    //miliseconds
-    U64 GetTimeAllowance()const
+    U64 GetTimeAllowance() const
     {
         return U64(our_time_ / 20 + our_increment_ / 2);
     }
@@ -46,13 +45,30 @@ public:
     }
     void StartTiming()
     {
-        end_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(GetTimeAllowance());
+        const auto now = std::chrono::steady_clock::now();
+        base_ms_ = GetTimeAllowance();
+        hard_end_ = now + std::chrono::milliseconds(base_ms_);
+        soft_end_ = now + std::chrono::milliseconds(base_ms_ / 2);
+        start_ = now;
     }
-    bool OutOfTime()const {return std::chrono::steady_clock::now() > end_;}
+    bool OutOfTime() const { return std::chrono::steady_clock::now() > hard_end_; }
+    bool SoftTimeUp() const { return std::chrono::steady_clock::now() > soft_end_; }
+
+    // Extend soft limit (e.g. when best move changes) up to hard limit
+    void ExtendSoftTime(double factor)
+    {
+        const auto new_soft = start_ + std::chrono::milliseconds(
+            static_cast<U64>(base_ms_ * std::min(factor, 1.0)));
+        if (new_soft > soft_end_ && new_soft < hard_end_)
+            soft_end_ = new_soft;
+    }
 
 private:
-    U64 our_time_;
-    U64 our_increment_;
-    std::chrono::time_point<std::chrono::steady_clock> end_;
+    U64 our_time_{};
+    U64 our_increment_{};
+    U64 base_ms_{};
+    std::chrono::time_point<std::chrono::steady_clock> start_;
+    std::chrono::time_point<std::chrono::steady_clock> hard_end_;
+    std::chrono::time_point<std::chrono::steady_clock> soft_end_;
 };
 #endif // #ifndef TIMER_HPP

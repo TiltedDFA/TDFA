@@ -37,7 +37,8 @@ public:
     ~TransposTable(){delete[] table_ptr_;};
     void Resize(size_t size_in_mB);
     void Store(ZobristKey, Score, Move, U8, BoundType) const;
-    [[nodiscard]] HashEntry const* Probe(ZobristKey)const;
+    [[nodiscard]] HashEntry const* Probe(ZobristKey) const;
+    void Prefetch(ZobristKey key) const;
     void Clear() const;
     [[nodiscard]] size_t GetNumElems()const{return num_elements_;}
 private:

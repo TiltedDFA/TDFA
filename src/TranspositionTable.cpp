@@ -33,12 +33,11 @@ void TransposTable::Store(
                           ) const {
     assert(num_elements_ != 0);
 
-    // HashEntry* entry = &table_ptr_[key % num_elements_];
     HashEntry* entry = &table_ptr_[index(key, num_elements_)];
 
-    #if DEBUG_TRANPOSITION_TABLE == 1
-    PRINTNL(std::format("key: {}, num_elms: {}, index accessed: {}", key, num_elements_, key % num_elements_));
-    #endif
+    // Depth replacement: keep deeper entries unless this is an exact score
+    if(entry->key_ != 0 && entry->depth_ > depth && bound != BoundType::EXACT_VAL)
+        return;
 
     entry->key_   = key;
     entry->eval_  = eval;
@@ -52,6 +51,9 @@ HashEntry const* TransposTable::Probe(ZobristKey key)const
     // const HashEntry* entry = &table_ptr_[key % num_elements_];
     const HashEntry* entry = &table_ptr_[index(key, num_elements_)];
     return (entry->key_ == key) ? entry : nullptr;
+}
+void TransposTable::Prefetch(ZobristKey key) const {
+    __builtin_prefetch(&table_ptr_[index(key, num_elements_)]);
 }
 void TransposTable::Clear() const {
     std::memset(table_ptr_, 0, sizeof(HashEntry) * num_elements_);

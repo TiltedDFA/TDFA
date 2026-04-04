@@ -12,8 +12,6 @@
 #include <functional>
 #include <iostream>
 #include <string_view>
-#include <vector>
-
 #include "Board.hpp"
 
 struct StateInfo
@@ -32,6 +30,8 @@ public:
     Piece       captured_type_;
     ZobristKey  zobrist_key_;
 };
+static constexpr int MAX_GAME_PLY = 1024;
+
 class Position final : public Board
 {
 public:
@@ -40,11 +40,10 @@ public:
         info_({}),
         turn_(White),
         full_moves_(0),
-        previous_state_info({})
-    {
-        previous_state_info.reserve(MAX_MOVES);
-    }
-    
+        state_sp_(0),
+        state_stack_{}
+    {}
+
     Position(std::string_view fen) : Position()
     {
         ImportFen(fen);
@@ -60,7 +59,7 @@ public:
         info_.zobrist_key_      = 0;
         turn_                   = White;
         full_moves_             = 0;
-        previous_state_info.clear();
+        state_sp_               = 0;
     }
 
     void ImportFen(std::string_view fen);
@@ -96,15 +95,45 @@ public:
     {
         return ((Pieces(White) & Pieces(Black)) == 0ULL);
     }
+
+    bool IsRepetition() const
+    {
+        for (int i = state_sp_ - 2; i >= 0; i -= 2)
+        {
+            if (state_stack_[i].zobrist_key_ == info_.zobrist_key_)
+                return true;
+        }
+        return false;
+    }
+
+    void MakeNullMove()
+    {
+        state_stack_[state_sp_++] = info_;
+        if (info_.en_passant_sq_ != Magics::EP_NULL)
+        {
+            info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
+            info_.en_passant_sq_ = Magics::EP_NULL;
+        }
+        info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
+        turn_ = !turn_;
+    }
+
+    void UnmakeNullMove()
+    {
+        turn_ = !turn_;
+        info_ = state_stack_[--state_sp_];
+    }
+
     ZobristKey HashCurrentPostion();
-    
+
 private:
     void UpdateCastlingRights();
 private:
     StateInfo info_;
     Colour turn_;
     U16 full_moves_;
-    std::vector<StateInfo> previous_state_info;
+    int state_sp_;
+    StateInfo state_stack_[MAX_GAME_PLY];
 };
 
 
