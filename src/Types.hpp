@@ -1,6 +1,7 @@
 #ifndef TYPES_HPP
 #define TYPES_HPP
 
+constexpr bool USE_PEXT = true;
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0

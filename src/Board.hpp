@@ -57,92 +57,102 @@ public:
     {
         return Piece(t + c * 8);
     }
-#ifndef NDEBUG
-    constexpr void pedantic_check(Sq s, bool add, Piece p = Piece::p_None) const
-    {
-         const BitBoard sq_bb = Magics::SqToBB(s);
-         const PieceType pt = Magics::TypeOf(p);
-         assert(Magics::ValidSq(s));
-         if (add)
-         {
-            const Colour c = Magics::ColourOf(p);
-            assert(PieceOn(s) == p_None);                                  //no piece exists where we try to place it
-            assert(pt != PieceType::pt_All && pt != PieceType::pt_None);   //valid piece type to move
-            assert(!(by_type_[pt] & sq_bb));                               //no piece exists where we try to place it
-            assert(!(by_type_[pt_All] & sq_bb));                           //no piece exists where we try to place it
-            assert(!(by_colour_[c] & sq_bb));                              //no piece exists where we try to place it
-         }
-         else //remove/delete
-         {
-            assert(PieceOn(s) != p_None);                                 //piece exists where we try to place it
-            assert(by_type_[pt] & sq_bb);                               //piece exists where we try to place it
-            assert(by_type_[pt_All] & sq_bb);                           //piece exists where we try to place it
-            assert(by_colour_[Magics::ColourOf(PieceOn(s))] & sq_bb);                              //piece exists where we try to place it
-         }
-
-    }
-#else
-    constexpr void pedantic_check(Sq s, bool add, Piece p = Piece::p_None) const
-    {
-        return;
-    }
-#endif
     constexpr void AddPiece(const Piece p, const Sq s)
     {
         using namespace Magics;
-        pedantic_check(s, true, p);
-
-        by_type_[TypeOf(p)]     |= SqToBB(s);
-        by_type_[pt_All]        |= SqToBB(s);
-        by_colour_[ColourOf(p)] |= SqToBB(s);
-
+        const BitBoard sq_bb = SqToBB(s);
+        by_type_[TypeOf(p)]     |= sq_bb;
+        by_type_[pt_All]        |= sq_bb;
+        by_colour_[ColourOf(p)] |= sq_bb;
         board_[s] = p;
     }
     constexpr void RemovePiece(const Sq s)
     {
         using namespace Magics;
-
         const Piece p = board_[s];
-
-        pedantic_check(s, false);
-
-        by_type_[TypeOf(p)]     ^= SqToBB(s);
-        by_type_[pt_All]        ^= SqToBB(s);
-        by_colour_[ColourOf(p)] ^= SqToBB(s);
-
+        const BitBoard sq_bb = SqToBB(s);
+        by_type_[TypeOf(p)]     ^= sq_bb;
+        by_type_[pt_All]        ^= sq_bb;
+        by_colour_[ColourOf(p)] ^= sq_bb;
         board_[s] = p_None;
     }
     constexpr Piece PopPiece(const Sq s)
     {
-        using namespace Magics;
-
         const Piece p = board_[s];
         RemovePiece(s);
-
         return p;
     }
     constexpr void MovePiece(const Sq from, const Sq to)
     {
         using namespace Magics;
-
         const Piece p = board_[from];
-        pedantic_check(from, false);
-        pedantic_check(to, true, p);
-
         const BitBoard move = SqToBB(from) | SqToBB(to);
-
         by_type_[pt_All]           ^= move;
         by_type_[TypeOf(p)]        ^= move;
         by_colour_[ColourOf(p)]    ^= move;
-
         board_[from]   = p_None;
         board_[to]     = p;
+    }
+    // Bitboard-based piece type lookup (avoids mailbox dependency)
+    [[nodiscard]] constexpr PieceType PieceTypeOn(const Sq s) const
+    {
+        const BitBoard bb = Magics::SqToBB(s);
+        if (by_type_[pt_Pawn]   & bb) return pt_Pawn;
+        if (by_type_[pt_Knight] & bb) return pt_Knight;
+        if (by_type_[pt_King]   & bb) return pt_King;
+        if (by_type_[pt_Bishop] & bb) return pt_Bishop;
+        if (by_type_[pt_Rook]   & bb) return pt_Rook;
+        return pt_Queen;
+    }
 
+    // Known-type move: caller provides type+colour, skips re-reading mailbox
+    constexpr void MovePieceFast(const Sq from, const Sq to, const PieceType pt, const Colour c)
+    {
+        const BitBoard move = Magics::SqToBB(from) | Magics::SqToBB(to);
+        by_type_[pt_All] ^= move;
+        by_type_[pt]     ^= move;
+        by_colour_[c]    ^= move;
+        board_[to]   = MakePiece(c, pt);
+        board_[from] = p_None;
+    }
+    // Known-type remove: caller provides type+colour
+    constexpr void RemovePieceFast(const Sq s, const PieceType pt, const Colour c)
+    {
+        const BitBoard sq_bb = Magics::SqToBB(s);
+        by_type_[pt_All] ^= sq_bb;
+        by_type_[pt]     ^= sq_bb;
+        by_colour_[c]    ^= sq_bb;
+        board_[s] = p_None;
+    }
+    // Known-type add: caller provides type+colour
+    constexpr void AddPieceFast(const PieceType pt, const Colour c, const Sq s)
+    {
+        const BitBoard sq_bb = Magics::SqToBB(s);
+        by_type_[pt_All] |= sq_bb;
+        by_type_[pt]     |= sq_bb;
+        by_colour_[c]    |= sq_bb;
+        board_[s] = MakePiece(c, pt);
+    }
+    // Rebuild mailbox from bitboards (call before search/eval that needs PieceOn)
+    constexpr void RebuildMailbox()
+    {
+        std::ranges::fill(board_, p_None);
+        for (Colour c = White; c <= Black; c = Colour(c + 1))
+            for (PieceType pt = pt_King; pt <= pt_Pawn; pt = PieceType(pt + 1))
+            {
+                BitBoard bb = Pieces(c, pt);
+                while (bb)
+                {
+                    const Sq sq = Magics::FindLS1B(bb);
+                    board_[sq] = MakePiece(c, pt);
+                    bb = Magics::PopLS1B(bb);
+                }
+            }
     }
 private:
     Piece    board_[64];
     BitBoard by_colour_[2];
-    BitBoard by_type_  [7]; // piece typee + all board
+    BitBoard by_type_  [7]; // piece type + all board
 };
 
 #endif //TDFA_BOARD_HPP

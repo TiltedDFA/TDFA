@@ -125,125 +125,111 @@ void Position::MakeMove(const Move m)
     assert(IsOk());
     state_stack_[state_sp_++] = info_;
 
-    Sq start_sq;
-    Sq target_sq;
+    Sq from, to;
     MoveType mt;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
+    Moves::DecodeMove(m, &from, &to, &mt);
 
-    PieceType p_type = Magics::TypeOf(PieceOn(start_sq));
-
-    U8 is_castling_move = 0;
-    const BitBoard start_bb    = Magics::SqToBB(start_sq);
-    const BitBoard target_bb   = Magics::SqToBB(target_sq);
-    const BitBoard them_pieces = Pieces(!turn_) | (p_type == pt_Pawn ?  EnPasBB() : 0);
-
-    ++info_.half_moves_;
-
-    if(Moves::IsPromotionMove(m)) p_type = pt_Pawn;
-
-    if((target_bb & them_pieces))
-    {
-        Sq capture_sq = target_sq;
-        if(target_sq == info_.en_passant_sq_) capture_sq -= (turn_ == White ? 8 : -8);
-
-        info_.captured_type_ = PopPiece(capture_sq);
-        assert(info_.captured_type_ != p_None);
-        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][Magics::TypeOf(info_.captured_type_)][capture_sq];
-        info_.half_moves_ = 0;
-    }
-    else
-        info_.captured_type_ = p_None;
-
-    //handle weird castling rights update
-    if(Magics::TypeOf(info_.captured_type_) == pt_Rook && (target_bb & (Magics::ROOK_START_SQS)))
-    {
-
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        switch (target_sq)
-        {
-        case 0:  info_.castling_rights_ &= (~Magics::CASTLE_Q_W & 0xF);break;
-        case 7:  info_.castling_rights_ &= (~Magics::CASTLE_K_W & 0xF);break;
-        case 56: info_.castling_rights_ &= (~Magics::CASTLE_Q_B & 0xF);break;
-        case 63: info_.castling_rights_ &= (~Magics::CASTLE_K_B & 0xF);break;
-        }
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-    }
-    if(p_type == pt_Rook && (start_bb & Magics::ROOK_START_SQS))
-    {
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        switch (start_sq)
-        {
-        case 0:  info_.castling_rights_ &= (~Magics::CASTLE_Q_W & 0xF);break;
-        case 7:  info_.castling_rights_ &= (~Magics::CASTLE_K_W & 0xF);break;
-        case 56: info_.castling_rights_ &= (~Magics::CASTLE_Q_B & 0xF);break;
-        case 63: info_.castling_rights_ &= (~Magics::CASTLE_K_B & 0xF);break;
-        }
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-    }
-    
-
-    if(p_type == pt_King)
-    {
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        info_.castling_rights_ &= turn_ == White ? Magics::NO_CASTLE_W : Magics::NO_CASTLE_B;
-        info_.zobrist_key_ ^= Zobrist::CASTLING[info_.castling_rights_];
-        
-        switch (Magics::EncodeKing(start_sq, target_sq))
-        {
-        case Magics::EncodeKing(4, 2):   is_castling_move = 1; break;
-        case Magics::EncodeKing(4, 6):   is_castling_move = 2; break;
-        case Magics::EncodeKing(60, 58): is_castling_move = 3; break;
-        case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
-        default: ;
-        }
-    }
+    // Clear EP square
     if(info_.en_passant_sq_ != Magics::EP_NULL)
     {
         info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
         info_.en_passant_sq_ = Magics::EP_NULL;
     }
 
-    if(is_castling_move)
-    {
-        //move relevant pieces
-        // pieces_[whites_turn_][loc::KING] = target_bb;
-        MovePiece(start_sq, target_sq);
-        MovePiece(Magics::ROOK_TO_FROM_ARR[is_castling_move][0], Magics::ROOK_TO_FROM_ARR[is_castling_move][1]);
-        // assert("Double check this", 0);
-        //update the key
-        info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[is_castling_move];
-    }
-    else
-    {
-        // //move piece
-        // assert((pieces_[whites_turn_][p_type] & start_bb));
-        // assert(!(pieces_[whites_turn_][p_type] & target_bb));
+    ++info_.half_moves_;
+    info_.captured_type_ = p_None;
 
-        // pieces_[whites_turn_][p_type] ^= start_bb | target_bb;
-        MovePiece(start_sq, target_sq);
-        info_.zobrist_key_ ^= Zobrist::PIECES[turn_][p_type][start_sq] ^ Zobrist::PIECES[turn_][p_type][target_sq];
-    }
-    
-    if(p_type == pt_Pawn)
-    {
-        if(std::abs(start_sq - target_sq) == 16)
-        {
-            info_.en_passant_sq_ = target_sq - (turn_ == White ? 8 : -8);
-            info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
-        }
-        else if(Moves::IsPromotionMove(m))
-        {
-            const PieceType prom_to = Moves::PTypeOfProm(m);
-            // assert("Need to update promotion system of moves since changed piece type", 0);
-            // pieces_[whites_turn_][loc::PAWN] &= ~target_bb;
-            // pieces_[whites_turn_][prom_to]   |= target_bb;
-            RemovePiece(target_sq);
-            AddPiece(MakePiece(turn_, prom_to),target_sq);
+    const PieceType p_type = Magics::TypeOf(PieceOn(from));
 
-            info_.zobrist_key_ ^= Zobrist::PIECES[turn_][prom_to][target_sq] ^ Zobrist::PIECES[turn_][pt_Pawn][target_sq];
+    switch(mt)
+    {
+    case mt_Quiet:
+    {
+        MovePieceFast(from, to, p_type, turn_);
+        info_.zobrist_key_ ^= Zobrist::PIECES[turn_][p_type][from] ^ Zobrist::PIECES[turn_][p_type][to];
+
+        // Pawn double push — set EP
+        if(p_type == pt_Pawn)
+        {
+            if((from ^ to) == 16) // equivalent to abs(from-to)==16 for unsigned
+            {
+                info_.en_passant_sq_ = Sq(turn_ == White ? from + 8 : from - 8);
+                info_.zobrist_key_ ^= Zobrist::EN_PASSANT[info_.en_passant_sq_];
+            }
+            info_.half_moves_ = 0;
         }
+        break;
+    }
+    case mt_Capture:
+    {
+        const Piece cap_p = PieceOn(to);
+        const PieceType cap_pt = Magics::TypeOf(cap_p);
+        RemovePieceFast(to, cap_pt, !turn_);
+        info_.captured_type_ = cap_p;
+        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][cap_pt][to];
         info_.half_moves_ = 0;
+
+        MovePieceFast(from, to, p_type, turn_);
+        info_.zobrist_key_ ^= Zobrist::PIECES[turn_][p_type][from] ^ Zobrist::PIECES[turn_][p_type][to];
+        break;
     }
+    case mt_EnPassant:
+    {
+        const Sq cap_sq = Sq(turn_ == White ? to - 8 : to + 8);
+        RemovePieceFast(cap_sq, pt_Pawn, !turn_);
+        info_.captured_type_ = MakePiece(!turn_, pt_Pawn);
+        info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][pt_Pawn][cap_sq];
+        info_.half_moves_ = 0;
+
+        MovePieceFast(from, to, pt_Pawn, turn_);
+        info_.zobrist_key_ ^= Zobrist::PIECES[turn_][pt_Pawn][from] ^ Zobrist::PIECES[turn_][pt_Pawn][to];
+        break;
+    }
+    case mt_Castling:
+    {
+        U8 castle_idx = 0;
+        switch (Magics::EncodeKing(from, to))
+        {
+        case Magics::EncodeKing(4, 2):   castle_idx = 1; break;
+        case Magics::EncodeKing(4, 6):   castle_idx = 2; break;
+        case Magics::EncodeKing(60, 58): castle_idx = 3; break;
+        case Magics::EncodeKing(60, 62): castle_idx = 4; break;
+        }
+        MovePieceFast(from, to, pt_King, turn_);
+        MovePieceFast(Magics::ROOK_TO_FROM_ARR[castle_idx][0], Magics::ROOK_TO_FROM_ARR[castle_idx][1], pt_Rook, turn_);
+        info_.zobrist_key_ ^= Magics::CASTLING_ZOB_KEYS[castle_idx];
+        break;
+    }
+    default: // promotions
+    {
+        const PieceType prom_to = Moves::PTypeOfProm(m);
+
+        // Handle capture-promotion
+        const Piece cap_p = PieceOn(to);
+        if(cap_p != p_None)
+        {
+            const PieceType cap_pt = Magics::TypeOf(cap_p);
+            RemovePieceFast(to, cap_pt, !turn_);
+            info_.captured_type_ = cap_p;
+            info_.zobrist_key_ ^= Zobrist::PIECES[!turn_][cap_pt][to];
+        }
+
+        // Move pawn then replace with promoted piece
+        MovePieceFast(from, to, pt_Pawn, turn_);
+        RemovePieceFast(to, pt_Pawn, turn_);
+        AddPieceFast(prom_to, turn_, to);
+        info_.zobrist_key_ ^= Zobrist::PIECES[turn_][pt_Pawn][from] ^ Zobrist::PIECES[turn_][prom_to][to];
+        info_.half_moves_ = 0;
+        break;
+    }
+    }
+
+    // Castling rights update — single table lookup replaces 3 switch blocks
+    const U8 old_cr = info_.castling_rights_;
+    info_.castling_rights_ &= Magics::CASTLING_MASK[from] & Magics::CASTLING_MASK[to];
+    if(old_cr != info_.castling_rights_)
+        info_.zobrist_key_ ^= Zobrist::CASTLING[old_cr] ^ Zobrist::CASTLING[info_.castling_rights_];
+
     info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
     turn_ = !turn_;
     if(turn_ == White)
@@ -255,56 +241,65 @@ void Position::UnmakeMove(const Move m)
     assert(IsOk());
     turn_ = !turn_;
 
-    Sq start_sq;
-    Sq target_sq;
+    Sq from, to;
     MoveType mt;
-    Moves::DecodeMove(m, &start_sq, &target_sq, &mt);
+    Moves::DecodeMove(m, &from, &to, &mt);
 
-    PieceType p_type = Magics::TypeOf(PieceOn(target_sq));
-    U8 is_castling_move = 0;
-
-    if(Moves::IsPromotionMove(m))
+    switch(mt)
     {
-        p_type = pt_Pawn;
-        RemovePiece(target_sq);
-        AddPiece(MakePiece(turn_, pt_Pawn),target_sq);
+    case mt_Quiet:
+    {
+        const PieceType p_type = Magics::TypeOf(PieceOn(to));
+        MovePieceFast(to, from, p_type, turn_);
+        break;
     }
-    //if castling move
-    if(p_type == pt_King)
+    case mt_Capture:
     {
-        switch (Magics::EncodeKing(start_sq, target_sq))
+        const PieceType p_type = Magics::TypeOf(PieceOn(to));
+        MovePieceFast(to, from, p_type, turn_);
+        const PieceType cap_pt = Magics::TypeOf(info_.captured_type_);
+        const Colour cap_c = Magics::ColourOf(info_.captured_type_);
+        AddPieceFast(cap_pt, cap_c, to);
+        break;
+    }
+    case mt_EnPassant:
+    {
+        MovePieceFast(to, from, pt_Pawn, turn_);
+        const Sq cap_sq = Sq(turn_ == White ? to - 8 : to + 8);
+        AddPieceFast(pt_Pawn, !turn_, cap_sq);
+        break;
+    }
+    case mt_Castling:
+    {
+        U8 castle_idx = 0;
+        switch (Magics::EncodeKing(from, to))
         {
-        case Magics::EncodeKing(4, 2):   is_castling_move = 1; break;
-        case Magics::EncodeKing(4, 6):   is_castling_move = 2; break;
-        case Magics::EncodeKing(60, 58): is_castling_move = 3; break;
-        case Magics::EncodeKing(60, 62): is_castling_move = 4; break;
+        case Magics::EncodeKing(4, 2):   castle_idx = 1; break;
+        case Magics::EncodeKing(4, 6):   castle_idx = 2; break;
+        case Magics::EncodeKing(60, 58): castle_idx = 3; break;
+        case Magics::EncodeKing(60, 62): castle_idx = 4; break;
         }
+        MovePieceFast(to, from, pt_King, turn_);
+        MovePieceFast(Magics::ROOK_TO_FROM_ARR[castle_idx][1], Magics::ROOK_TO_FROM_ARR[castle_idx][0], pt_Rook, turn_);
+        break;
     }
-    
-    if(is_castling_move) [[unlikely]]
+    default: // promotions
     {
-        // pieces_[whites_turn_][loc::KING] = start_bb;
-        // pieces_[whites_turn_][loc::ROOK] ^= Magics::ROOK_TO_FROM_ARR_BB[is_castling_move];
-        MovePiece(target_sq, start_sq);
-        MovePiece(Magics::ROOK_TO_FROM_ARR[is_castling_move][1], Magics::ROOK_TO_FROM_ARR[is_castling_move][0]);
-        // assert("Double check this", 0);
-    }
-    else
-    {
-        MovePiece(target_sq, start_sq);
+        const PieceType prom_pt = Magics::TypeOf(PieceOn(to));
+        RemovePieceFast(to, prom_pt, turn_);
+        AddPieceFast(pt_Pawn, turn_, from);
 
+        // Restore captured piece if any
         if(info_.captured_type_ != p_None)
         {
-            Sq captured_sq = target_sq;
-            if(Magics::TypeOf(info_.captured_type_) == pt_Pawn && target_sq == state_stack_[state_sp_ - 1].en_passant_sq_)
-            {
-                captured_sq -= (turn_ == White ? 8 : -8);
-            }
-            // pieces_[!whites_turn_][info_.captured_type_] |= Magics::SqToBB(captured_sq);
-            AddPiece(info_.captured_type_, captured_sq);
+            const PieceType cap_pt = Magics::TypeOf(info_.captured_type_);
+            const Colour cap_c = Magics::ColourOf(info_.captured_type_);
+            AddPieceFast(cap_pt, cap_c, to);
         }
+        break;
     }
-    //restore previous state
+    }
+    // Restore previous state
     info_ = state_stack_[--state_sp_];
     assert(IsOk());
 }

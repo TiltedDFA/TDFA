@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <immintrin.h>
 
 #include "Types.hpp"
 #include "MagicConstants.hpp"
@@ -17,20 +18,33 @@ namespace MoveGen
     {
         while(b)
         {
-            ml->add(Moves::EncodeMove(from, Magics::FindLS1B(b), type));
-            b = Magics::PopLS1B(b);
+            ml->add(Moves::EncodeMove(from, Magics::PopNRetLS1B(b), type));
         }
     }
 
-    template<AttackDirection direction>
-    constexpr move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
+    template<AttackDirection direction, bool UsePext = USE_PEXT>
+    inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
     {
         if constexpr(direction == Rank)
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedFilesIndex(us   & attack_mask);
-            const U8 them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
+            const U8 file_bit = U8(1u << file_of_attacker);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard rank_mask = Magics::RANK_1BB << (piece_sq & 56);
+                us_collapsed = U8(_pext_u64(us, rank_mask));
+                them_collapsed = U8(_pext_u64(them, rank_mask));
+            }
+            else
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedFilesIndex(us   & attack_mask);
+                them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
+            }
+            us_collapsed &= U8(~file_bit);
+            them_collapsed &= U8(~file_bit);
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
             assert(lookup_index <= 2187);
 
@@ -38,11 +52,25 @@ namespace MoveGen
         }
         else if constexpr(direction == File)
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 rank_of_attacker = Magics::RankOf(piece_sq);
             const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask, file_of_attacker);
-            const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard file_mask = Magics::FILE_ABB << file_of_attacker;
+                us_collapsed = U8(_pext_u64(us, file_mask));
+                them_collapsed = U8(_pext_u64(them, file_mask));
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            }
+            else
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask, file_of_attacker);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
+            }
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 
@@ -50,10 +78,31 @@ namespace MoveGen
         }
         else //direction == Diag || direction == Anti Diag
         {
-            const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
             const U8 rank_of_attacker = Magics::RankOf(piece_sq);
-            const U8 us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask);
-            const U8 them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
+            const U8 file_of_attacker = Magics::FileOf(piece_sq);
+            U8 us_collapsed{};
+            U8 them_collapsed{};
+            if constexpr (UsePext)
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                const BitBoard full_mask = attack_mask | Magics::SqToBB(piece_sq);
+                const U8 start_rank = (direction == Diagonal)
+                    ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
+                    : ((rank_of_attacker + file_of_attacker > 7)
+                        ? U8(rank_of_attacker + file_of_attacker - 7)
+                        : 0);
+                us_collapsed = U8(_pext_u64(us, full_mask) << start_rank);
+                them_collapsed = U8(_pext_u64(them, full_mask) << start_rank);
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            }
+            else
+            {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us   & attack_mask);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
+            }
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 
@@ -76,15 +125,13 @@ namespace MoveGen
 
         while(bishops)
         {
-            const U8 bishop_index = Magics::FindLS1B(bishops);
+            const U8 bishop_index = Magics::PopNRetLS1B(bishops);
 
             move_info const* move = GetMovesForSliding<Diagonal>(bishop_index, us, them);
             ml->merge(move);
 
             move = GetMovesForSliding<AntiDiagonal>(bishop_index, us, them);
             ml->merge(move);
-            
-            bishops = Magics::PopLS1B(bishops);
         }
     }
     
@@ -99,15 +146,13 @@ namespace MoveGen
         
         while(rooks)
         {
-            const U8 rook_index = Magics::FindLS1B(rooks);
+            const U8 rook_index = Magics::PopNRetLS1B(rooks);
 
             move_info const* move = GetMovesForSliding<File>(rook_index, us, them);
             ml->merge(move);
-            
+
             move = GetMovesForSliding<Rank>(rook_index, us, them);
             ml->merge(move);
-            
-            rooks = Magics::PopLS1B(rooks);
         }
     }
 
@@ -122,21 +167,19 @@ namespace MoveGen
 
         while(queens)
         {
-            const U8 queen_index = Magics::FindLS1B(queens);
-            
+            const U8 queen_index = Magics::PopNRetLS1B(queens);
+
             move_info const* move = GetMovesForSliding<File>(queen_index, us, them);
             ml->merge(move);
-            
+
             move = GetMovesForSliding<Rank>(queen_index, us, them);
             ml->merge(move);
-            
+
             move = GetMovesForSliding<Diagonal>(queen_index, us, them);
             ml->merge(move);
-            
+
             move = GetMovesForSliding<AntiDiagonal>(queen_index, us, them);
             ml->merge(move);
-            
-            queens = Magics::PopLS1B(queens);
         }
     }
 
@@ -145,19 +188,20 @@ namespace MoveGen
     {
         BitBoard knights = pos->Pieces(colour_to_move, pt_Knight);
         if(!knights) return;
+        const BitBoard occupied = pos->Pieces(White, Black);
+        const BitBoard them = pos->Pieces(!colour_to_move);
         while(knights)
         {
-            const U8 knight_index = Magics::FindLS1B(knights);
-            const BitBoard possible_quiet_move      = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~pos->Pieces(White, Black);
-            const BitBoard possible_capture_moves   = Magics::KNIGHT_ATTACK_MASKS[knight_index] & pos->Pieces(!colour_to_move);
+            const U8 knight_index = Magics::PopNRetLS1B(knights);
+            const BitBoard possible_quiet_move      = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~occupied;
+            const BitBoard possible_capture_moves   = Magics::KNIGHT_ATTACK_MASKS[knight_index] & them;
             GenerateMovesFromBB(possible_quiet_move, ml, knight_index, mt_Quiet);
             GenerateMovesFromBB(possible_capture_moves, ml, knight_index, mt_Capture);
-            knights = Magics::PopLS1B(knights);
         }
     }
 
     template<Colour colour_to_move>
-    void KingMoves(Position const* pos, MoveList* ml) 
+    void KingMoves(Position const* pos, MoveList* ml)
     {
         const U8 king_index = Magics::FindLS1B(pos->Pieces(colour_to_move, pt_King));
         const BitBoard possible_quiet_move      = Magics::KING_ATTACK_MASKS[king_index] & ~pos->Pieces(White, Black);
@@ -196,8 +240,7 @@ namespace MoveGen
 
         while(knights)
         {
-            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::FindLS1B(knights)] & them;
-            knights = Magics::PopLS1B(knights);
+            attacks |= Magics::KNIGHT_ATTACK_MASKS[Magics::PopNRetLS1B(knights)] & them;
         }
         return attacks;
     }
@@ -214,12 +257,10 @@ namespace MoveGen
 
         while(bishops)
         {
-            const U8 bishop_index = Magics::FindLS1B(bishops);
+            const U8 bishop_index = Magics::PopNRetLS1B(bishops);
 
             attacks |= GetMovesForSliding<Diagonal      >(bishop_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<AntiDiagonal  >(bishop_index, us, them)->attacks_;
-            
-            bishops = Magics::PopLS1B(bishops);
         }
         return attacks;
     }
@@ -236,10 +277,9 @@ namespace MoveGen
 
         while(rooks)
         {
-            const U8 rook_index = Magics::FindLS1B(rooks);
+            const U8 rook_index = Magics::PopNRetLS1B(rooks);
             attacks |= GetMovesForSliding<File>(rook_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<Rank>(rook_index, us, them)->attacks_;
-            rooks = Magics::PopLS1B(rooks);
         }
         return attacks;
     }
@@ -256,64 +296,44 @@ namespace MoveGen
 
         while(queens)
         {
-            const U8 queen_index = Magics::FindLS1B(queens);
-            
+            const U8 queen_index = Magics::PopNRetLS1B(queens);
+
             attacks |= GetMovesForSliding<File          >(queen_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<Rank          >(queen_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<Diagonal      >(queen_index, us, them)->attacks_;
             attacks |= GetMovesForSliding<AntiDiagonal  >(queen_index, us, them)->attacks_;
-
-            queens = Magics::PopLS1B(queens);
         }
         return attacks;
     }
     
-    // ── Per-square attack detection (much faster than GenerateAllAttacks) ──
+    // ── Per-square attack detection ──
     template<Colour attacked_by>
-    bool IsSquareAttacked(Position const* pos, Sq sq)
+    inline bool IsSquareAttacked(Position const* pos, Sq sq)
     {
-        if (Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(attacked_by, pt_Knight))
-            return true;
-
-        if (Magics::KING_ATTACK_MASKS[sq] & pos->Pieces(attacked_by, pt_King))
-            return true;
-
+        const BitBoard us   = pos->Pieces(!attacked_by);
+        const BitBoard them = pos->Pieces(attacked_by);
+        const BitBoard bishop_queen = pos->Pieces(attacked_by, pt_Bishop, pt_Queen);
+        const BitBoard rook_queen   = pos->Pieces(attacked_by, pt_Rook, pt_Queen);
         const BitBoard sq_bb = Magics::SqToBB(sq);
+
+        if (GetMovesForSliding<Diagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if (GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_ & bishop_queen) return true;
+        if (GetMovesForSliding<File>(sq, us, them)->attacks_ & rook_queen) return true;
+        if (GetMovesForSliding<Rank>(sq, us, them)->attacks_ & rook_queen) return true;
+
+        if (Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(attacked_by, pt_Knight)) return true;
+
+        const BitBoard pawns = pos->Pieces(attacked_by, pt_Pawn);
         if constexpr (attacked_by == White)
         {
-            if ((Magics::Shift<SOUTH_EAST>(sq_bb) | Magics::Shift<SOUTH_WEST>(sq_bb))
-                & pos->Pieces(White, pt_Pawn))
-                return true;
+            if ((Magics::Shift<SOUTH_EAST>(sq_bb) | Magics::Shift<SOUTH_WEST>(sq_bb)) & pawns) return true;
         }
         else
         {
-            if ((Magics::Shift<NORTH_EAST>(sq_bb) | Magics::Shift<NORTH_WEST>(sq_bb))
-                & pos->Pieces(Black, pt_Pawn))
-                return true;
+            if ((Magics::Shift<NORTH_EAST>(sq_bb) | Magics::Shift<NORTH_WEST>(sq_bb)) & pawns) return true;
         }
 
-        const BitBoard us   = pos->Pieces(!attacked_by) | sq_bb;
-        const BitBoard them = pos->Pieces(attacked_by);
-
-        const BitBoard diag = pos->Pieces(attacked_by, pt_Bishop, pt_Queen);
-        if (diag)
-        {
-            if (GetMovesForSliding<Diagonal>(sq, us, them)->attacks_ & diag)
-                return true;
-            if (GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_ & diag)
-                return true;
-        }
-
-        const BitBoard ortho = pos->Pieces(attacked_by, pt_Rook, pt_Queen);
-        if (ortho)
-        {
-            if (GetMovesForSliding<File>(sq, us, them)->attacks_ & ortho)
-                return true;
-            if (GetMovesForSliding<Rank>(sq, us, them)->attacks_ & ortho)
-                return true;
-        }
-
-        return false;
+        return (Magics::KING_ATTACK_MASKS[sq] & pos->Pieces(attacked_by, pt_King));
     }
 
     template<Colour colour_to_move>
@@ -385,7 +405,7 @@ namespace MoveGen
 
         while (pieces)
         {
-            const Sq sq = Magics::FindLS1B(pieces);
+            const Sq sq = Magics::PopNRetLS1B(pieces);
             BitBoard attacks = 0;
 
             if (pt == pt_Bishop || pt == pt_Queen)
@@ -400,7 +420,6 @@ namespace MoveGen
             }
 
             GenerateMovesFromBB(attacks & them, ml, sq, mt_Capture);
-            pieces = Magics::PopLS1B(pieces);
         }
     }
 
@@ -424,10 +443,9 @@ namespace MoveGen
             BitBoard knights = pos->Pieces(C, pt_Knight);
             while (knights)
             {
-                const Sq sq = Magics::FindLS1B(knights);
+                const Sq sq = Magics::PopNRetLS1B(knights);
                 BitBoard caps = Magics::KNIGHT_ATTACK_MASKS[sq] & pos->Pieces(!C);
                 GenerateMovesFromBB(caps, ml, sq, mt_Capture);
-                knights = Magics::PopLS1B(knights);
             }
         }
 

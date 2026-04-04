@@ -71,6 +71,20 @@ namespace Magics
         (Zobrist::PIECES[false][pt_Rook][56] ^ Zobrist::PIECES[false][pt_Rook][59] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][58]),
         (Zobrist::PIECES[false][pt_Rook][61] ^ Zobrist::PIECES[false][pt_Rook][63] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][62])
     };
+    // Precomputed castling rights mask per square. AND with current rights to update.
+    // Only squares 0,4,7,56,60,63 differ from 0xFF.
+    constexpr auto CASTLING_MASK = []() consteval {
+        std::array<U8, 64> m{};
+        for (int i = 0; i < 64; ++i) m[i] = 0xFF;
+        m[0]  = U8(~CASTLE_Q_W); // a1 rook
+        m[7]  = U8(~CASTLE_K_W); // h1 rook
+        m[4]  = U8(~(CASTLE_K_W | CASTLE_Q_W)); // e1 king
+        m[56] = U8(~CASTLE_Q_B); // a8 rook
+        m[63] = U8(~CASTLE_K_B); // h8 rook
+        m[60] = U8(~(CASTLE_K_B | CASTLE_Q_B)); // e8 king
+        return m;
+    }();
+
     constexpr BitBoard GetLS1B(BitBoard bb) noexcept {return bb & -bb;}
 
 #ifdef __GNUG__
