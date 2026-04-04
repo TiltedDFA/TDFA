@@ -22,9 +22,9 @@ public:
 
     [[nodiscard]] constexpr bool contains(const Move m) const {return std::find(data_.cbegin(), data_.cbegin() + idx_, m) != data_.cbegin() + idx_;}
 
-    constexpr void merge(move_info const* src)
+    constexpr void merge_ray(ray_moves const* src)
     {
-        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
+        std::copy_n(src->moves_.data(), src->count_, data_.data() + idx_);
         idx_ += src->count_;
     }
 

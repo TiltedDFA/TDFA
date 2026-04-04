@@ -113,9 +113,9 @@ static inline std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> Precompu
 
 std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> SLIDING_ATTACKS = PrecomputeAttacks();
 
-static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
+static inline std::array<std::array<std::array<U8, 2187>, 4>, 64> PrecomputeEndpoints()
 {
-    std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
+    std::array<std::array<std::array<U8, 2187>, 4>, 64> result{};
     for(U8 sq = 0; sq < 64; ++sq)
     {
         for(U16 us = 0; us < 256; ++us)
@@ -125,197 +125,100 @@ static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> Precomp
                 //skipping useless blocker configurations
                 if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
 
-                move_info file_attack_moves{};
-                move_info rank_attack_moves{};
-                move_info diagonal_attack_moves{};
-                move_info anti_diagonal_attack_moves{};
-
                 const U8 rank_combined = (us | them) & ~Magics::BBFileOf(sq);
                 U8 other_combined = (us | them) & ~Magics::BBRankOf(sq);
 
                 const U8 rankofsq = Magics::RankOf(sq);
                 const U8 fileofsq = Magics::FileOf(sq);
 
-                BitBoard diag_attacks = 0ull;
-                BitBoard diag_quiets{}, diag_captures{};
-                BitBoard anti_diag_attacks = 0ull;
-                BitBoard adiag_quiets{}, adiag_captures{};
-
+                // Rank direction: file-based index, positive=East, negative=West
                 if(us & Magics::BBFileOf(sq))
                 {
+                    U8 pos_offset = 0;
+                    U8 pos_cap = 0;
+                    U8 neg_offset = 0;
+                    U8 neg_cap = 0;
+
+                    // East (positive)
                     for(int8_t current_file = fileofsq + 1; current_file < 8; ++current_file)
                     {
-                        if((us >> current_file) & 1) break; //our piece
-                        if(!((rank_combined >> current_file) & 1)) //empty
-                        {
-                            rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - fileofsq), mt_Quiet));
-                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (current_file - fileofsq));
-                            continue;
-                        }
-                        if((them >> current_file) & 1) //their piece
-                        {
-                            rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (current_file - fileofsq), mt_Capture));
-                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (current_file - fileofsq));
-                            break;
-                        }
+                        if((us >> current_file) & 1) break;
+                        pos_offset++;
+                        if((them >> current_file) & 1) { pos_cap = 1; break; }
                     }
-                    for(int8_t current_file = fileofsq - 1; current_file > - 1 ; --current_file)
+                    // West (negative)
+                    for(int8_t current_file = fileofsq - 1; current_file > -1; --current_file)
                     {
                         if((us >> current_file) & 1) break;
-                        if(!((rank_combined >> current_file) & 1))
-                        {
-                            rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - current_file), mt_Quiet));
-                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - current_file));
-                            continue;
-                        }
-                        if((them >> current_file) & 1)
-                        {
-                            rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - current_file), mt_Capture));
-                            rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - current_file));
-                            break;
-                        }
+                        neg_offset++;
+                        if((them >> current_file) & 1) { neg_cap = 1; break; }
                     }
+
+                    const U8 ep_byte = (neg_cap << 7) | (pos_cap << 6) | (neg_offset << 3) | pos_offset;
                     const U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
                     const U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
-                    assert((p1 + p2 ) <= 2187);
-                    result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
+                    assert((p1 + p2) <= 2187);
+                    result.at(sq).at(Rank).at(p1 + p2) = ep_byte;
                 }
 
-                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // File/Diagonal/AntiDiagonal: rank-based index
                 if(us & Magics::BBRankOf(sq))
                 {
-                    for(int8_t current_file = rankofsq + 1; current_file < 8; ++current_file)
+                    // Geometric limits for each direction
+                    const U8 diag_max_pos   = std::min(U8(7 - rankofsq), U8(7 - fileofsq)); // NE
+                    const U8 diag_max_neg   = std::min(rankofsq, fileofsq);                   // SW
+                    const U8 adiag_max_pos  = std::min(U8(7 - rankofsq), fileofsq);           // NW
+                    const U8 adiag_max_neg  = std::min(rankofsq, U8(7 - fileofsq));           // SE
+
+                    // Helper lambda: compute endpoint for a single sub-direction along rank trace
+                    // max_steps = geometric limit for this direction
+                    // returns (offset, is_capture)
+                    auto compute_sub = [&](int start, int end, int step, U8 max_steps) -> std::pair<U8, U8>
                     {
-                        if((us >> current_file) & 1) break; //our piece
-                        if(!((other_combined >> current_file) & 1)) //empty
+                        U8 offset = 0;
+                        U8 cap = 0;
+                        for(int cr = start; step > 0 ? cr < end : cr > end; cr += step)
                         {
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - rankofsq), mt_Quiet));
-                            file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
-
-                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
+                            if(offset >= max_steps) break; // hit board edge for this direction
+                            if((us >> cr) & 1) break; // blocked by friendly
+                            if(!((other_combined >> cr) & 1))
                             {
-                                auto const atk = Magics::SqToBB(sq + 9 * (current_file - rankofsq));
-                                diag_attacks    |= atk;
-                                diag_quiets     |= atk;
+                                offset++;
+                                continue;
                             }
-                            if(Magics::ValidSq(sq +  7 * (current_file - rankofsq)))
+                            if((them >> cr) & 1)
                             {
-                                auto const atk = Magics::SqToBB(sq + 7 * (current_file - rankofsq));
-                                anti_diag_attacks   |= atk;
-                                adiag_quiets        |= atk;
+                                offset++;
+                                cap = 1;
+                                break;
                             }
-                            continue;
                         }
-                        if((them >> current_file) & 1) //their piece
-                        {
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8 * (current_file - rankofsq), mt_Capture));
-                            file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
+                        return {offset, cap};
+                    };
 
-                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
-                            {
-                                auto const atk = Magics::SqToBB(sq + 9 * (current_file - rankofsq));
-                                diag_attacks |= atk;
-                                diag_captures |= atk;
-                            }
+                    // File: positive=North (max: 7-rank), negative=South (max: rank)
+                    auto [file_pos_offset, file_pos_cap] = compute_sub(rankofsq + 1, 8, 1, U8(7 - rankofsq));
+                    auto [file_neg_offset, file_neg_cap] = compute_sub(rankofsq - 1, -1, -1, rankofsq);
 
-                            if(Magics::ValidSq(sq +  7 * (current_file - rankofsq)))
-                            {
-                                auto const atk = Magics::SqToBB(sq + 7 * (current_file - rankofsq));
-                                anti_diag_attacks   |= atk;
-                                adiag_captures      |= atk;
-                            }
-                            break;
-                        }
+                    // Diagonal: positive=NE, negative=SW
+                    auto [diag_pos_offset, diag_pos_cap] = compute_sub(rankofsq + 1, 8, 1, diag_max_pos);
+                    auto [diag_neg_offset, diag_neg_cap] = compute_sub(rankofsq - 1, -1, -1, diag_max_neg);
 
-                    }
-                    for(int8_t current_file = rankofsq - 1; current_file > - 1 ; --current_file)
-                    {
-                        if((us >> current_file) & 1) break;
-                        if(!((other_combined >> current_file) & 1))
-                        {
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (rankofsq - current_file), mt_Quiet));
-                            file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
+                    // AntiDiagonal: positive=NW, negative=SE
+                    auto [adiag_pos_offset, adiag_pos_cap] = compute_sub(rankofsq + 1, 8, 1, adiag_max_pos);
+                    auto [adiag_neg_offset, adiag_neg_cap] = compute_sub(rankofsq - 1, -1, -1, adiag_max_neg);
 
-                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
-                            {
-                                auto const atk = Magics::SqToBB(sq - 9 * (rankofsq - current_file));
-                                diag_attacks    |= atk;
-                                diag_quiets     |= atk;
-                            }
-
-                            if(Magics::ValidSq(sq -  7 * (rankofsq - current_file)))
-                            {
-                                auto const atk = Magics::SqToBB(sq - 7 * (rankofsq - current_file));
-                                anti_diag_attacks   |= atk;
-                                adiag_quiets        |= atk;
-                            }
-
-                            continue;
-                        }
-                        if((them >> current_file) & 1)
-                        {
-                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8 * (rankofsq - current_file), mt_Capture));
-                            file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
-
-                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
-                            {
-                                auto const atk = Magics::SqToBB(sq - 9 * (rankofsq - current_file));
-                                diag_attacks    |= atk;
-                                diag_captures   |= atk;
-                            }
-
-                            if(Magics::ValidSq(sq -  7 * (rankofsq - current_file)))
-                            {
-                                auto const atk = Magics::SqToBB(sq - 7 * (rankofsq - current_file));
-                                anti_diag_attacks |= atk;
-                                adiag_captures    |= atk;
-                            }
-                            break;
-                        }
-                    }
-
-                    diag_attacks        &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
-                    diag_captures       &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
-                    diag_quiets         &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
-
-                    anti_diag_attacks   &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
-                    adiag_captures      &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
-                    adiag_quiets        &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
-
-                    assert((diag_captures | diag_quiets) == diag_attacks);
-                    assert((adiag_captures | adiag_quiets) == anti_diag_attacks);
-
-                    diagonal_attack_moves.attacks_      = diag_attacks;
-                    anti_diagonal_attack_moves.attacks_ = anti_diag_attacks;
-
-                    while(diag_quiets)
-                    {
-                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_quiets),mt_Quiet));
-                        diag_quiets = Magics::PopLS1B(diag_quiets);
-                    }
-                    while(diag_captures)
-                    {
-                        diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_captures),mt_Capture));
-                        diag_captures = Magics::PopLS1B(diag_captures);
-                    }
-                    while(adiag_quiets)
-                    {
-                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(adiag_quiets),mt_Quiet));
-                        adiag_quiets = Magics::PopLS1B(adiag_quiets);
-                    }
-                    while(adiag_captures)
-                    {
-                        anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(adiag_captures),mt_Capture));
-                        adiag_captures = Magics::PopLS1B(adiag_captures);
-                    }
                     const U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
                     const U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
-                    assert((p1 + p2 ) <= 2187);
-                    result.at(sq).at((U8)File           ).at(p1 + p2) = file_attack_moves;
-                    result.at(sq).at((U8)Diagonal       ).at(p1 + p2) = diagonal_attack_moves;
-                    result.at(sq).at((U8)AntiDiagonal   ).at(p1 + p2) = anti_diagonal_attack_moves;
+                    assert((p1 + p2) <= 2187);
+
+                    const U8 file_ep = (file_neg_cap << 7) | (file_pos_cap << 6) | (file_neg_offset << 3) | file_pos_offset;
+                    const U8 diag_ep = (diag_neg_cap << 7) | (diag_pos_cap << 6) | (diag_neg_offset << 3) | diag_pos_offset;
+                    const U8 adiag_ep = (adiag_neg_cap << 7) | (adiag_pos_cap << 6) | (adiag_neg_offset << 3) | adiag_pos_offset;
+
+                    result.at(sq).at((U8)File).at(p1 + p2) = file_ep;
+                    result.at(sq).at((U8)Diagonal).at(p1 + p2) = diag_ep;
+                    result.at(sq).at((U8)AntiDiagonal).at(p1 + p2) = adiag_ep;
                 }
             }
         }
@@ -323,7 +226,70 @@ static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> Precomp
     return result;
 }
 
-std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+std::array<std::array<std::array<U8, 2187>, 4>, 64> SLIDING_ENDPOINTS = PrecomputeEndpoints();
+
+static inline std::array<std::array<std::array<ray_moves, 256>, 4>, 64> PrecomputeMoveLookup()
+{
+    std::array<std::array<std::array<ray_moves, 256>, 4>, 64> result{};
+    for(U8 sq = 0; sq < 64; ++sq)
+    {
+        const U8 rank = Magics::RankOf(sq);
+        const U8 file = Magics::FileOf(sq);
+
+        for(U8 dir = 0; dir < 4; ++dir)
+        {
+            const int pos_step = Magics::DIRECTION_STEP[dir][0];
+            const int neg_step = Magics::DIRECTION_STEP[dir][1];
+
+            // Precompute max steps for positive and negative sub-directions
+            U8 max_pos = 0, max_neg = 0;
+            switch(dir)
+            {
+                case File:          max_pos = 7 - rank; max_neg = rank; break;
+                case Rank:          max_pos = 7 - file; max_neg = file; break;
+                case Diagonal:      max_pos = std::min(U8(7 - rank), U8(7 - file)); max_neg = std::min(rank, file); break;
+                case AntiDiagonal:  max_pos = std::min(U8(7 - rank), file); max_neg = std::min(rank, U8(7 - file)); break;
+            }
+
+            for(U16 ep = 0; ep < 256; ++ep)
+            {
+                const U8 pos_offset = ep & 0x07;
+                const U8 neg_offset = (ep >> 3) & 0x07;
+                const U8 pos_cap    = (ep >> 6) & 1;
+                const U8 neg_cap    = (ep >> 7) & 1;
+
+                // Skip geometrically invalid endpoints
+                if(pos_offset > max_pos || neg_offset > max_neg) continue;
+                // Capture flag requires non-zero offset
+                if(pos_cap && pos_offset == 0) continue;
+                if(neg_cap && neg_offset == 0) continue;
+
+                ray_moves& rm = result[sq][dir][ep];
+
+                // Positive sub-direction
+                for(U8 i = 1; i <= pos_offset; ++i)
+                {
+                    int to = int(sq) + i * pos_step;
+                    assert(to >= 0 && to < 64);
+                    MoveType mt = (i == pos_offset && pos_cap) ? mt_Capture : mt_Quiet;
+                    rm.moves_[rm.count_++] = Moves::EncodeMove(sq, Sq(to), mt);
+                }
+
+                // Negative sub-direction
+                for(U8 i = 1; i <= neg_offset; ++i)
+                {
+                    int to = int(sq) + i * neg_step;
+                    assert(to >= 0 && to < 64);
+                    MoveType mt = (i == neg_offset && neg_cap) ? mt_Capture : mt_Quiet;
+                    rm.moves_[rm.count_++] = Moves::EncodeMove(sq, Sq(to), mt);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+std::array<std::array<std::array<ray_moves, 256>, 4>, 64> MOVE_LOOKUP = PrecomputeMoveLookup();
 
 void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
 {

@@ -12,7 +12,8 @@
 #include "MoveList.hpp"
 
 extern std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> SLIDING_ATTACKS;
-extern std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG;
+extern std::array<std::array<std::array<U8, 2187>, 4>, 64> SLIDING_ENDPOINTS;
+extern std::array<std::array<std::array<ray_moves, 256>, 4>, 64> MOVE_LOOKUP;
 namespace MoveGen
 {
     constexpr void GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const MoveType type)
@@ -112,7 +113,7 @@ namespace MoveGen
     }
 
     template<AttackDirection direction, bool UsePext = USE_PEXT>
-    inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
+    inline INLINE U8 GetEndpoint(Sq piece_sq, BitBoard us, BitBoard them) noexcept
     {
         if constexpr(direction == Rank)
         {
@@ -137,7 +138,7 @@ namespace MoveGen
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
             assert(lookup_index <= 2187);
 
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+            return SLIDING_ENDPOINTS _AT(piece_sq)_AT(direction)_AT(lookup_index);
         }
         else if constexpr(direction == File)
         {
@@ -163,7 +164,7 @@ namespace MoveGen
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+            return SLIDING_ENDPOINTS _AT(piece_sq)_AT(direction)_AT(lookup_index);
         }
         else //direction == Diag || direction == Anti Diag
         {
@@ -195,7 +196,7 @@ namespace MoveGen
             const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
             assert(lookup_index <= 2187);
 
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+            return SLIDING_ENDPOINTS _AT(piece_sq)_AT(direction)_AT(lookup_index);
         }
     }
 
@@ -212,9 +213,11 @@ namespace MoveGen
         const BitBoard them = pos->Pieces(!colour_to_move);
         while(bishops)
         {
-            const U8 bishop_index = Magics::PopNRetLS1B(bishops);
-            ml->merge(GetMovesForSliding<Diagonal>(bishop_index, us, them));
-            ml->merge(GetMovesForSliding<AntiDiagonal>(bishop_index, us, them));
+            const Sq sq = Magics::PopNRetLS1B(bishops);
+            const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
+            const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
+            if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
+            if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
         }
     }
     
@@ -227,9 +230,11 @@ namespace MoveGen
         const BitBoard them = pos->Pieces(!colour_to_move);
         while(rooks)
         {
-            const U8 rook_index = Magics::PopNRetLS1B(rooks);
-            ml->merge(GetMovesForSliding<File>(rook_index, us, them));
-            ml->merge(GetMovesForSliding<Rank>(rook_index, us, them));
+            const Sq sq = Magics::PopNRetLS1B(rooks);
+            const U8 ep_file = GetEndpoint<File>(sq, us, them);
+            const U8 ep_rank = GetEndpoint<Rank>(sq, us, them);
+            if(ep_file) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
+            if(ep_rank) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
         }
     }
 
@@ -242,11 +247,15 @@ namespace MoveGen
         const BitBoard them = pos->Pieces(!colour_to_move);
         while(queens)
         {
-            const U8 queen_index = Magics::PopNRetLS1B(queens);
-            ml->merge(GetMovesForSliding<File>(queen_index, us, them));
-            ml->merge(GetMovesForSliding<Rank>(queen_index, us, them));
-            ml->merge(GetMovesForSliding<Diagonal>(queen_index, us, them));
-            ml->merge(GetMovesForSliding<AntiDiagonal>(queen_index, us, them));
+            const Sq sq = Magics::PopNRetLS1B(queens);
+            const U8 ep_file  = GetEndpoint<File>(sq, us, them);
+            const U8 ep_rank  = GetEndpoint<Rank>(sq, us, them);
+            const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
+            const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
+            if(ep_file)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
+            if(ep_rank)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
+            if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
+            if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
         }
     }
 

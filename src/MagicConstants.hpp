@@ -314,5 +314,13 @@ namespace Magics
         }
         return r;
     }();
+    // Step offsets per direction: [direction][0=positive, 1=negative]
+    // File: N/S, Rank: E/W, Diagonal: NE/SW, AntiDiagonal: NW/SE
+    constexpr int DIRECTION_STEP[4][2] = {
+        {+8, -8},  // File
+        {+1, -1},  // Rank
+        {+9, -9},  // Diagonal
+        {+7, -7},  // AntiDiagonal
+    };
 }
 #endif //#ifndef MAGICCONSTANTS_HPP
