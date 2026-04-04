@@ -20,7 +20,7 @@ public:
 
     [[nodiscard]] constexpr size_t len()const noexcept {return idx_;}
 
-    [[nodiscard]] constexpr bool contains(const Move m) const {return std::find(data_.begin(), data_.begin() + idx_, m) != data_.begin() + idx_;}
+    [[nodiscard]] constexpr bool contains(const Move m) const {return std::find(data_.cbegin(), data_.cbegin() + idx_, m) != data_.cbegin() + idx_;}
 
     constexpr void merge(move_info const* src)
     {

@@ -125,9 +125,9 @@ void Position::MakeMove(const Move m)
     assert(IsOk());
     state_stack_[state_sp_++] = info_;
 
-    Sq from, to;
-    MoveType mt;
-    Moves::DecodeMove(m, &from, &to, &mt);
+    const Sq from = Sq(m & 0x3F);
+    const Sq to = Sq((m >> 6) & 0x3F);
+    const MoveType mt = MoveType(m >> 12);
 
     // Clear EP square
     if(info_.en_passant_sq_ != Magics::EP_NULL)
@@ -143,7 +143,7 @@ void Position::MakeMove(const Move m)
 
     switch(mt)
     {
-    case mt_Quiet:
+    case mt_Quiet: [[likely]]
     {
         MovePieceFast(from, to, p_type, turn_);
         info_.zobrist_key_ ^= Zobrist::PIECES[turn_][p_type][from] ^ Zobrist::PIECES[turn_][p_type][to];
@@ -241,9 +241,9 @@ void Position::UnmakeMove(const Move m)
     assert(IsOk());
     turn_ = !turn_;
 
-    Sq from, to;
-    MoveType mt;
-    Moves::DecodeMove(m, &from, &to, &mt);
+    const Sq from = Sq(m & 0x3F);
+    const Sq to = Sq((m >> 6) & 0x3F);
+    const MoveType mt = MoveType(m >> 12);
 
     switch(mt)
     {

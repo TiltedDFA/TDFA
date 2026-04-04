@@ -260,8 +260,9 @@ namespace MoveGen
         while(knights)
         {
             const U8 knight_index = Magics::PopNRetLS1B(knights);
-            const BitBoard possible_quiet_move      = Magics::KNIGHT_ATTACK_MASKS[knight_index] & ~occupied;
-            const BitBoard possible_capture_moves   = Magics::KNIGHT_ATTACK_MASKS[knight_index] & them;
+            const BitBoard knight_attacks = Magics::KNIGHT_ATTACK_MASKS[knight_index];
+            const BitBoard possible_quiet_move      = knight_attacks & ~occupied;
+            const BitBoard possible_capture_moves   = knight_attacks & them;
             GenerateMovesFromBB(possible_quiet_move, ml, knight_index, mt_Quiet);
             GenerateMovesFromBB(possible_capture_moves, ml, knight_index, mt_Capture);
         }

@@ -329,42 +329,38 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
 {
     const BitBoard pawns = pos->Pieces(White, pt_Pawn);
     if(!pawns) return;
-    BitBoard pawn_move;
+    const BitBoard empty = pos->EmptySqs();
     const BitBoard capturable_squares = pos->Pieces(Black);
 
-    pawn_move = Shift<MD::NORTH>(pawns) & pos->EmptySqs() & ~Magics::RANK_8BB;
-    while (pawn_move)
+    BitBoard bb = Shift<MD::NORTH>(pawns) & empty & ~Magics::RANK_8BB;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(index - 8, index, mt_Quiet));
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::NORTH>(pawns) & pos->EmptySqs() & Magics::RANK_8BB;
-    while (pawn_move)
+    bb = Shift<MD::NORTH>(pawns) & empty & Magics::RANK_8BB;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
 
         ml->add(Moves::EncodeMove(index - 8, index, mt_QueenPromotion));
         ml->add(Moves::EncodeMove(index - 8, index, mt_RookPromotion));
         ml->add(Moves::EncodeMove(index - 8, index, mt_BishopPromotion));
         ml->add(Moves::EncodeMove(index - 8, index, mt_KnightPromotion));
-
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::NORTHNORTH>(pawns) & pos->EmptySqs() & Shift<MD::NORTH>(pos->EmptySqs()) & Magics::RANK_4BB;
-    while (pawn_move)
+    bb = Shift<MD::NORTHNORTH>(pawns) & empty & Shift<MD::NORTH>(empty) & Magics::RANK_4BB;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(index - 16, index, mt_Quiet));
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::NORTH_EAST>(pawns) & capturable_squares;
-    while (pawn_move)
+    bb = Shift<MD::NORTH_EAST>(pawns) & capturable_squares;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         if(index > 55)
         {
             ml->add(Moves::EncodeMove(index - 9, index, mt_QueenPromotion));
@@ -376,7 +372,6 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(index - 9, index, mt_Capture));
         }
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
     if((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_EAST>(pawns)) [[unlikely]]
@@ -385,10 +380,10 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
         ml->add(Moves::EncodeMove(idx - 9, idx, mt_EnPassant));
     }
 
-    pawn_move = Shift<MD::NORTH_WEST>(pawns) & capturable_squares;
-    while (pawn_move)
+    bb = Shift<MD::NORTH_WEST>(pawns) & capturable_squares;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         if(index > 55)
         {
             ml->add(Moves::EncodeMove(index - 7, index, mt_QueenPromotion));
@@ -400,7 +395,6 @@ void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(index - 7, index, mt_Capture));
         }
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
     if((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns)) [[unlikely]]
     {
@@ -413,39 +407,36 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
 {
     const BitBoard pawns = pos->Pieces(Black, pt_Pawn);
     if(!pawns) return;
-    BitBoard pawn_move;
+    const BitBoard empty = pos->EmptySqs();
     const BitBoard capturable_squares = pos->Pieces(White);
 
-    pawn_move = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & ~Magics::RANK_1BB;
-    while (pawn_move)
+    BitBoard bb = Shift<MD::SOUTH>(pawns) & empty & ~Magics::RANK_1BB;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(index + 8, index, mt_Quiet));
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & Magics::RANK_1BB;
-    while (pawn_move)
+    bb = Shift<MD::SOUTH>(pawns) & empty & Magics::RANK_1BB;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(index + 8, index, mt_QueenPromotion));
         ml->add(Moves::EncodeMove(index + 8, index, mt_RookPromotion));
         ml->add(Moves::EncodeMove(index + 8, index, mt_BishopPromotion));
         ml->add(Moves::EncodeMove(index + 8, index, mt_KnightPromotion));
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
-    pawn_move = Shift<MD::SOUTHSOUTH>(pawns) & pos->EmptySqs() & Shift<MD::SOUTH>(pos->EmptySqs()) & Magics::RANK_5BB;
-    while (pawn_move)
+    bb = Shift<MD::SOUTHSOUTH>(pawns) & empty & Shift<MD::SOUTH>(empty) & Magics::RANK_5BB;
+    while (bb)
     {
-        const int index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(index + 16, index, mt_Quiet));
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
-    pawn_move = Shift<MD::SOUTH_EAST>(pawns) & capturable_squares;
-    while (pawn_move)
+    bb = Shift<MD::SOUTH_EAST>(pawns) & capturable_squares;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         if(index < 8)
         {
             ml->add(Moves::EncodeMove(index + 7, index, mt_QueenPromotion));
@@ -457,7 +448,6 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(index + 7, index, mt_Capture));
         }
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
 
     if((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns)) [[unlikely]]
@@ -466,10 +456,10 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
         ml->add(Moves::EncodeMove(idx + 7, idx, mt_EnPassant));
     }
 
-    pawn_move = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
-    while (pawn_move)
+    bb = Shift<MD::SOUTH_WEST>(pawns) & capturable_squares;
+    while (bb)
     {
-        const Sq index = Magics::FindLS1B(pawn_move);
+        const Sq index = Magics::PopNRetLS1B(bb);
         if(index < 8)
         {
             ml->add(Moves::EncodeMove(index + 9, index, mt_QueenPromotion));
@@ -481,7 +471,6 @@ void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(index + 9, index, mt_Capture));
         }
-        pawn_move = Magics::PopLS1B(pawn_move);
     }
     if((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns)) [[unlikely]]
     {
@@ -504,19 +493,18 @@ void MoveGen::WhitePawnCaptures(Position const* pos, MoveList* ml) noexcept
     bb = Shift<MD::NORTH>(pawns) & pos->EmptySqs() & Magics::RANK_8BB;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(idx - 8, idx, mt_QueenPromotion));
         ml->add(Moves::EncodeMove(idx - 8, idx, mt_KnightPromotion));
         ml->add(Moves::EncodeMove(idx - 8, idx, mt_RookPromotion));
         ml->add(Moves::EncodeMove(idx - 8, idx, mt_BishopPromotion));
-        bb = Magics::PopLS1B(bb);
     }
 
     // NE captures
     bb = Shift<MD::NORTH_EAST>(pawns) & enemies;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         if (idx > 55)
         {
             ml->add(Moves::EncodeMove(idx - 9, idx, mt_QueenPromotion));
@@ -528,7 +516,6 @@ void MoveGen::WhitePawnCaptures(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(idx - 9, idx, mt_Capture));
         }
-        bb = Magics::PopLS1B(bb);
     }
 
     if ((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_EAST>(pawns)) [[unlikely]]
@@ -541,7 +528,7 @@ void MoveGen::WhitePawnCaptures(Position const* pos, MoveList* ml) noexcept
     bb = Shift<MD::NORTH_WEST>(pawns) & enemies;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         if (idx > 55)
         {
             ml->add(Moves::EncodeMove(idx - 7, idx, mt_QueenPromotion));
@@ -553,7 +540,6 @@ void MoveGen::WhitePawnCaptures(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(idx - 7, idx, mt_Capture));
         }
-        bb = Magics::PopLS1B(bb);
     }
 
     if ((pos->EnPasBB() & ~Magics::RANK_3BB) & Shift<MD::NORTH_WEST>(pawns)) [[unlikely]]
@@ -575,19 +561,18 @@ void MoveGen::BlackPawnCaptures(Position const* pos, MoveList* ml) noexcept
     bb = Shift<MD::SOUTH>(pawns) & pos->EmptySqs() & Magics::RANK_1BB;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         ml->add(Moves::EncodeMove(idx + 8, idx, mt_QueenPromotion));
         ml->add(Moves::EncodeMove(idx + 8, idx, mt_KnightPromotion));
         ml->add(Moves::EncodeMove(idx + 8, idx, mt_RookPromotion));
         ml->add(Moves::EncodeMove(idx + 8, idx, mt_BishopPromotion));
-        bb = Magics::PopLS1B(bb);
     }
 
     // SE captures
     bb = Shift<MD::SOUTH_EAST>(pawns) & enemies;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         if (idx < 8)
         {
             ml->add(Moves::EncodeMove(idx + 7, idx, mt_QueenPromotion));
@@ -599,7 +584,6 @@ void MoveGen::BlackPawnCaptures(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(idx + 7, idx, mt_Capture));
         }
-        bb = Magics::PopLS1B(bb);
     }
 
     if ((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_EAST>(pawns)) [[unlikely]]
@@ -612,7 +596,7 @@ void MoveGen::BlackPawnCaptures(Position const* pos, MoveList* ml) noexcept
     bb = Shift<MD::SOUTH_WEST>(pawns) & enemies;
     while (bb)
     {
-        const Sq idx = Magics::FindLS1B(bb);
+        const Sq idx = Magics::PopNRetLS1B(bb);
         if (idx < 8)
         {
             ml->add(Moves::EncodeMove(idx + 9, idx, mt_QueenPromotion));
@@ -624,7 +608,6 @@ void MoveGen::BlackPawnCaptures(Position const* pos, MoveList* ml) noexcept
         {
             ml->add(Moves::EncodeMove(idx + 9, idx, mt_Capture));
         }
-        bb = Magics::PopLS1B(bb);
     }
 
     if ((pos->EnPasBB() & ~Magics::RANK_6BB) & Shift<MD::SOUTH_WEST>(pawns)) [[unlikely]]
