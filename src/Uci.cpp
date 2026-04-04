@@ -97,36 +97,43 @@ void Uci::HandleGo(const ArgList& args)
     else
         time_manager_.SetOptions(btime, binc);
 
-    time_manager_.StartTiming();
-    const Move best = search_.FindBestMove(&pos_, &tt_, &time_manager_);
+    WaitForSearch(); // join any previous search thread
 
-    // Zero-alloc move-to-string directly into stack buffer
-    const Sq from = Moves::StartSq(best);
-    const Sq to = Moves::TargetSq(best);
-    char mbuf[16] = "bestmove ";
-    int pos = 9;
-    mbuf[pos++] = char('a' + Magics::FileOf(from));
-    mbuf[pos++] = char('1' + Magics::RankOf(from));
-    mbuf[pos++] = char('a' + Magics::FileOf(to));
-    mbuf[pos++] = char('1' + Magics::RankOf(to));
-    if(Moves::IsPromotionMove(best))
-    {
-        switch(Moves::PTypeOfProm(best))
+    time_manager_.ResetStop();
+    time_manager_.StartTiming();
+
+    // Launch search on a separate thread so stdin remains responsive to 'stop'
+    search_thread_ = std::thread([this]() {
+        const Move best = search_.FindBestMove(&pos_, &tt_, &time_manager_);
+
+        const Sq from = Moves::StartSq(best);
+        const Sq to = Moves::TargetSq(best);
+        char mbuf[16] = "bestmove ";
+        int p = 9;
+        mbuf[p++] = char('a' + Magics::FileOf(from));
+        mbuf[p++] = char('1' + Magics::RankOf(from));
+        mbuf[p++] = char('a' + Magics::FileOf(to));
+        mbuf[p++] = char('1' + Magics::RankOf(to));
+        if(Moves::IsPromotionMove(best))
         {
-        case pt_Queen:  mbuf[pos++] = 'q'; break;
-        case pt_Rook:   mbuf[pos++] = 'r'; break;
-        case pt_Bishop: mbuf[pos++] = 'b'; break;
-        case pt_Knight: mbuf[pos++] = 'n'; break;
-        default: break;
+            switch(Moves::PTypeOfProm(best))
+            {
+            case pt_Queen:  mbuf[p++] = 'q'; break;
+            case pt_Rook:   mbuf[p++] = 'r'; break;
+            case pt_Bishop: mbuf[p++] = 'b'; break;
+            case pt_Knight: mbuf[p++] = 'n'; break;
+            default: break;
+            }
         }
-    }
-    mbuf[pos++] = '\n';
-    std::cout.write(mbuf, pos);
-    std::cout.flush();
+        mbuf[p++] = '\n';
+        std::cout.write(mbuf, p);
+        std::cout.flush();
+    });
 }
 
 void Uci::HandlePosition(const ArgList& args)
 {
+    WaitForSearch();
     if(args[1] == "fen")
     {
         assert(args.size() >= 8);
@@ -166,10 +173,19 @@ void Uci::HandlePosition(const ArgList& args)
 
 void Uci::HandleStop()
 {
+    time_manager_.Stop();
+    WaitForSearch();
+}
+
+void Uci::WaitForSearch()
+{
+    if(search_thread_.joinable())
+        search_thread_.join();
 }
 
 void Uci::HandleNewGame()
 {
+    WaitForSearch();
     pos_ = Position(STARTPOS);
     tt_.Clear();
     time_manager_.SetOptions(60'000, 0);
@@ -218,7 +234,7 @@ void Uci::Loop()
     while(true)
     {
         std::getline(std::cin, input_buf_);
-        if(input_buf_ == "quit") return;
+        if(input_buf_ == "quit") { time_manager_.Stop(); WaitForSearch(); return; }
 
         const ArgList args = SplitArgs(input_buf_);
         if(args.empty()) continue;

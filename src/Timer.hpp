@@ -51,8 +51,10 @@ public:
         soft_end_ = now + std::chrono::milliseconds(base_ms_ / 2);
         start_ = now;
     }
-    bool OutOfTime() const { return std::chrono::steady_clock::now() > hard_end_; }
-    bool SoftTimeUp() const { return std::chrono::steady_clock::now() > soft_end_; }
+    bool OutOfTime() const { return stopped_ || std::chrono::steady_clock::now() > hard_end_; }
+    bool SoftTimeUp() const { return stopped_ || std::chrono::steady_clock::now() > soft_end_; }
+    void Stop() { stopped_ = true; }
+    void ResetStop() { stopped_ = false; }
 
     // Extend soft limit (e.g. when best move changes) up to hard limit
     void ExtendSoftTime(double factor)
@@ -64,6 +66,7 @@ public:
     }
 
 private:
+    bool stopped_{false};
     U64 our_time_{};
     U64 our_increment_{};
     U64 base_ms_{};

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <thread>
 
 // Stack-allocated arg list — no heap allocation
 struct ArgList
@@ -45,7 +46,8 @@ private:
     void HandleGo(const ArgList&);
     void HandlePosition(const ArgList&);
 
-    static void HandleStop();
+    void HandleStop();
+    void WaitForSearch();
     void HandleNewGame();
     void HandleSetOption(const ArgList&);
     static void HandleBench(const ArgList&);
@@ -56,8 +58,8 @@ private:
     TransposTable tt_;
     TimeManager time_manager_;
     Search search_;
-    // Reusable input buffer — avoids reallocation across Loop iterations
     std::string input_buf_;
+    std::thread search_thread_;
 private:
     static constexpr const char* ENGINE_NAME = "TDFA V1.2.1";
     static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
