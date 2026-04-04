@@ -291,6 +291,106 @@ static inline std::array<std::array<std::array<ray_moves, 256>, 4>, 64> Precompu
 
 std::array<std::array<std::array<ray_moves, 256>, 4>, 64> MOVE_LOOKUP = PrecomputeMoveLookup();
 
+// === OLD SYSTEM (for A/B benchmarking) ===
+static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
+{
+    std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};
+    for(U8 sq = 0; sq < 64; ++sq)
+    {
+        for(U16 us = 0; us < 256; ++us)
+        {
+            for(U16 them = 0; them < 256; ++them)
+            {
+                if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
+                move_info file_attack_moves{};
+                move_info rank_attack_moves{};
+                move_info diagonal_attack_moves{};
+                move_info anti_diagonal_attack_moves{};
+                const U8 rank_combined = (us | them) & ~Magics::BBFileOf(sq);
+                U8 other_combined = (us | them) & ~Magics::BBRankOf(sq);
+                const U8 rankofsq = Magics::RankOf(sq);
+                const U8 fileofsq = Magics::FileOf(sq);
+                BitBoard diag_attacks = 0ull;
+                BitBoard diag_quiets{}, diag_captures{};
+                BitBoard anti_diag_attacks = 0ull;
+                BitBoard adiag_quiets{}, adiag_captures{};
+                if(us & Magics::BBFileOf(sq))
+                {
+                    for(int8_t f = fileofsq + 1; f < 8; ++f)
+                    {
+                        if((us >> f) & 1) break;
+                        if(!((rank_combined >> f) & 1)) { rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (f - fileofsq), mt_Quiet)); rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (f - fileofsq)); continue; }
+                        if((them >> f) & 1) { rank_attack_moves.add_move(Moves::EncodeMove(sq, sq + (f - fileofsq), mt_Capture)); rank_attack_moves.attacks_ |= Magics::SqToBB(sq + (f - fileofsq)); break; }
+                    }
+                    for(int8_t f = fileofsq - 1; f > -1; --f)
+                    {
+                        if((us >> f) & 1) break;
+                        if(!((rank_combined >> f) & 1)) { rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - f), mt_Quiet)); rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - f)); continue; }
+                        if((them >> f) & 1) { rank_attack_moves.add_move(Moves::EncodeMove(sq, sq - (fileofsq - f), mt_Capture)); rank_attack_moves.attacks_ |= Magics::SqToBB(sq - (fileofsq - f)); break; }
+                    }
+                    const U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
+                    result.at(sq).at(Rank).at(p1 + p2) = rank_attack_moves;
+                }
+                if(us & Magics::BBRankOf(sq))
+                {
+                    for(int8_t r = rankofsq + 1; r < 8; ++r)
+                    {
+                        if((us >> r) & 1) break;
+                        if(!((other_combined >> r) & 1)) {
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8*(r-rankofsq), mt_Quiet)); file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8*(r-rankofsq));
+                            if(Magics::ValidSq(sq+9*(r-rankofsq))) { auto a=Magics::SqToBB(sq+9*(r-rankofsq)); diag_attacks|=a; diag_quiets|=a; }
+                            if(Magics::ValidSq(sq+7*(r-rankofsq))) { auto a=Magics::SqToBB(sq+7*(r-rankofsq)); anti_diag_attacks|=a; adiag_quiets|=a; }
+                            continue;
+                        }
+                        if((them >> r) & 1) {
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq + 8*(r-rankofsq), mt_Capture)); file_attack_moves.attacks_ |= Magics::SqToBB(sq + 8*(r-rankofsq));
+                            if(Magics::ValidSq(sq+9*(r-rankofsq))) { auto a=Magics::SqToBB(sq+9*(r-rankofsq)); diag_attacks|=a; diag_captures|=a; }
+                            if(Magics::ValidSq(sq+7*(r-rankofsq))) { auto a=Magics::SqToBB(sq+7*(r-rankofsq)); anti_diag_attacks|=a; adiag_captures|=a; }
+                            break;
+                        }
+                    }
+                    for(int8_t r = rankofsq - 1; r > -1; --r)
+                    {
+                        if((us >> r) & 1) break;
+                        if(!((other_combined >> r) & 1)) {
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8*(rankofsq-r), mt_Quiet)); file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8*(rankofsq-r));
+                            if(Magics::ValidSq(sq-9*(rankofsq-r))) { auto a=Magics::SqToBB(sq-9*(rankofsq-r)); diag_attacks|=a; diag_quiets|=a; }
+                            if(Magics::ValidSq(sq-7*(rankofsq-r))) { auto a=Magics::SqToBB(sq-7*(rankofsq-r)); anti_diag_attacks|=a; adiag_quiets|=a; }
+                            continue;
+                        }
+                        if((them >> r) & 1) {
+                            file_attack_moves.add_move(Moves::EncodeMove(sq, sq - 8*(rankofsq-r), mt_Capture)); file_attack_moves.attacks_ |= Magics::SqToBB(sq - 8*(rankofsq-r));
+                            if(Magics::ValidSq(sq-9*(rankofsq-r))) { auto a=Magics::SqToBB(sq-9*(rankofsq-r)); diag_attacks|=a; diag_captures|=a; }
+                            if(Magics::ValidSq(sq-7*(rankofsq-r))) { auto a=Magics::SqToBB(sq-7*(rankofsq-r)); anti_diag_attacks|=a; adiag_captures|=a; }
+                            break;
+                        }
+                    }
+                    diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][Diagonal];
+                    diag_captures &= Magics::SLIDING_ATTACKS_MASK[sq][Diagonal];
+                    diag_quiets &= Magics::SLIDING_ATTACKS_MASK[sq][Diagonal];
+                    anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][AntiDiagonal];
+                    adiag_captures &= Magics::SLIDING_ATTACKS_MASK[sq][AntiDiagonal];
+                    adiag_quiets &= Magics::SLIDING_ATTACKS_MASK[sq][AntiDiagonal];
+                    diagonal_attack_moves.attacks_ = diag_attacks;
+                    anti_diagonal_attack_moves.attacks_ = anti_diag_attacks;
+                    while(diag_quiets) { diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_quiets), mt_Quiet)); diag_quiets = Magics::PopLS1B(diag_quiets); }
+                    while(diag_captures) { diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(diag_captures), mt_Capture)); diag_captures = Magics::PopLS1B(diag_captures); }
+                    while(adiag_quiets) { anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(adiag_quiets), mt_Quiet)); adiag_quiets = Magics::PopLS1B(adiag_quiets); }
+                    while(adiag_captures) { anti_diagonal_attack_moves.add_move(Moves::EncodeMove(sq, Magics::FindLS1B(adiag_captures), mt_Capture)); adiag_captures = Magics::PopLS1B(adiag_captures); }
+                    const U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
+                    result.at(sq).at((U8)File).at(p1+p2) = file_attack_moves;
+                    result.at(sq).at((U8)Diagonal).at(p1+p2) = diagonal_attack_moves;
+                    result.at(sq).at((U8)AntiDiagonal).at(p1+p2) = anti_diagonal_attack_moves;
+                }
+            }
+        }
+    }
+    return result;
+}
+std::array<std::array<std::array<move_info, 2187>, 4>, 64> SLIDING_ATTACK_CONFIG = PrecomputeTitboards();
+
 void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept
 {
     const BitBoard pawns = pos->Pieces(White, pt_Pawn);

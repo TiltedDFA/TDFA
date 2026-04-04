@@ -28,6 +28,12 @@ public:
         idx_ += src->count_;
     }
 
+    constexpr void merge(move_info const* src)
+    {
+        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
+        idx_ += src->count_;
+    }
+
 private:
     std::array<Move, MAX_MOVES> data_;
     size_t idx_;

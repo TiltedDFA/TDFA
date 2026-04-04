@@ -140,6 +140,15 @@ struct ray_moves
     U8 count_;
     constexpr ray_moves(): moves_(), count_(0) {}
 };
+struct move_info
+{
+    constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
+    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
+
+    std::array<Move, 7> encoded_move_;
+    U8 count_;
+    BitBoard attacks_;
+};
 enum class BoundType : U8
 {
     EXACT_VAL,          //Score is X
