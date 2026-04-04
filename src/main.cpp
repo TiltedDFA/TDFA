@@ -12,10 +12,8 @@
 #include "TranspositionTable.hpp"
 #include "ZobristConstants.hpp"
 
-static void BenchMovegen(int argc, char* argv[])
-{
-    const char* fens[] = {
-        // Startpos & well-known test positions
+static const char* BENCH_FENS[] = {
+    // Startpos & well-known test positions
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
         "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
@@ -129,15 +127,18 @@ static void BenchMovegen(int argc, char* argv[])
         "r1bqk2r/pp1nbppp/2p1pn2/3p4/2PP4/2N1PN2/PP2BPPP/R1BQK2R w KQkq - 0 1",
         "r1bqkb1r/pp1n1ppp/2p1pn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQK2R w KQkq - 0 1",
         "r1bq1rk1/pp1n1ppp/2pbpn2/3p4/2PP4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 0 1",
-    };
-    constexpr int NUM_POS = sizeof(fens) / sizeof(fens[0]);
+};
+constexpr int NUM_BENCH_FENS = sizeof(BENCH_FENS) / sizeof(BENCH_FENS[0]);
+
+static void BenchMovegen(int argc, char* argv[])
+{
     constexpr int ITERS = 2'000'000;
 
     std::vector<Position> positions;
-    positions.reserve(NUM_POS);
-    for(int i = 0; i < NUM_POS; ++i)
-        positions.emplace_back(fens[i]);
-    std::cout << NUM_POS << " positions loaded.\n";
+    positions.reserve(NUM_BENCH_FENS);
+    for(int i = 0; i < NUM_BENCH_FENS; ++i)
+        positions.emplace_back(BENCH_FENS[i]);
+    std::cout << NUM_BENCH_FENS << " positions loaded.\n";
 
     auto run_bench = [&](const char* label, auto gen_white, auto gen_black) {
         U64 total_moves = 0;
@@ -146,7 +147,7 @@ static void BenchMovegen(int argc, char* argv[])
             Timer<std::chrono::microseconds> t(&time_us);
             for(int iter = 0; iter < ITERS; ++iter)
             {
-                for(int p = 0; p < NUM_POS; ++p)
+                for(int p = 0; p < NUM_BENCH_FENS; ++p)
                 {
                     MoveList ml{};
                     if(positions[p].ColourToMove() == White)
@@ -198,6 +199,151 @@ static void BenchMovegen(int argc, char* argv[])
     }
 }
 
+static void BenchLatency(const char* fens[], int num_fens)
+{
+    constexpr int ITERS = 100'000;
+
+    std::vector<Position> positions;
+    positions.reserve(num_fens);
+    for(int i = 0; i < num_fens; ++i)
+        positions.emplace_back(fens[i]);
+
+    // Test 1: FEN parsing only
+    {
+        U64 time_ns = 1;
+        {
+            Timer<std::chrono::nanoseconds> t(&time_ns);
+            for(int iter = 0; iter < ITERS; ++iter)
+                for(int i = 0; i < num_fens; ++i)
+                    Position pos(fens[i]);
+        }
+        double ns_per = double(time_ns) / double(ITERS * num_fens);
+        std::cout << std::format("FEN parse:      {:.1f} ns/position\n", ns_per);
+    }
+
+    // Test 2: Movegen only (position pre-loaded)
+    {
+        U64 time_ns = 1;
+        U64 total_moves = 0;
+        {
+            Timer<std::chrono::nanoseconds> t(&time_ns);
+            for(int iter = 0; iter < ITERS; ++iter)
+                for(int i = 0; i < num_fens; ++i)
+                {
+                    MoveList ml{};
+                    if(positions[i].ColourToMove() == White)
+                        MoveGen::GeneratePseudoLegalMoves<White>(&positions[i], &ml);
+                    else
+                        MoveGen::GeneratePseudoLegalMoves<Black>(&positions[i], &ml);
+                    total_moves += ml.len();
+                }
+        }
+        double ns_per = double(time_ns) / double(ITERS * num_fens);
+        std::cout << std::format("Movegen only:   {:.1f} ns/call ({} avg moves)\n", ns_per, total_moves / (ITERS * num_fens));
+    }
+
+    // Test 3: FEN parse + movegen combined
+    {
+        U64 time_ns = 1;
+        U64 total_moves = 0;
+        {
+            Timer<std::chrono::nanoseconds> t(&time_ns);
+            for(int iter = 0; iter < ITERS; ++iter)
+                for(int i = 0; i < num_fens; ++i)
+                {
+                    Position pos(fens[i]);
+                    MoveList ml{};
+                    if(pos.ColourToMove() == White)
+                        MoveGen::GeneratePseudoLegalMoves<White>(&pos, &ml);
+                    else
+                        MoveGen::GeneratePseudoLegalMoves<Black>(&pos, &ml);
+                    total_moves += ml.len();
+                }
+        }
+        double ns_per = double(time_ns) / double(ITERS * num_fens);
+        std::cout << std::format("Parse+movegen:  {:.1f} ns/call\n", ns_per);
+    }
+}
+
+static void BenchUci()
+{
+    // Measure UCI command parsing + position setup latency (no search)
+    constexpr int ITERS = 500'000;
+    const char* cmds[] = {
+        "position startpos",
+        "position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6",
+        "position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+        "position fen r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10 moves c3d5",
+    };
+    constexpr int NUM_CMDS = 4;
+
+    // Suppress cout during bench
+    auto* old_buf = std::cout.rdbuf(nullptr);
+
+    Uci uci;
+    U64 time_ns = 1;
+    {
+        Timer<std::chrono::nanoseconds> t(&time_ns);
+        for(int iter = 0; iter < ITERS; ++iter)
+        {
+            for(int c = 0; c < NUM_CMDS; ++c)
+            {
+                std::string inp(cmds[c]);
+                // Simulate what Loop() does: split + dispatch
+                // We call HandlePosition directly via a full parse cycle
+                // by feeding through the public interface indirectly
+                // Actually, just measure SplitArgs + position handling
+            }
+        }
+    }
+    std::cout.rdbuf(old_buf);
+
+    // Better approach: measure position command round-trips via pipe
+    // Instead, let's just time the critical path directly
+    std::cout << "UCI latency benchmark (position commands):\n";
+
+    // Test: parse + apply "position startpos moves ..."
+    {
+        Position pos(STARTPOS);
+        U64 t_ns = 1;
+        {
+            Timer<std::chrono::nanoseconds> t(&t_ns);
+            for(int iter = 0; iter < ITERS; ++iter)
+            {
+                pos.ImportFen(STARTPOS);
+                pos.HashCurrentPostion();
+                // Apply 8 moves
+                pos.MakeMove(UTIL::UciToMove("e2e4", pos));
+                pos.MakeMove(UTIL::UciToMove("e7e5", pos));
+                pos.MakeMove(UTIL::UciToMove("g1f3", pos));
+                pos.MakeMove(UTIL::UciToMove("b8c6", pos));
+                pos.MakeMove(UTIL::UciToMove("f1b5", pos));
+                pos.MakeMove(UTIL::UciToMove("a7a6", pos));
+                pos.MakeMove(UTIL::UciToMove("b5a4", pos));
+                pos.MakeMove(UTIL::UciToMove("g8f6", pos));
+            }
+        }
+        double ns_per = double(t_ns) / double(ITERS);
+        std::cout << std::format("  startpos + 8 moves: {:.1f} ns/call ({:.1f} ns/move)\n", ns_per, ns_per / 8.0);
+    }
+
+    // Test: UciToMove conversion alone
+    {
+        Position pos(STARTPOS);
+        U64 t_ns = 1;
+        {
+            Timer<std::chrono::nanoseconds> t(&t_ns);
+            for(int iter = 0; iter < ITERS * 8; ++iter)
+            {
+                volatile Move m = UTIL::UciToMove("e2e4", pos);
+                (void)m;
+            }
+        }
+        double ns_per = double(t_ns) / double(ITERS * 8);
+        std::cout << std::format("  UciToMove:          {:.1f} ns/call\n", ns_per);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     std::ios::sync_with_stdio(false);
@@ -208,6 +354,14 @@ int main(int argc, char* argv[])
     else if(argc > 1 && std::string_view(argv[1]) == "benchmovegen")
     {
         BenchMovegen(argc, argv);
+    }
+    else if(argc > 1 && std::string_view(argv[1]) == "benchlatency")
+    {
+        BenchLatency(BENCH_FENS, NUM_BENCH_FENS);
+    }
+    else if(argc > 1 && std::string_view(argv[1]) == "benchuci")
+    {
+        BenchUci();
     }
     else
     {

@@ -4,33 +4,29 @@
 #include <array>
 #include <string_view>
 
-constexpr std::string_view RemoveWhiteSpace(std::string_view str)
+constexpr std::string_view RemoveWhiteSpace(std::string_view str) noexcept
 {
-    int start_index{-1};
-    int end_index{static_cast<int>(str.size())};
-    while(str.at(++start_index) == ' '){}
-    while(str.at(--end_index) == ' '){}
-    return {str.begin() + start_index, str.begin() + end_index + 1};
+    size_t start = 0;
+    size_t end = str.size();
+    while(start < end && str[start] == ' ') ++start;
+    while(end > start && str[end - 1] == ' ') --end;
+    return str.substr(start, end - start);
 }
-constexpr void SplitFen(std::string_view fen, std::array<std::string_view,6>& fen_sections)
+constexpr void SplitFen(std::string_view fen, std::array<std::string_view,6>& fen_sections) noexcept
 {
-    int start = 0;
-    int end = -1;
-    U8 current_fen_section = 0;
-    while(size_t(++end) < fen.size())
+    U8 section = 0;
+    size_t start = 0;
+    for(size_t i = 0; i < fen.size(); ++i)
     {
-        if(fen.at(end) == ' ')
+        if(fen[i] == ' ')
         {
-            ++end;
-            fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (end - 1));
-            ++current_fen_section;
-            start = end;
-            continue;
+            fen_sections[section++] = fen.substr(start, i - start);
+            start = i + 1;
         }
     }
-    fen_sections.at(current_fen_section) = std::string_view(fen.begin() + start, fen.begin() + (++end - 1));
-    ++current_fen_section;
+    if(start <= fen.size())
+        fen_sections[section] = fen.substr(start);
 }
-constexpr bool IsDigit(const char i) {return i <= '9' && i >= '0';}
+constexpr bool IsDigit(const char i) noexcept {return U8(i - '0') <= 9;}
 
 #endif // #ifndef BOARDUTILS_HPP

@@ -3,6 +3,17 @@
 #include <charconv>
 #include <cmath>
 
+// Lookup table: ASCII char → Piece (p_None for invalid chars)
+static constexpr auto CHAR_TO_PIECE = []() consteval {
+    std::array<Piece, 128> t{};
+    for(auto& p : t) p = p_None;
+    t['P'] = p_WhitePawn;   t['N'] = p_WhiteKnight; t['B'] = p_WhiteBishop;
+    t['R'] = p_WhiteRook;   t['Q'] = p_WhiteQueen;  t['K'] = p_WhiteKing;
+    t['p'] = p_BlackPawn;   t['n'] = p_BlackKnight;  t['b'] = p_BlackBishop;
+    t['r'] = p_BlackRook;   t['q'] = p_BlackQueen;   t['k'] = p_BlackKing;
+    return t;
+}();
+
 void Position::ImportFen(std::string_view fen)
 {
     Reset();
@@ -12,113 +23,50 @@ void Position::ImportFen(std::string_view fen)
 
     U8 current_row = 7;
     U8 current_col = 0;
-    for(const char i : fen_sections[0])
+    for(const char c : fen_sections[0])
     {
-        if(IsDigit(i))
+        if(IsDigit(c))
         {
-            current_col += i - '0';
+            current_col += c - '0';
             continue;
         }
-        if(i == '/')
+        if(c == '/')
         {
             current_col = 0;
             --current_row;
             continue;
         }
-        const Sq square = ((current_row * 8) + current_col);
-        switch (i)
-        {
-        case('p'):
-            AddPiece(p_BlackPawn, square);
-            break;
-        case('n'):
-            AddPiece(p_BlackKnight, square);
-            break;
-        case('b'):
-            AddPiece(p_BlackBishop, square);
-            break;
-        case('r'):
-            AddPiece(p_BlackRook, square);
-            break;
-        case('q'):
-            AddPiece(p_BlackQueen, square);
-            break;
-        case('k'):
-            AddPiece(p_BlackKing, square);
-            break;
-        case('P'):
-            AddPiece(p_WhitePawn, square);
-            break;
-        case('N'):
-            AddPiece(p_WhiteKnight, square);
-            break;
-        case('B'):
-            AddPiece(p_WhiteBishop, square);
-            break;
-        case('R'):
-            AddPiece(p_WhiteRook, square);
-            break;
-        case('Q'):
-            AddPiece(p_WhiteQueen, square);
-            break;
-        case('K'):
-            AddPiece(p_WhiteKing, square);
-            break;
-        default:
-            break;
-        }
+        AddPiece(CHAR_TO_PIECE[U8(c)], (current_row * 8) + current_col);
         ++current_col;
     }
 
-    turn_ = (fen_sections _AT(1) _AT(0) == 'w') ? White : Black;
+    turn_ = (fen_sections[1][0] == 'w') ? White : Black;
 
-    for(const char i : fen_sections.at(2))
+    // Castling — branchless OR with lookup
+    static constexpr auto CASTLING_CHAR = []() consteval {
+        std::array<U8, 128> t{};
+        t['K'] = Magics::CASTLE_K_W;
+        t['Q'] = Magics::CASTLE_Q_W;
+        t['k'] = Magics::CASTLE_K_B;
+        t['q'] = Magics::CASTLE_Q_B;
+        return t;
+    }();
+    for(const char c : fen_sections[2])
+        info_.castling_rights_ |= CASTLING_CHAR[U8(c)];
+
+    // En passant
+    if(fen_sections[3][0] != '-')
     {
-        switch (i)
-        {
-        case '-':
-            break;
-        case 'K':
-            info_.castling_rights_ |= Magics::CASTLE_K_W;
-            break;
-        case 'Q':
-            info_.castling_rights_ |= Magics::CASTLE_Q_W;
-            break;
-        case 'k':
-            info_.castling_rights_ |= Magics::CASTLE_K_B;
-            break;
-        case 'q':
-            info_.castling_rights_ |= Magics::CASTLE_Q_B;
-            break;
-        default:
-            break;
-        }
+        info_.en_passant_sq_ = Sq((fen_sections[3][0] - 'a') + (fen_sections[3][1] - '1') * 8);
     }
 
-    if(fen_sections.at(3) != "-")
-    {
-        U8 en_passant_index = 0;
-        en_passant_index += (fen_sections.at(3).at(0)) - 'a';
-        en_passant_index += (fen_sections.at(3).at(1) - '1') * 8;
-        info_.en_passant_sq_ = en_passant_index;
-    }
+    // Half moves
+    if(!fen_sections[4].empty())
+        std::from_chars(fen_sections[4].data(), fen_sections[4].data() + fen_sections[4].size(), info_.half_moves_);
 
-    if(fen_sections.at(4).empty())
-    {
-        info_.half_moves_ = 0;
-    }
-    else
-    {
-        std::from_chars(fen_sections.at(4).data(), fen_sections.at(4).data() + fen_sections.at(4).size(), info_.half_moves_);
-    }
-    if(fen_sections.at(5).empty())
-    {
-        full_moves_ = 0;
-    }
-    else
-    {
-        std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.at(5).size(), full_moves_);
-    }
+    // Full moves
+    if(!fen_sections[5].empty())
+        std::from_chars(fen_sections[5].data(), fen_sections[5].data() + fen_sections[5].size(), full_moves_);
 }
 void Position::MakeMove(const Move m)
 {

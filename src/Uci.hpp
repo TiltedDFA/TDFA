@@ -15,18 +15,31 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <unordered_map>
-#include <vector>
 
-using CmdMap = std::unordered_map<std::string_view, U8>;
-using ArgList = std::vector<std::string_view>;
+// Stack-allocated arg list — no heap allocation
+struct ArgList
+{
+    std::array<std::string_view, 128> args_;
+    U8 count_{0};
+
+    void push(std::string_view sv) noexcept { args_[count_++] = sv; }
+    [[nodiscard]] std::string_view operator[](size_t i) const noexcept { return args_[i]; }
+    [[nodiscard]] U8 size() const noexcept { return count_; }
+    [[nodiscard]] bool empty() const noexcept { return count_ == 0; }
+
+    // Iterator support for range-based for / std::ranges::find
+    const std::string_view* begin() const noexcept { return args_.data(); }
+    const std::string_view* end() const noexcept { return args_.data() + count_; }
+    const std::string_view* cbegin() const noexcept { return begin(); }
+    const std::string_view* cend() const noexcept { return end(); }
+};
+
 class Uci
 {
 public:
     Uci():tt_size_(16), pos_(STARTPOS), tt_(), time_manager_(){tt_.Resize(tt_size_);}
     void Loop();
 private:
-    //helper functions
     void HandleUci();
     void HandleIsReady();
     void HandleGo(const ArgList&);
@@ -38,27 +51,15 @@ private:
     static void HandleBench(const ArgList&);
     void HandlePrint(const ArgList&);
 private:
-    //mutables
     size_t tt_size_;
-    Position pos_;    
+    Position pos_;
     TransposTable tt_;
     TimeManager time_manager_;
     Search search_;
+    // Reusable input buffer — avoids reallocation across Loop iterations
+    std::string input_buf_;
 private:
-    //constants
     static constexpr const char* ENGINE_NAME = "TDFA V1.2.1";
     static constexpr const char* ENGINE_AUTHOR = "Malik Tremain";
-    static inline const CmdMap COMMAND_VALUES = 
-    {
-        {"uci", 1},
-        {"isready", 2},
-        {"go", 3},
-        {"position", 4},
-        {"stop", 5},
-        {"ucinewgame", 6},
-        {"setoption", 7},
-        {"bench", 8},
-        {"print", 9},
-    };
 };
 #endif // #ifndef UCI_HPP
