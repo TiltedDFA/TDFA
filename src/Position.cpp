@@ -198,14 +198,14 @@ void Position::UnmakeMove(const Move m)
     {
     case mt_Quiet:
     {
-        MovePieceFast(to, from, info_.moved_type_, turn_);
+        MovePieceFast(to, from, PieceType(info_.moved_type_), turn_);
         break;
     }
     case mt_Capture:
     {
-        MovePieceFast(to, from, info_.moved_type_, turn_);
-        const PieceType cap_pt = Magics::TypeOf(info_.captured_type_);
-        const Colour cap_c = Magics::ColourOf(info_.captured_type_);
+        MovePieceFast(to, from, PieceType(info_.moved_type_), turn_);
+        const PieceType cap_pt = Magics::TypeOf(Piece(info_.captured_type_));
+        const Colour cap_c = Magics::ColourOf(Piece(info_.captured_type_));
         AddPieceFast(cap_pt, cap_c, to);
         break;
     }
@@ -239,8 +239,8 @@ void Position::UnmakeMove(const Move m)
         // Restore captured piece if any
         if(info_.captured_type_ != p_None)
         {
-            const PieceType cap_pt = Magics::TypeOf(info_.captured_type_);
-            const Colour cap_c = Magics::ColourOf(info_.captured_type_);
+            const PieceType cap_pt = Magics::TypeOf(Piece(info_.captured_type_));
+            const Colour cap_c = Magics::ColourOf(Piece(info_.captured_type_));
             AddPieceFast(cap_pt, cap_c, to);
         }
         break;

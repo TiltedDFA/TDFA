@@ -28,8 +28,9 @@ public:
     U8          castling_rights_;
     U8          half_moves_;
     U8          en_passant_sq_;
-    PieceType   moved_type_;
-    Piece       captured_type_;
+    U8          moved_type_;    // PieceType stored as U8 for packing
+    U8          captured_type_; // Piece stored as U8 for packing (Piece is now U8 anyway)
+    // 3 bytes padding to align zobrist_key_
     ZobristKey  zobrist_key_;
 };
 static constexpr int MAX_GAME_PLY = 1024;
