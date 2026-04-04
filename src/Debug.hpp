@@ -46,9 +46,6 @@ namespace Debug
     void PrintUsThem(BitBoard us, BitBoard them, bool mirrored = false);
     
     void PrintUsThemBlank(BitBoard us, BitBoard them, bool mirrored = false);
-    //Prints out the attack squares of the moves stored in a move_info as a bitboard
-    void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored = false);
-
     //Prints out a uint8_t's pieces
     void PrintU8BB(U8 bb, U8 board_center, bool mirrored = false);
 

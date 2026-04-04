@@ -16,17 +16,17 @@ public:
 
     constexpr Move operator[](const size_t index) const noexcept {return data_[index];}
 
-    constexpr void merge(move_info const* src)
-    {
-        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
-        idx_ += src->count_;
-    }
-
     [[nodiscard]] constexpr std::array<Move, MAX_MOVES>& all() noexcept {return data_;}
 
     [[nodiscard]] constexpr size_t len()const noexcept {return idx_;}
 
     [[nodiscard]] constexpr bool contains(const Move m) const {return std::find(data_.begin(), data_.begin() + idx_, m) != data_.begin() + idx_;}
+
+    constexpr void merge(move_info const* src)
+    {
+        std::copy_n(src->encoded_move_.data(), src->count_, data_.data() + idx_);
+        idx_ += src->count_;
+    }
 
 private:
     std::array<Move, MAX_MOVES> data_;

@@ -204,17 +204,6 @@ namespace Debug
         output += mirrored ? "A  B  C  D  E  F  G  H" : "H  G  F  E  D  C  B  A";
         PRINTNL(output);
     }
-    void PrintEncodedMovesMoveInfo(const move_info& move, bool mirrored)
-    {
-        if(move.count_ == 0) std::cout << "No moves found\n";
-
-        BitBoard combined_board{0ull};
-
-        for(U8 i = 0; i < move.count_; ++i)
-            combined_board |= 1ull << Moves::TargetSq(move.encoded_move_[i]);
-        
-        PrintBB(combined_board, mirrored);
-    }
     void PrintU8BB(U8 bb, U8 board_center, bool mirrored)
     {
         std::string output{},current_line{};

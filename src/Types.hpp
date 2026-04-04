@@ -52,15 +52,6 @@ enum MD : U8
     NORTHNORTH,
     SOUTHSOUTH
 };
-struct move_info
-{
-    constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
-    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
-
-    std::array<Move, 7> encoded_move_;
-    U8 count_;
-    BitBoard attacks_;
-};
 namespace loc
 {
     constexpr U8 BLACK = 0;
@@ -142,6 +133,15 @@ enum AttackDirection : U8
     Rank,
     Diagonal,
     AntiDiagonal
+};
+struct move_info
+{
+    constexpr move_info(): encoded_move_(), count_(0), attacks_(0ull){}
+    inline constexpr void add_move(const Move m) noexcept {encoded_move_ _AT(count_++) = m;}
+
+    std::array<Move, 7> encoded_move_;
+    U8 count_;
+    BitBoard attacks_;
 };
 enum class BoundType : U8
 {

@@ -1,6 +1,118 @@
 #include "MoveGen.hpp"
 using Magics::Shift;
 
+static inline std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> PrecomputeAttacks()
+{
+    std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> result{};
+    for(U8 sq = 0; sq < 64; ++sq)
+    {
+        for(U16 us = 0; us < 256; ++us)
+        {
+            for(U16 them = 0; them < 256; ++them)
+            {
+                //skipping useless blocker configurations
+                if(us & them || (((~us) & Magics::BBFileOf(sq) || them & Magics::BBFileOf(sq)) & ((~us) & Magics::BBRankOf(sq) || them & Magics::BBRankOf(sq)))) continue;
+
+                BitBoard rank_attacks = 0ull;
+                BitBoard file_attacks = 0ull;
+                BitBoard diag_attacks = 0ull;
+                BitBoard anti_diag_attacks = 0ull;
+
+                const U8 rank_combined = (us | them) & ~Magics::BBFileOf(sq);
+                U8 other_combined = (us | them) & ~Magics::BBRankOf(sq);
+
+                const U8 rankofsq = Magics::RankOf(sq);
+                const U8 fileofsq = Magics::FileOf(sq);
+
+                if(us & Magics::BBFileOf(sq))
+                {
+                    for(int8_t current_file = fileofsq + 1; current_file < 8; ++current_file)
+                    {
+                        if((us >> current_file) & 1) break; //our piece
+                        rank_attacks |= Magics::SqToBB(sq + (current_file - fileofsq));
+                        if((them >> current_file) & 1) break; //their piece
+                    }
+                    for(int8_t current_file = fileofsq - 1; current_file > - 1 ; --current_file)
+                    {
+                        if((us >> current_file) & 1) break;
+                        rank_attacks |= Magics::SqToBB(sq - (fileofsq - current_file));
+                        if((them >> current_file) & 1) break;
+                    }
+                    const U16 p1 = Magics::base_2_to_3_us[fileofsq][us & ~Magics::BBFileOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[fileofsq][them];
+                    assert((p1 + p2 ) <= 2187);
+                    result.at(sq).at(Rank).at(p1 + p2) = rank_attacks;
+                }
+
+                if(us & Magics::BBRankOf(sq))
+                {
+                    for(int8_t current_file = rankofsq + 1; current_file < 8; ++current_file)
+                    {
+                        if((us >> current_file) & 1) break; //our piece
+                        if(!((other_combined >> current_file) & 1)) //empty
+                        {
+                            file_attacks |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
+
+                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
+                                diag_attacks |= Magics::SqToBB(sq + 9 * (current_file - rankofsq));
+                            if(Magics::ValidSq(sq + 7 * (current_file - rankofsq)))
+                                anti_diag_attacks |= Magics::SqToBB(sq + 7 * (current_file - rankofsq));
+                            continue;
+                        }
+                        if((them >> current_file) & 1) //their piece
+                        {
+                            file_attacks |= Magics::SqToBB(sq + 8 * (current_file - rankofsq));
+
+                            if(Magics::ValidSq(sq + 9 * (current_file - rankofsq)))
+                                diag_attacks |= Magics::SqToBB(sq + 9 * (current_file - rankofsq));
+                            if(Magics::ValidSq(sq + 7 * (current_file - rankofsq)))
+                                anti_diag_attacks |= Magics::SqToBB(sq + 7 * (current_file - rankofsq));
+                            break;
+                        }
+                    }
+                    for(int8_t current_file = rankofsq - 1; current_file > - 1 ; --current_file)
+                    {
+                        if((us >> current_file) & 1) break;
+                        if(!((other_combined >> current_file) & 1))
+                        {
+                            file_attacks |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
+
+                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
+                                diag_attacks |= Magics::SqToBB(sq - 9 * (rankofsq - current_file));
+                            if(Magics::ValidSq(sq - 7 * (rankofsq - current_file)))
+                                anti_diag_attacks |= Magics::SqToBB(sq - 7 * (rankofsq - current_file));
+                            continue;
+                        }
+                        if((them >> current_file) & 1)
+                        {
+                            file_attacks |= Magics::SqToBB(sq - 8 * (rankofsq - current_file));
+
+                            if(Magics::ValidSq(sq - 9 * (rankofsq - current_file)))
+                                diag_attacks |= Magics::SqToBB(sq - 9 * (rankofsq - current_file));
+                            if(Magics::ValidSq(sq - 7 * (rankofsq - current_file)))
+                                anti_diag_attacks |= Magics::SqToBB(sq - 7 * (rankofsq - current_file));
+                            break;
+                        }
+                    }
+
+                    diag_attacks      &= Magics::SLIDING_ATTACKS_MASK[sq][(int)Diagonal];
+                    anti_diag_attacks &= Magics::SLIDING_ATTACKS_MASK[sq][(int)AntiDiagonal];
+
+                    const U16 p1 = Magics::base_2_to_3_us[rankofsq][us & ~Magics::BBRankOf(sq)];
+                    const U16 p2 = 2 * Magics::base_2_to_3_us[rankofsq][them];
+                    assert((p1 + p2 ) <= 2187);
+                    result.at(sq).at((U8)File           ).at(p1 + p2) = file_attacks;
+                    result.at(sq).at((U8)Diagonal       ).at(p1 + p2) = diag_attacks;
+                    result.at(sq).at((U8)AntiDiagonal   ).at(p1 + p2) = anti_diag_attacks;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+std::array<std::array<std::array<BitBoard, 2187>, 4>, 64> SLIDING_ATTACKS = PrecomputeAttacks();
+
 static inline std::array<std::array<std::array<move_info, 2187>, 4>, 64> PrecomputeTitboards()
 {
     std::array<std::array<std::array<move_info, 2187>, 4>, 64> result{};

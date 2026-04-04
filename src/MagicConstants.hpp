@@ -291,5 +291,19 @@ namespace Magics
     inline constexpr std::array<BitBoard, 64> KNIGHT_ATTACK_MASKS = KnightAttackingMask();
 
     inline constexpr std::array<BitBoard, 64> KING_ATTACK_MASKS = KingAttackingMask();
+
+    inline constexpr auto BISHOP_LINE_MASK = []() consteval {
+        std::array<BitBoard, 64> r{};
+        for (int sq = 0; sq < 64; ++sq)
+            r[sq] = SLIDING_ATTACKS_MASK[sq][Diagonal] | SLIDING_ATTACKS_MASK[sq][AntiDiagonal];
+        return r;
+    }();
+
+    inline constexpr auto ROOK_LINE_MASK = []() consteval {
+        std::array<BitBoard, 64> r{};
+        for (int sq = 0; sq < 64; ++sq)
+            r[sq] = SLIDING_ATTACKS_MASK[sq][File] | SLIDING_ATTACKS_MASK[sq][Rank];
+        return r;
+    }();
 }
 #endif //#ifndef MAGICCONSTANTS_HPP

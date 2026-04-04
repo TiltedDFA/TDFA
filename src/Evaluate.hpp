@@ -394,8 +394,8 @@ namespace Eval
         BitBoard bishops = pos->Pieces(C, pt_Bishop);
         while (bishops) {
             const Sq sq = Magics::FindLS1B(bishops);
-            BitBoard attacks = MoveGen::GetMovesForSliding<Diagonal>(sq, us, them)->attacks_
-                             | MoveGen::GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_;
+            BitBoard attacks = MoveGen::GetSlidingAttacks<Diagonal>(sq, us, them)
+                             | MoveGen::GetSlidingAttacks<AntiDiagonal>(sq, us, them);
             int mob = Magics::PopCnt(attacks & safe);
             mg += Score(MOB_BISHOP_MG * (mob - 7));
             eg += Score(MOB_BISHOP_EG * (mob - 7));
@@ -406,8 +406,8 @@ namespace Eval
         BitBoard rooks = pos->Pieces(C, pt_Rook);
         while (rooks) {
             const Sq sq = Magics::FindLS1B(rooks);
-            BitBoard attacks = MoveGen::GetMovesForSliding<File>(sq, us, them)->attacks_
-                             | MoveGen::GetMovesForSliding<Rank>(sq, us, them)->attacks_;
+            BitBoard attacks = MoveGen::GetSlidingAttacks<File>(sq, us, them)
+                             | MoveGen::GetSlidingAttacks<Rank>(sq, us, them);
             int mob = Magics::PopCnt(attacks & safe);
             mg += Score(MOB_ROOK_MG * (mob - 7));
             eg += Score(MOB_ROOK_EG * (mob - 7));
@@ -418,10 +418,10 @@ namespace Eval
         BitBoard queens = pos->Pieces(C, pt_Queen);
         while (queens) {
             const Sq sq = Magics::FindLS1B(queens);
-            BitBoard attacks = MoveGen::GetMovesForSliding<File>(sq, us, them)->attacks_
-                             | MoveGen::GetMovesForSliding<Rank>(sq, us, them)->attacks_
-                             | MoveGen::GetMovesForSliding<Diagonal>(sq, us, them)->attacks_
-                             | MoveGen::GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_;
+            BitBoard attacks = MoveGen::GetSlidingAttacks<File>(sq, us, them)
+                             | MoveGen::GetSlidingAttacks<Rank>(sq, us, them)
+                             | MoveGen::GetSlidingAttacks<Diagonal>(sq, us, them)
+                             | MoveGen::GetSlidingAttacks<AntiDiagonal>(sq, us, them);
             int mob = Magics::PopCnt(attacks & safe);
             mg += Score(MOB_QUEEN_MG * (mob - 14));
             eg += Score(MOB_QUEEN_EG * (mob - 14));
@@ -518,8 +518,8 @@ namespace Eval
         BitBoard bishops = pos->Pieces(C, pt_Bishop);
         while (bishops) {
             const Sq sq = Magics::FindLS1B(bishops);
-            BitBoard atk = MoveGen::GetMovesForSliding<Diagonal>(sq, us, them)->attacks_
-                         | MoveGen::GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_;
+            BitBoard atk = MoveGen::GetSlidingAttacks<Diagonal>(sq, us, them)
+                         | MoveGen::GetSlidingAttacks<AntiDiagonal>(sq, us, them);
             if (atk & king_zone) { ++attackers; attack_units += ATTACK_UNIT_BISHOP; }
             bishops = Magics::PopLS1B(bishops);
         }
@@ -528,8 +528,8 @@ namespace Eval
         BitBoard rooks = pos->Pieces(C, pt_Rook);
         while (rooks) {
             const Sq sq = Magics::FindLS1B(rooks);
-            BitBoard atk = MoveGen::GetMovesForSliding<File>(sq, us, them)->attacks_
-                         | MoveGen::GetMovesForSliding<Rank>(sq, us, them)->attacks_;
+            BitBoard atk = MoveGen::GetSlidingAttacks<File>(sq, us, them)
+                         | MoveGen::GetSlidingAttacks<Rank>(sq, us, them);
             if (atk & king_zone) { ++attackers; attack_units += ATTACK_UNIT_ROOK; }
             rooks = Magics::PopLS1B(rooks);
         }
@@ -538,10 +538,10 @@ namespace Eval
         BitBoard queens = pos->Pieces(C, pt_Queen);
         while (queens) {
             const Sq sq = Magics::FindLS1B(queens);
-            BitBoard atk = MoveGen::GetMovesForSliding<File>(sq, us, them)->attacks_
-                         | MoveGen::GetMovesForSliding<Rank>(sq, us, them)->attacks_
-                         | MoveGen::GetMovesForSliding<Diagonal>(sq, us, them)->attacks_
-                         | MoveGen::GetMovesForSliding<AntiDiagonal>(sq, us, them)->attacks_;
+            BitBoard atk = MoveGen::GetSlidingAttacks<File>(sq, us, them)
+                         | MoveGen::GetSlidingAttacks<Rank>(sq, us, them)
+                         | MoveGen::GetSlidingAttacks<Diagonal>(sq, us, them)
+                         | MoveGen::GetSlidingAttacks<AntiDiagonal>(sq, us, them);
             if (atk & king_zone) { ++attackers; attack_units += ATTACK_UNIT_QUEEN; }
             queens = Magics::PopLS1B(queens);
         }
