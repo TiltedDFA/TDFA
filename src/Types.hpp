@@ -2,6 +2,7 @@
 #define TYPES_HPP
 
 constexpr bool USE_PEXT = true;
+constexpr bool USE_ENDPOINT_MOVEGEN = false; // false = move_info table (big L3), true = endpoint system (small L2)
 #define USE_TITBOARDS 1
 #define USE_TRANSPOSITION_TABLE 1
 #define DEBUG_TRANPOSITION_TABLE 0

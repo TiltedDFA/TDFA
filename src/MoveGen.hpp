@@ -201,6 +201,75 @@ namespace MoveGen
         }
     }
 
+    // move_info lookup (used when USE_ENDPOINT_MOVEGEN = false, and by Old* benchmark variants)
+    template<AttackDirection direction, bool UsePext = USE_PEXT>
+    inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
+    {
+        if constexpr(direction == Rank)
+        {
+            const U8 file_of_attacker = Magics::FileOf(piece_sq);
+            const U8 file_bit = U8(1u << file_of_attacker);
+            U8 us_collapsed{}, them_collapsed{};
+            if constexpr (UsePext) {
+                const BitBoard rank_mask = Magics::RANK_1BB << (piece_sq & 56);
+                us_collapsed = U8(_pext_u64(us, rank_mask));
+                them_collapsed = U8(_pext_u64(them, rank_mask));
+            } else {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedFilesIndex(us & attack_mask);
+                them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
+            }
+            us_collapsed &= U8(~file_bit);
+            them_collapsed &= U8(~file_bit);
+            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
+            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+        }
+        else if constexpr(direction == File)
+        {
+            const U8 rank_of_attacker = Magics::RankOf(piece_sq);
+            const U8 file_of_attacker = Magics::FileOf(piece_sq);
+            U8 us_collapsed{}, them_collapsed{};
+            if constexpr (UsePext) {
+                const BitBoard file_mask = Magics::FILE_ABB << file_of_attacker;
+                us_collapsed = U8(_pext_u64(us, file_mask));
+                them_collapsed = U8(_pext_u64(them, file_mask));
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            } else {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us & attack_mask, file_of_attacker);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
+            }
+            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
+            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+        }
+        else
+        {
+            const U8 rank_of_attacker = Magics::RankOf(piece_sq);
+            const U8 file_of_attacker = Magics::FileOf(piece_sq);
+            U8 us_collapsed{}, them_collapsed{};
+            if constexpr (UsePext) {
+                constexpr int diag_idx = (direction == Diagonal) ? 0 : 1;
+                const BitBoard full_mask = Magics::DIAG_FULL_MASK[piece_sq][diag_idx];
+                const U8 start_rank = (direction == Diagonal)
+                    ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
+                    : ((rank_of_attacker + file_of_attacker > 7) ? U8(rank_of_attacker + file_of_attacker - 7) : 0);
+                us_collapsed = U8(_pext_u64(us, full_mask) << start_rank);
+                them_collapsed = U8(_pext_u64(them, full_mask) << start_rank);
+                const U8 rank_bit = U8(1u << rank_of_attacker);
+                us_collapsed &= U8(~rank_bit);
+                them_collapsed &= U8(~rank_bit);
+            } else {
+                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
+                us_collapsed   = Magics::CollapsedRanksIndex(us & attack_mask);
+                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
+            }
+            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
+            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
+        }
+    }
+
     void WhitePawnMoves(Position const* pos, MoveList* ml) noexcept;
 
     void BlackPawnMoves(Position const* pos, MoveList* ml) noexcept;
@@ -215,13 +284,21 @@ namespace MoveGen
         while(bishops)
         {
             const Sq sq = Magics::PopNRetLS1B(bishops);
-            const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
-            const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
-            if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
-            if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
+            if constexpr(USE_ENDPOINT_MOVEGEN)
+            {
+                const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
+                const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
+                if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
+                if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
+            }
+            else
+            {
+                ml->merge(GetMovesForSliding<Diagonal>(sq, us, them));
+                ml->merge(GetMovesForSliding<AntiDiagonal>(sq, us, them));
+            }
         }
     }
-    
+
     template<Colour colour_to_move>
     constexpr void RookMoves(Position const* pos, MoveList* ml)
     {
@@ -232,10 +309,18 @@ namespace MoveGen
         while(rooks)
         {
             const Sq sq = Magics::PopNRetLS1B(rooks);
-            const U8 ep_file = GetEndpoint<File>(sq, us, them);
-            const U8 ep_rank = GetEndpoint<Rank>(sq, us, them);
-            if(ep_file) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
-            if(ep_rank) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
+            if constexpr(USE_ENDPOINT_MOVEGEN)
+            {
+                const U8 ep_file = GetEndpoint<File>(sq, us, them);
+                const U8 ep_rank = GetEndpoint<Rank>(sq, us, them);
+                if(ep_file) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
+                if(ep_rank) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
+            }
+            else
+            {
+                ml->merge(GetMovesForSliding<File>(sq, us, them));
+                ml->merge(GetMovesForSliding<Rank>(sq, us, them));
+            }
         }
     }
 
@@ -249,14 +334,24 @@ namespace MoveGen
         while(queens)
         {
             const Sq sq = Magics::PopNRetLS1B(queens);
-            const U8 ep_file  = GetEndpoint<File>(sq, us, them);
-            const U8 ep_rank  = GetEndpoint<Rank>(sq, us, them);
-            const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
-            const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
-            if(ep_file)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
-            if(ep_rank)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
-            if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
-            if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
+            if constexpr(USE_ENDPOINT_MOVEGEN)
+            {
+                const U8 ep_file  = GetEndpoint<File>(sq, us, them);
+                const U8 ep_rank  = GetEndpoint<Rank>(sq, us, them);
+                const U8 ep_diag  = GetEndpoint<Diagonal>(sq, us, them);
+                const U8 ep_adiag = GetEndpoint<AntiDiagonal>(sq, us, them);
+                if(ep_file)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(File)_AT(ep_file));
+                if(ep_rank)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Rank)_AT(ep_rank));
+                if(ep_diag)  ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(Diagonal)_AT(ep_diag));
+                if(ep_adiag) ml->merge_ray(&MOVE_LOOKUP _AT(sq)_AT(AntiDiagonal)_AT(ep_adiag));
+            }
+            else
+            {
+                ml->merge(GetMovesForSliding<File>(sq, us, them));
+                ml->merge(GetMovesForSliding<Rank>(sq, us, them));
+                ml->merge(GetMovesForSliding<Diagonal>(sq, us, them));
+                ml->merge(GetMovesForSliding<AntiDiagonal>(sq, us, them));
+            }
         }
     }
 
@@ -564,74 +659,6 @@ namespace MoveGen
         }
     }
     // === OLD SYSTEM (for A/B benchmarking) ===
-    template<AttackDirection direction, bool UsePext = USE_PEXT>
-    inline INLINE move_info const* GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept
-    {
-        if constexpr(direction == Rank)
-        {
-            const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            const U8 file_bit = U8(1u << file_of_attacker);
-            U8 us_collapsed{}, them_collapsed{};
-            if constexpr (UsePext) {
-                const BitBoard rank_mask = Magics::RANK_1BB << (piece_sq & 56);
-                us_collapsed = U8(_pext_u64(us, rank_mask));
-                them_collapsed = U8(_pext_u64(them, rank_mask));
-            } else {
-                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
-                us_collapsed   = Magics::CollapsedFilesIndex(us & attack_mask);
-                them_collapsed = Magics::CollapsedFilesIndex(them & attack_mask);
-            }
-            us_collapsed &= U8(~file_bit);
-            them_collapsed &= U8(~file_bit);
-            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, file_of_attacker);
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
-        }
-        else if constexpr(direction == File)
-        {
-            const U8 rank_of_attacker = Magics::RankOf(piece_sq);
-            const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            U8 us_collapsed{}, them_collapsed{};
-            if constexpr (UsePext) {
-                const BitBoard file_mask = Magics::FILE_ABB << file_of_attacker;
-                us_collapsed = U8(_pext_u64(us, file_mask));
-                them_collapsed = U8(_pext_u64(them, file_mask));
-                const U8 rank_bit = U8(1u << rank_of_attacker);
-                us_collapsed &= U8(~rank_bit);
-                them_collapsed &= U8(~rank_bit);
-            } else {
-                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
-                us_collapsed   = Magics::CollapsedRanksIndex(us & attack_mask, file_of_attacker);
-                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask, file_of_attacker);
-            }
-            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
-        }
-        else
-        {
-            const U8 rank_of_attacker = Magics::RankOf(piece_sq);
-            const U8 file_of_attacker = Magics::FileOf(piece_sq);
-            U8 us_collapsed{}, them_collapsed{};
-            if constexpr (UsePext) {
-                constexpr int diag_idx = (direction == Diagonal) ? 0 : 1;
-                const BitBoard full_mask = Magics::DIAG_FULL_MASK[piece_sq][diag_idx];
-                const U8 start_rank = (direction == Diagonal)
-                    ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
-                    : ((rank_of_attacker + file_of_attacker > 7) ? U8(rank_of_attacker + file_of_attacker - 7) : 0);
-                us_collapsed = U8(_pext_u64(us, full_mask) << start_rank);
-                them_collapsed = U8(_pext_u64(them, full_mask) << start_rank);
-                const U8 rank_bit = U8(1u << rank_of_attacker);
-                us_collapsed &= U8(~rank_bit);
-                them_collapsed &= U8(~rank_bit);
-            } else {
-                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
-                us_collapsed   = Magics::CollapsedRanksIndex(us & attack_mask);
-                them_collapsed = Magics::CollapsedRanksIndex(them & attack_mask);
-            }
-            const U16 lookup_index = Magics::GetBaseThreeUsThem(us_collapsed, them_collapsed, rank_of_attacker);
-            return &SLIDING_ATTACK_CONFIG _AT(piece_sq)_AT(direction)_AT(lookup_index);
-        }
-    }
-
     template<Colour C>
     constexpr void OldBishopMoves(Position const* pos, MoveList* ml)
     {
