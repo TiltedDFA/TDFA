@@ -21,12 +21,14 @@ public:
         castling_rights_(0),
         half_moves_(0),
         en_passant_sq_(Magics::EP_NULL),
+        moved_type_(pt_None),
         captured_type_(p_None),
         zobrist_key_(0){}
 public:
     U8          castling_rights_;
     U8          half_moves_;
     U8          en_passant_sq_;
+    PieceType   moved_type_;
     Piece       captured_type_;
     ZobristKey  zobrist_key_;
 };

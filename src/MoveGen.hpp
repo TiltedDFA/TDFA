@@ -85,8 +85,8 @@ namespace MoveGen
             U8 them_collapsed{};
             if constexpr (UsePext)
             {
-                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
-                const BitBoard full_mask = attack_mask | Magics::SqToBB(piece_sq);
+                constexpr int diag_idx = (direction == Diagonal) ? 0 : 1;
+                const BitBoard full_mask = Magics::DIAG_FULL_MASK[piece_sq][diag_idx];
                 const U8 start_rank = (direction == Diagonal)
                     ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
                     : ((rank_of_attacker + file_of_attacker > 7)
@@ -173,8 +173,8 @@ namespace MoveGen
             U8 them_collapsed{};
             if constexpr (UsePext)
             {
-                const BitBoard attack_mask = Magics::SLIDING_ATTACKS_MASK[piece_sq][direction];
-                const BitBoard full_mask = attack_mask | Magics::SqToBB(piece_sq);
+                constexpr int diag_idx = (direction == Diagonal) ? 0 : 1;
+                const BitBoard full_mask = Magics::DIAG_FULL_MASK[piece_sq][diag_idx];
                 const U8 start_rank = (direction == Diagonal)
                     ? (rank_of_attacker > file_of_attacker ? U8(rank_of_attacker - file_of_attacker) : 0)
                     : ((rank_of_attacker + file_of_attacker > 7)

@@ -140,6 +140,7 @@ void Position::MakeMove(const Move m)
     info_.captured_type_ = p_None;
 
     const PieceType p_type = Magics::TypeOf(PieceOn(from));
+    info_.moved_type_ = p_type;
 
     switch(mt)
     {
@@ -249,14 +250,12 @@ void Position::UnmakeMove(const Move m)
     {
     case mt_Quiet:
     {
-        const PieceType p_type = Magics::TypeOf(PieceOn(to));
-        MovePieceFast(to, from, p_type, turn_);
+        MovePieceFast(to, from, info_.moved_type_, turn_);
         break;
     }
     case mt_Capture:
     {
-        const PieceType p_type = Magics::TypeOf(PieceOn(to));
-        MovePieceFast(to, from, p_type, turn_);
+        MovePieceFast(to, from, info_.moved_type_, turn_);
         const PieceType cap_pt = Magics::TypeOf(info_.captured_type_);
         const Colour cap_c = Magics::ColourOf(info_.captured_type_);
         AddPieceFast(cap_pt, cap_c, to);
@@ -285,7 +284,7 @@ void Position::UnmakeMove(const Move m)
     }
     default: // promotions
     {
-        const PieceType prom_pt = Magics::TypeOf(PieceOn(to));
+        const PieceType prom_pt = Moves::PTypeOfProm(m);
         RemovePieceFast(to, prom_pt, turn_);
         AddPieceFast(pt_Pawn, turn_, from);
 

@@ -278,11 +278,9 @@ namespace Magics
     //This omits the file of piece that you're trying to calculate the moves for
     inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_us = compute_base_2_to_3<true>();
 
-    inline constexpr std::array<std::array<U16, 256>, 8> base_2_to_3_them = compute_base_2_to_3<false>();
-
     inline constexpr U16 GetBaseThreeUsThem(U8 us, U8 them, Sq piece_square) noexcept
     {
-        return base_2_to_3_us[piece_square][us] + base_2_to_3_them[piece_square][them];
+        return base_2_to_3_us[piece_square][us] + (U16(base_2_to_3_us[piece_square][them]) << 1);
     }
 
     //finds the attacking masks for sliding pieces. This omits the square of the attacking piece.
@@ -303,6 +301,17 @@ namespace Magics
         std::array<BitBoard, 64> r{};
         for (int sq = 0; sq < 64; ++sq)
             r[sq] = SLIDING_ATTACKS_MASK[sq][File] | SLIDING_ATTACKS_MASK[sq][Rank];
+        return r;
+    }();
+
+    // Full diagonal masks (attack_mask | piece square) for PEXT extraction
+    inline constexpr auto DIAG_FULL_MASK = []() consteval {
+        std::array<std::array<BitBoard, 2>, 64> r{};
+        for (int sq = 0; sq < 64; ++sq)
+        {
+            r[sq][0] = SLIDING_ATTACKS_MASK[sq][Diagonal] | SqToBB(U8(sq));
+            r[sq][1] = SLIDING_ATTACKS_MASK[sq][AntiDiagonal] | SqToBB(U8(sq));
+        }
         return r;
     }();
 }
