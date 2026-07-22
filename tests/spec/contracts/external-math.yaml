@@ -1,0 +1,892 @@
+schema_version: 1
+snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+contract_set: external-math
+authoring_stage: blind-contract-authoring
+information_firewall:
+  permitted_inputs:
+    - tests/README.md
+    - tests/spec/**
+    - tests/data/**
+    - perftsuite.epd
+    - UCI, FEN, FIDE, and mathematical authorities
+  implementation_inspected: false
+  product_executed: false
+scope: >-
+  Narrow valid-domain behavior whose expected result is fixed without an owner
+  policy. Every collection result below is an abstract mathematical set
+  projection; raw storage, order, multiplicity, and capacity behavior are not
+  contracted.
+
+cards:
+  - id: C-MTH-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: mathematical
+    signatures:
+      - "constexpr Colour operator!(const Colour c)"
+      - "template<typename T> float FloatDiv(T dividend, T divisor)"
+      - "constexpr double Magics::pow(double x, unsigned int y) noexcept"
+    purpose: >-
+      Provide the two-colour complement and exact ordinary arithmetic used by
+      finite test cases. This card does not establish ABI widths or exceptional
+      floating-point behavior.
+    authority:
+      type: mathematical
+      reference: oracle/exact-finite-arithmetic-v1
+    preconditions:
+      - "operator! receives exactly White or Black."
+      - >-
+        FloatDiv is instantiated as U8, U16, U32, U64, I16, int, or float. Its
+        exact input pairs are (0,1), (1,1), (1,2), (3,2), and (8,8), plus
+        (-1,1), (1,-2), and (-3,-2) for I16, int, and float, and the
+        representable scale-by-two variants of those pairs. The divisor is
+        nonzero and every operand and real quotient is finite and exactly
+        representable as binary32.
+      - >-
+        Magics::pow receives x in {-4,-2,-1,-0.5,0,0.5,1,2,4} and y in 0..12,
+        excluding 0^0. Every resulting value is finite and exactly representable
+        as binary64.
+    result:
+      - "!White is Black, !Black is White, and !(!c) equals c."
+      - "FloatDiv returns the real quotient rounded exactly to the stipulated binary32 value."
+      - "Magics::pow returns the mathematical integer power x^y for the stipulated exact cases."
+    mutates:
+      - none
+    preserves:
+      - "All operands and program state."
+    failure:
+      - "Inputs outside the preconditions are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated inputs."
+    oracle:
+      type: exhaustive-model
+      id: oracle/exact-finite-arithmetic-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-BIT-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: mathematical
+    signatures:
+      - "template<Sq N> consteval BitBoard Magics::SqToBB() noexcept"
+      - "constexpr BitBoard Magics::SqToBB(Sq index)"
+      - "constexpr BitBoard Magics::GetLS1B(BitBoard bb) noexcept"
+      - "constexpr Sq Magics::FindLS1B(BitBoard bb) noexcept"
+      - "constexpr Sq Magics::FindMS1B(BitBoard board) noexcept"
+      - "constexpr BitBoard Magics::PopLS1B(BitBoard board) noexcept"
+      - "constexpr BitBoard Magics::PopMS1B(const BitBoard board) noexcept"
+      - "constexpr Sq Magics::PopNRetLS1B(BitBoard& board) noexcept"
+      - "constexpr U8 Magics::PopCnt(BitBoard bb) noexcept"
+    purpose: >-
+      Interpret BitBoard as a 64-coefficient binary vector and provide its
+      valid-index, cardinality, and nonzero endpoint operations.
+    authority:
+      type: mathematical
+      reference: oracle/ordered-64-bit-coefficient-set-v1
+    preconditions:
+      - "SqToBB receives a runtime or template index in 0..63."
+      - "GetLS1B, FindLS1B, FindMS1B, PopLS1B, PopMS1B, and PopNRetLS1B receive a nonzero BitBoard."
+      - "PopCnt may receive any BitBoard."
+    result:
+      - "SqToBB(i) is the one-hot vector with coefficient i set; its two declarations agree."
+      - "PopCnt is the number of set coefficients and lies in 0..64."
+      - "GetLS1B returns the one-hot least set coefficient."
+      - "FindLS1B and FindMS1B return the least and greatest set indices respectively."
+      - "PopLS1B and PopMS1B remove exactly the corresponding endpoint coefficient."
+      - "PopNRetLS1B returns the least set index and removes exactly that coefficient from its reference operand."
+    mutates:
+      - "PopNRetLS1B may mutate only its BitBoard reference operand as stated."
+    preserves:
+      - "All by-value operands and all state unrelated to the PopNRetLS1B operand."
+    failure:
+      - "Zero scans/removals and out-of-range square indices are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated inputs."
+    oracle:
+      type: exhaustive-model
+      id: oracle/ordered-set-bit-list-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-GRD-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: mathematical
+    signatures:
+      - "constexpr Sq Magics::FileOf(U8 index) noexcept"
+      - "constexpr Sq Magics::RankOf(Sq index)"
+      - "constexpr U8 Magics::BBFileOf(Sq square) noexcept"
+      - "constexpr U8 Magics::BBRankOf(Sq square) noexcept"
+      - "template<MD D> constexpr BitBoard Magics::Shift(BitBoard b) noexcept"
+      - "consteval std::array<BitBoard, 64> Magics::KnightAttackingMask() noexcept"
+      - "consteval std::array<BitBoard, 64> Magics::KingAttackingMask() noexcept"
+      - "inline constexpr std::array<BitBoard, 64> Magics::KNIGHT_ATTACK_MASKS"
+      - "inline constexpr std::array<BitBoard, 64> Magics::KING_ATTACK_MASKS"
+    purpose: >-
+      Expose only orientation-free incidence and FIDE leaper geometry on a
+      finite eight-by-eight board.
+    authority:
+      type: mathematical
+      reference: oracle/orientation-free-grid-geometry-v1
+    preconditions:
+      - "Square arguments are in 0..63 and BitBoard inputs are arbitrary."
+      - "Shift is instantiated only with the ten named MD enumerators in the dossier."
+      - "Any labelled comparison normalizes all indices through one independently checked square-label bijection and never assumes a numeric board origin."
+    result:
+      - "FileOf and RankOf induce orthogonal eight-class partitions of 64 squares, with eight members per class and every class pair occurring once."
+      - "BBFileOf and BBRankOf are one-hot labels inducing the same respective partitions."
+      - "The named shifts satisfy the orientation-free partial-bijection, edge-cardinality, opposite, composition, and union laws in oracle/orientation-free-grid-shift-v1."
+      - "After label normalization, king masks contain exactly the in-board one-step destinations and knight masks exactly the in-board signed permutations of (1,2)."
+      - "Each consteval mask family equals its corresponding inline table."
+    mutates:
+      - none
+    preserves:
+      - "All inputs and program state."
+    failure:
+      - "Out-of-range squares and any numeric-to-label orientation claim are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated inputs."
+    oracle:
+      type: exhaustive-model
+      id: oracle/orientation-free-grid-geometry-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-MOV-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: mathematical
+    signatures:
+      - "constexpr Move Moves::EncodeMove(const Sq start_index, const Sq target_index, const MoveType move_type)"
+      - "constexpr void Moves::DecodeMove(const Move move, Sq* __restrict__ start_index, Sq* __restrict__ target_index, MoveType* __restrict__ move_type)"
+      - "constexpr U8 Moves::TargetSq(const Move move)"
+      - "constexpr U8 Moves::StartSq(const Move move)"
+      - "constexpr bool Moves::IsPromotionMove(const Move move)"
+    purpose: >-
+      Provide an injective product encoding and semantic projections for valid
+      distinct-square chess moves without fixing a numeric bit layout.
+    authority:
+      type: mathematical
+      reference: oracle/move-component-product-v1
+    preconditions:
+      - "Start and target are distinct values in 0..63."
+      - >-
+        MoveType is exactly one of mt_Quiet, mt_EnPassant, mt_Castling,
+        mt_Capture, mt_QueenPromotion, mt_RookPromotion,
+        mt_BishopPromotion, or mt_KnightPromotion.
+      - "DecodeMove receives three non-null, non-aliasing output pointers and a Move returned by EncodeMove under this card."
+      - "StartSq, TargetSq, and IsPromotionMove receive a Move returned by EncodeMove under this card."
+    result:
+      - "DecodeMove returns the exact start, target, and named MoveType used to encode the Move."
+      - "StartSq and TargetSq return the same start and target projections."
+      - "Re-encoding decoded components returns the original Move, and different valid tuples have different Move values."
+      - "IsPromotionMove is true exactly for the four concrete promotion MoveTypes and false for the other four semantic MoveTypes."
+    mutates:
+      - "DecodeMove may write only its three output pointees."
+    preserves:
+      - "All other state."
+    failure:
+      - "Markers, null/bad/arbitrary encodings, equal squares, invalid squares, and invalid pointers are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated inputs."
+    oracle:
+      type: exhaustive-model
+      id: oracle/move-component-product-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-MOV-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 3
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "constexpr MoveList::MoveList()"
+      - "constexpr Move MoveList::operator[](const size_t index) const noexcept"
+      - "[[nodiscard]] constexpr std::array<Move, MAX_MOVES>& MoveList::all() noexcept"
+      - "[[nodiscard]] constexpr size_t MoveList::len() const noexcept"
+      - "constexpr void Moves::DecodeMove(const Move move, Sq* __restrict__ start_index, Sq* __restrict__ target_index, MoveType* __restrict__ move_type)"
+    purpose: >-
+      Expose only the logical populated prefix of a fresh MoveList generator
+      result and decode each generated Move to its semantic tuple.
+    authority:
+      type: owner-decision
+      reference: >-
+        tests/spec/intended-purpose-v1.md firm rows for generated encoded moves,
+        MoveList construction/len/operator[], and Moves::DecodeMove
+    preconditions:
+      - "Before any generator call or len() read, the test derives the expected logical result independently, constructs a MoveList, and observes only all().size() as that object's public backing capacity."
+      - "The generator receives a non-null newly constructed MoveList and is called only when the independently expected logical-set cardinality is no greater than the observed backing capacity."
+      - "After the call, len() is read and checked against the previously observed capacity before any operator[] access."
+      - "DecodeMove receives three non-null, non-aliasing output pointers and a Move read from that populated prefix."
+    result:
+      - >-
+        all().size() exposes the backing capacity used only to gate the call;
+        this card fixes neither a minimum capacity nor constructor len() state.
+      - >-
+        When the independently expected logical set fits the observed capacity,
+        the approved-domain generator call completes and post-call len() is no
+        greater than that capacity. Only after this bound passes, indices
+        [0,len()) may be read and, after set normalization, contain every and
+        only independently expected logical result element.
+      - "Storage at and beyond len() is unobserved; ordering and multiplicity within the populated prefix remain unspecified."
+      - "Every populated generated Move is in C-MOV-010's distinct-square, eight-semantic-kind domain, and DecodeMove returns its logical source, target, and named MoveType."
+      - "Tests may normalize the populated prefix to an unordered logical set; this card makes no ordering or multiplicity claim."
+    mutates:
+      - "The test uses all() only to read size() and does not mutate backing elements; len and indexed reads do not mutate the MoveList, and DecodeMove may write only its three output pointees."
+    preserves:
+      - "Prefix observation preserves the populated MoveList."
+    failure:
+      - "Constructor len() state, expected results larger than observed capacity, out-of-prefix reads, nonfresh lists, append-versus-replace on prior contents, backing-element mutation, unused storage, general overflow policy, duplicates, ordering, invalid inputs/encodings, and null pointers are outside this card; no failure response is specified. A fitting expected result with len()>capacity or an incomplete/extra logical prefix violates the result."
+    ordering: explicitly unspecified
+    determinism: "The normalized populated logical set and each Move's semantic decode are deterministic for the approved generator inputs."
+    oracle:
+      type: reference-model
+      id: oracle/logical-generated-movelist-prefix-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-MOV-012
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 3
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "template<AttackDirection direction> constexpr move_info const* MoveGen::GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept"
+      - "std::array<Move, 7> move_info::encoded_move_"
+      - "U8 move_info::count_"
+      - "constexpr void Moves::DecodeMove(const Move move, Sq* __restrict__ start_index, Sq* __restrict__ target_index, MoveType* __restrict__ move_type)"
+    purpose: >-
+      Expose only the immediate logical populated prefix of a valid sliding
+      move_info result and decode each populated Move to its semantic tuple.
+    authority:
+      type: owner-decision
+      reference: >-
+        tests/spec/intended-purpose-v1.md firm rows for GetMovesForSliding,
+        move_info's bounded logical move group, and Moves::DecodeMove
+    preconditions:
+      - "GetMovesForSliding receives a valid source contained in us, disjoint us/them occupancies, and one of the four named AttackDirection instantiations."
+      - "The expected logical sliding result is derived independently before the call, and the return value is checked immediately; no pointer-lifetime claim is made beyond that observation."
+      - "For each populated Move reached after the result checks, DecodeMove receives three non-null, non-aliasing output pointers."
+    result:
+      - "When the independently expected logical result is nonempty, GetMovesForSliding returns a non-null move_info pointer. When it is empty, null is permitted and represents the empty logical result without dereference."
+      - "For every non-null return, the test reads count_ and requires count_<=encoded_move_.size() before reading any encoded_move_ element."
+      - "Only after the non-null and count-bounds checks, indices [0,count_) are read and contain every and only independently expected logical move after set normalization; a non-null empty result therefore has count_==0. Storage at and beyond count_ and attacks_ are unobserved."
+      - "Every populated Move is in C-MOV-010's distinct-square, eight-semantic-kind domain, and DecodeMove returns its logical source, target, and named MoveType."
+      - "Tests may normalize the populated prefix to an unordered logical set; this card makes no ordering or multiplicity claim."
+    mutates:
+      - "Immediate move_info field reads do not mutate the record; DecodeMove may write only its three output pointees."
+    preserves:
+      - "The supplied occupancies and source value."
+    failure:
+      - "Pointer lifetime after the immediate observation, dereferencing a null empty representation, reads before the count-bounds check, out-of-prefix reads, unused storage, attacks_, ordering, multiplicity, general overflow policy, overlapping occupancies, invalid directions/sources, and invalid generated encodings are outside this card; no failure response is specified. Null for a nonempty expected result, count_ greater than encoded_move_.size(), or an incomplete/extra checked prefix violates the result."
+    ordering: explicitly unspecified
+    determinism: "The normalized populated logical set and each Move's semantic decode are deterministic for the stated sliding inputs."
+    oracle:
+      type: reference-model
+      id: oracle/logical-generated-move-info-prefix-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-UCI-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "inline std::string UTIL::Square(Sq sq)"
+      - "inline char UTIL::PromotionChar(PieceType p)"
+      - "inline std::string UTIL::MoveToStr(const Move m)"
+      - "inline Move UTIL::UciToMove(const std::string_view str, const Position& pos)"
+    purpose: >-
+      Convert valid chess squares, ordinary promotion pieces, and legal moves
+      to and from canonical lowercase UCI long algebraic notation.
+    authority:
+      type: UCI
+      reference: >-
+        UCI April 2006 move format at https://backscattering.de/chess/uci/
+        together with FIDE move semantics at
+        https://handbook.fide.com/chapter/E012023
+    preconditions:
+      - "Square receives a value in 0..63; only the collective 64-input bijection is observed."
+      - "PromotionChar receives pt_Queen, pt_Rook, pt_Bishop, or pt_Knight."
+      - "UciToMove receives a canonical four- or five-character lowercase UCI token that is legal in the supplied canonical legal Position."
+      - "MoveToStr receives the Move returned by such a UciToMove call before the Position is changed."
+    result:
+      - "Across all 64 Sq inputs, Square returns every label a1 through h8 exactly once; this card does not bind any label to a numeric Sq."
+      - "PromotionChar maps the four ordinary promotion piece types to q, r, b, and n respectively."
+      - "MoveToStr(UciToMove(token, position)) returns token exactly."
+      - "The parsed Move's decoded source, target, and named semantic MoveType agree with the legal move denoted by token."
+    mutates:
+      - none
+    preserves:
+      - "The supplied Position, input view, and all unrelated state."
+    failure:
+      - "Malformed, noncanonical, pseudo-legal-only, illegal, null, and arbitrary encoded moves are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated token and Position."
+    oracle:
+      type: standard
+      id: oracle/uci-valid-long-algebraic-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-BRD-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 5
+    status: APPROVED
+    kind: mathematical
+    signatures:
+      - "constexpr Board::Board()"
+      - "constexpr void Board::ResetBoard()"
+      - "constexpr BitBoard Board::Pieces(const PieceType pt) const"
+      - "constexpr BitBoard Board::Pieces(const Colour c) const"
+      - "constexpr BitBoard Board::Pieces(Colour, Colour) const"
+      - "template<typename... PieceTypes> constexpr BitBoard Board::Pieces(const PieceType p, PieceTypes... pt) const"
+      - "template<typename... PieceTypes> constexpr BitBoard Board::Pieces(const Colour c, PieceTypes... p) const"
+      - "constexpr Piece Board::PieceOn(const Sq s) const"
+      - "static constexpr Piece Board::MakePiece(const Colour c, const PieceType t)"
+      - "constexpr PieceType Magics::TypeOf(Piece p)"
+      - "constexpr Colour Magics::ColourOf(Piece p)"
+      - "constexpr void Board::AddPiece(const Piece p, const Sq s)"
+      - "constexpr void Board::RemovePiece(const Sq s)"
+      - "constexpr Piece Board::PopPiece(const Sq s)"
+      - "constexpr void Board::MovePiece(const Sq from, const Sq to)"
+    purpose: >-
+      Model a board as a finite partial map from 64 square keys to the twelve
+      ordinary colour-piece pairs and expose its valid primitive transitions.
+    authority:
+      type: mathematical
+      reference: oracle/finite-piece-map-v1
+    preconditions:
+      - "Colours are White or Black, ordinary piece types are King, Queen, Bishop, Knight, Rook, and Pawn, pieces are the twelve corresponding Piece enumerators, and squares are in 0..63."
+      - "The single-argument Pieces(PieceType) query accepts each ordinary type and the aggregate category pt_All; MakePiece, TypeOf, and every variadic type pack use only ordinary types."
+      - "Piece-type packs are nonempty, contain only ordinary PieceTypes, and do not repeat a type."
+      - "The two-colour overload is called only as Pieces(White,Black) or Pieces(Black,White)."
+      - "AddPiece targets an empty square; RemovePiece and PopPiece target an occupied square; MovePiece has an occupied source and a distinct empty target."
+    result:
+      - "Construction and ResetBoard produce the empty map; repeated reset is idempotent."
+      - "MakePiece is a bijection on the two-colour by six-type product, with TypeOf and ColourOf as its inverse projections."
+      - "PieceOn returns the mapped piece or p_None."
+      - "Pieces(colour) is exactly the set of squares mapped to a piece of that colour."
+      - "Pieces(pt_All) is exactly every occupied square, equal to Pieces(White) union Pieces(Black) and to the union of the six ordinary single-type queries."
+      - "Pieces(type...) is the union of squares whose piece type is in the supplied distinct-type pack; argument order does not change that set."
+      - "Pieces(colour,type...) intersects that type union with the supplied colour, while Pieces(White,Black) and Pieces(Black,White) return the union of both colour occupancies."
+      - "Add, remove, pop, and move perform exactly the corresponding finite-map operation; PopPiece returns the removed piece."
+    mutates:
+      - "ResetBoard, AddPiece, RemovePiece, PopPiece, and MovePiece may mutate only the target Board according to the stated map transition."
+    preserves:
+      - "Every unrelated square and its colour/type membership."
+    failure:
+      - "Sentinels (including pt_None), invalid squares/pieces/types, pt_All inside a variadic type pack, repeated piece-type arguments, same-colour calls to the two-colour overload, occupied add/target, empty source/removal, and equal move endpoints are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated Board and inputs."
+    oracle:
+      type: exhaustive-model
+      id: oracle/finite-piece-map-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-FEN-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 5
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "Position::Position(std::string_view fen)"
+      - "void Position::ImportFen(std::string_view fen)"
+      - "constexpr BitBoard Position::EmptySqs() const"
+      - "constexpr BitBoard Position::EnPasBB() const"
+      - "constexpr Sq Position::EnPasSq() const"
+      - "constexpr U8 Position::CastlingRights() const"
+      - "constexpr Colour Position::ColourToMove() const"
+      - "constexpr U8 Position::HalfMoves() const"
+      - "constexpr U16 Position::FullMoves() const"
+      - "bool Position::IsOk() const"
+    purpose: >-
+      Establish an independently legal searchable Position from canonical FEN
+      and expose its FEN-semantic fields after direct import or an independently
+      approved legal transition.
+    authority:
+      type: FEN
+      reference: >-
+        PGN/FEN specification section 16.1 at
+        https://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm and
+        tests/spec/intended-purpose-v1.md Position/FEN observer rows
+    preconditions:
+      - >-
+        Position construction and ImportFen receive a canonical structurally
+        valid, independently FIDE-legal and searchable six-field FEN whose
+        counters fit the declared observer return types.
+      - >-
+        Position observers are called either on a Position established by such
+        construction/import or after this explicit approved transition chain:
+        on the current legal Position, UTIL::UciToMove under C-UCI-010 converts
+        a frozen literal legal UCI token, Moves::DecodeMove under C-MOV-010
+        verifies its exact semantic Move tuple, then Position::MakeMove under
+        C-CHS-011 applies that exact returned Move. A sequence repeats the same
+        chain at each current prefix.
+      - "EnPasSq is observed only when the FEN contains an en-passant target; absence is observed only through EnPasBB()==0."
+    result:
+      - "Construction and ImportFen establish exactly the labelled piece map, active colour, named castling-right set, en-passant target, halfmove clock, and fullmove number encoded by the FEN."
+      - "ImportFen replaces those semantic fields rather than merging them, and repeated import is idempotent over those fields."
+      - "EmptySqs is the complement of occupied labelled squares; EnPasBB is the target singleton when present; the other observers return their corresponding current FEN-semantic field regardless of whether provenance was direct import or the UTIL::UciToMove/Moves::DecodeMove/Position::MakeMove chain governed by C-UCI-010, C-MOV-010, and C-CHS-011."
+      - "IsOk returns true for every independently legal searchable Position in this positive domain."
+    mutates:
+      - "Construction and ImportFen may replace only the target Position; this card makes no assertion about hash or history lifecycle."
+      - "EmptySqs, EnPasBB, EnPasSq, CastlingRights, ColourToMove, HalfMoves, FullMoves, and IsOk do not mutate any FEN-semantic field named in this card."
+    preserves:
+      - "The input FEN bytes and all unrelated objects."
+      - "Every Position observer and IsOk preserve the labelled piece map, active colour, named rights, en-passant target, and both clocks; hash, cache, and history internals remain outside this card."
+    failure:
+      - "Noncanonical, malformed, structurally invalid, FIDE-illegal, non-searchable, out-of-range FEN, negative IsOk classification, and absent EnPasSq sentinel behavior are outside this card; no failure response is specified."
+    ordering: "FEN fields are placement, active colour, castling, en-passant, halfmove, then fullmove; all set-valued observations are otherwise unordered."
+    determinism: "Deterministic for the stated FEN."
+    oracle:
+      type: reference-model
+      id: oracle/frozen-fen-semantic-snapshot-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-FEN-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "constexpr bool IsDigit(const char i)"
+      - "constexpr void SplitFen(std::string_view fen, std::array<std::string_view,6>& fen_sections)"
+    purpose: >-
+      Recognize the ASCII digit terminal and split a canonical structurally
+      valid FEN record into its six uninterpreted source views without making a
+      FIDE-legality claim.
+    authority:
+      type: FEN
+      reference: >-
+        PGN/FEN specification section 16.1 and
+        tests/spec/intended-purpose-v1.md IsDigit/SplitFen firm rows
+    preconditions:
+      - "IsDigit may receive any char value and is interpreted as an ASCII grammar predicate."
+      - "SplitFen receives a canonical structurally valid record containing exactly six single-space-separated, nonempty FEN fields."
+      - "SplitFen's source bytes outlive all returned string_view observations."
+    result:
+      - "IsDigit is true exactly for ASCII '0' through '9'."
+      - "SplitFen writes the six exact source views in placement, active-colour, castling, en-passant, halfmove, fullmove order without interpreting chess legality."
+    mutates:
+      - "SplitFen may replace only the six output views."
+    preserves:
+      - "The input bytes and every unrelated object."
+    failure:
+      - "Missing, extra, empty, multiply separated, noncanonical, or malformed fields and expired source lifetime are outside this card; no failure response is specified."
+    ordering: "The six output views retain standard FEN field order."
+    determinism: "Deterministic for the stated character or FEN bytes."
+    oracle:
+      type: standard
+      id: oracle/fen-canonical-six-field-lexing-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-CHS-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 6
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "constexpr void MoveGen::GenerateMovesFromBB(BitBoard b, MoveList* ml, const Sq from, const MoveType type)"
+      - "template<AttackDirection direction> constexpr move_info const* MoveGen::GetMovesForSliding(Sq piece_sq, BitBoard us, BitBoard them) noexcept"
+      - "void MoveGen::WhitePawnMoves(Position const* pos, MoveList* ml) noexcept"
+      - "void MoveGen::BlackPawnMoves(Position const* pos, MoveList* ml) noexcept"
+      - "template<Colour colour_to_move> constexpr void MoveGen::BishopMoves(Position const* pos, MoveList* ml)"
+      - "template<Colour colour_to_move> constexpr void MoveGen::RookMoves(Position const* pos, MoveList* ml)"
+      - "template<Colour colour_to_move> constexpr void MoveGen::QueenMoves(Position const* pos, MoveList* ml)"
+      - "template<Colour colour_to_move> constexpr void MoveGen::KnightMoves(Position const* pos, MoveList* ml)"
+      - "template<Colour colour_to_move> void MoveGen::KingMoves(Position const* pos, MoveList* ml)"
+      - "template<Colour colour_to_move> constexpr void MoveGen::Castling(Position const* pos, MoveList* ml) noexcept"
+      - "template<Colour colour_to_move> constexpr void MoveGen::GeneratePseudoLegalMoves(Position const* __restrict__ pos, MoveList* __restrict__ ml)"
+      - "template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position* __restrict__ pos, MoveList* __restrict__ ml)"
+    purpose: >-
+      Produce standard chess movement sets on valid aligned positions, observed
+      only as logical source/target/promotion tuples, while leaving every
+      supplied Position logically unchanged on return.
+    authority:
+      type: FIDE
+      reference: >-
+        https://handbook.fide.com/chapter/E012023 and
+        tests/spec/intended-purpose-v1.md MoveGen rows, including the firm
+        GenerateLegalMoves restoration intent
+    preconditions:
+      - "Every Position pointer is non-null and points to an independently legal searchable Position established under C-FEN-010; the template or named colour equals Position::ColourToMove()."
+      - >-
+        Before each MoveList-writing call, the test independently derives the
+        complete expected logical set, constructs a dedicated MoveList, observes
+        only all().size(), and calls the generator only when the expectation
+        fits that observed capacity. Post-call prefix access follows C-MOV-011's
+        len bound and decode checks; no constructor len or minimum capacity is
+        assumed.
+      - >-
+        Immediately before every Position-taking generation call, the test
+        captures the complete FEN-semantic snapshot through C-BRD-010 and
+        C-FEN-010: labelled piece map, active colour, named castling rights,
+        en-passant target or absence, halfmove clock, and fullmove number.
+      - >-
+        Each Position supplied to GenerateLegalMoves is a fresh instance
+        dedicated to that one generation call. Transition assertions still use
+        a separately established equivalent Position; the generation instance
+        is observed after return only to verify the restoration result in this
+        card and is never reused as transition provenance.
+      - "GenerateMovesFromBB receives a valid source, a destination set excluding that source, and one of the eight concrete semantic MoveTypes in C-MOV-010."
+      - "GetMovesForSliding receives a valid source contained in us, disjoint us/them occupancies, and one of the four named AttackDirection instantiations."
+      - "Castling fixtures have conventional king/rook placement, internally consistent rights, and otherwise valid positions."
+    result:
+      - "Every fitting approved-domain MoveList result below is completely represented by the unordered logical set decoded from C-MOV-011's checked populated prefix; no raw backing storage, order, multiplicity, constructor len, or minimum capacity is asserted."
+      - "GenerateMovesFromBB's logical set is exactly the product of the source and requested kind with every destination bit; it distributes over disjoint destination union."
+      - "GetMovesForSliding first satisfies C-MOV-012's non-null and count-bounds results; its complete logical destinations are then decoded from the checked immediate move_info prefix and follow both rays to the edge or first blocker, including the first enemy blocker and excluding a friendly blocker and all squares beyond it."
+      - "WhitePawnMoves, BlackPawnMoves, and the bishop, rook, queen, knight, and king generators return exactly their FIDE movement-rule destinations before general own-king-safety filtering, with ordinary capture, double-push, en-passant, and four promotion choices where applicable."
+      - "Castling returns exactly each rights-authorized castle whose conventional king and rook are present, whose intervening path squares are empty, and whose king start, transit, and destination squares are unattacked; an attack only on the rook square or queen-side b-file clearance square does not bar castling."
+      - "GeneratePseudoLegalMoves returns the union of all movement-rule moves, applying Castling's stated special prerequisites but otherwise preceding general own-king-safety filtering."
+      - "GenerateLegalMoves returns exactly the moves legal under FIDE king-safety and special-move rules."
+      - "Colour/rank-reflected valid positions have correspondingly reflected logical move sets."
+      - >-
+        On return from every Position-taking generator, including
+        GenerateLegalMoves, the labelled piece map, active colour, named
+        castling rights, en-passant target or absence, halfmove clock, and
+        fullmove number exactly equal the pre-call snapshot.
+    mutates:
+      - "A MoveList-writing function may mutate only its supplied list's logical populated contents under C-MOV-011."
+      - >-
+        GenerateLegalMoves may transiently mutate its dedicated supplied
+        Position while filtering moves, but must restore every FEN-semantic
+        field named above before return. Hidden cache, hash, and history
+        lifecycle remain outside this card.
+    preserves:
+      - "Every Position-taking generator preserves the supplied Position's complete FEN-semantic snapshot on return."
+      - "All objects unrelated to the supplied Position and output list, including every separately established equivalent transition Position."
+    failure:
+      - "Null pointers, malformed/misaligned positions, invalid move components, nonfresh lists, and expected logical sets larger than the observed MoveList capacity are outside this card; no failure response is specified. A fitting incomplete or out-of-bounds list result, a nonempty move_info contract violation, or any post-return FEN-semantic state difference violates the result."
+    ordering: explicitly unspecified
+    determinism: "The logical set is deterministic for the stated Position and inputs."
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-ATK-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 6
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::PawnAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::KingAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::KnightAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::BishopAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::RookAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> constexpr BitBoard MoveGen::QueenAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> BitBoard MoveGen::GenerateAllAttacks(Position const* pos)"
+      - "template<Colour colour_to_move> bool MoveGen::InCheck(Position const* pos)"
+    purpose: >-
+      Fix unambiguous direct attack projections and check detection on valid
+      positions without introducing a move-collection dependency.
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    preconditions:
+      - "Every Position pointer is non-null and points to an independently legal searchable Position constructed from canonical FEN under C-FEN-010; every direct attack or InCheck template colour equals Position::ColourToMove()."
+      - >-
+        Before each query, the test captures the complete FEN-semantic snapshot
+        through C-BRD-010 and C-FEN-010. Any raw Sq or returned set bit used for
+        comparison is normalized only by UTIL::Square under C-UCI-010; expected
+        labelled squares are derived independently and never from that adapter.
+      - >-
+        Direct per-piece and aggregate attack-set equality uses
+        oracle/attack-nondisputed-consensus-mask-v1. For the allowed convention
+        variants, let I be their intersection and U their union; compare only on
+        the consensus mask I union complement(U), with I as the expected true
+        subset. That exclusion applies only to attack-map equality, never InCheck.
+    result:
+      - "After intersection with the assertion mask, pawn attacks are exactly the in-board forward diagonals, never forward moves."
+      - "After the same intersection, leaper and slider membership follows labelled FIDE geometry, stops beyond the first blocker, and never adds castling to king attacks."
+      - "After the same intersection, GenerateAllAttacks is the set union of the component projections; overlap never cancels."
+      - >-
+        InCheck follows oracle/fide-check-v1 without a mask and is true exactly
+        when the active colour's king is attacked by the opponent under FIDE
+        Article 3.1.3; attacks by an
+        opponent piece constrained from moving because its own king would be
+        exposed still count for this predicate.
+    mutates:
+      - "The direct attack and InCheck queries do not mutate any FEN-semantic field."
+    preserves:
+      - "PawnAttacks, KingAttacks, KnightAttacks, BishopAttacks, RookAttacks, QueenAttacks, GenerateAllAttacks, and InCheck preserve their supplied Position's labelled piece map, active colour, named rights, en-passant target, and both clocks."
+      - "All unrelated objects and all test-owned expected labelled sets."
+    failure:
+      - "Null pointers, malformed positions, template mismatch, and exact attack-map membership on assertion-mask-excluded squares are outside this card; no failure response is specified. No assertion-mask exclusion weakens InCheck."
+    ordering: "Attack results are sets with unspecified iteration order."
+    determinism: "The asserted projection and check predicate are deterministic for the stated Position."
+    oracle:
+      type: reference-model
+      id: oracle/attack-nondisputed-consensus-mask-v1+oracle/fide-check-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-ATK-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "template<Colour colour_to_move> bool MoveGen::InCheck(Position const* pos)"
+      - "template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position* __restrict__ pos, MoveList* __restrict__ ml)"
+      - "constexpr MoveList::MoveList()"
+      - "[[nodiscard]] constexpr std::array<Move, MAX_MOVES>& MoveList::all() noexcept"
+      - "[[nodiscard]] constexpr size_t MoveList::len() const noexcept"
+    purpose: >-
+      Classify standard checkmate and stalemate from the unmasked check predicate
+      and an independently complete legal-move set.
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    preconditions:
+      - >-
+        The expected check value and complete legal set are derived independently
+        for a canonical legal FEN before TDFA observation. InCheck and legal
+        generation use separately constructed equivalent fresh Positions under
+        C-FEN-010, with aligned template colour.
+      - >-
+        InCheck satisfies C-ATK-010. Before generation the test constructs a
+        dedicated MoveList, observes only all().size(), and calls
+        GenerateLegalMoves only when the independently expected legal-set
+        cardinality fits that capacity. Generation and post-call observation
+        satisfy C-CHS-010 and C-MOV-011, including restoration and the len bound.
+    result:
+      - >-
+        For every fitting row, post-call len() is no greater than the observed
+        capacity and the checked prefix completely represents the independently
+        expected legal set.
+      - "Checkmate is exactly unmasked InCheck with an empty legal set; stalemate is exactly not InCheck with an empty legal set."
+      - "A nonempty legal set is nonterminal under these two classifications, regardless of InCheck. No application result or corpus outcome flag is asserted."
+    mutates:
+      - "GenerateLegalMoves may populate only its dedicated MoveList and may transiently mutate its generation Position only within C-CHS-010's restoration boundary."
+    preserves:
+      - "Both supplied Positions' complete FEN-semantic snapshots on return and every unrelated object."
+    failure:
+      - "Malformed positions, template mismatch, expected legal sets larger than observed capacity, application outcomes, and draw adjudication are outside this card; no failure response is specified. A fitting incomplete legal set, failed len bound, or classification mismatch violates the result."
+    ordering: explicitly unspecified
+    determinism: "The terminal classification is deterministic for the stated Position."
+    oracle:
+      type: reference-model
+      id: oracle/fide-check-v1+oracle/mailbox-legal-v1-terminal
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: ["/root/app_review_d", "/root/external_rereview_c"]
+      approved_at: "2026-07-22"
+
+  - id: C-CHS-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 1
+    status: APPROVED
+    kind: internal
+    signatures:
+      - "void Position::MakeMove(Move m)"
+      - "void Position::UnmakeMove(Move m)"
+    purpose: >-
+      Apply a legal FIDE move to public semantic position state and reverse a
+      matching immediate move only as far as public placement and side.
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023 and standard six-field FEN transition semantics
+    preconditions:
+      - "MakeMove receives a Move denoting a legal move in the current independently legal Position."
+      - "UnmakeMove receives exactly the Move most recently passed to MakeMove on that Position, in immediate LIFO order, with no intervening state mutation."
+      - "Unmake observations under this card are restricted to the 64-square piece map, aggregate occupancies, and side to move."
+    result:
+      - "MakeMove performs the ordinary, capture, en-passant, castling, or selected q/r/b/n promotion placement effect and flips side to move."
+      - "MakeMove updates the named castling-right set, en-passant target, halfmove clock, and fullmove number exactly as represented by the resulting standard FEN."
+      - "A matching immediate UnmakeMove restores the preceding piece map, aggregate occupancies, captured piece, and side to move."
+      - "This card makes no UnmakeMove restoration claim for rights, en-passant representation, clocks, raw ZKey, hash composition, or hidden history."
+    mutates:
+      - "Only the target Position, according to the stated transition or narrow reversal."
+    preserves:
+      - "On MakeMove, every square and semantic field not changed by the FIDE/FEN transition."
+      - "On UnmakeMove, every object other than the target Position."
+    failure:
+      - "Illegal moves, mismatched/out-of-order/repeated unmake, empty history, and malformed positions are outside this card; no failure response is specified."
+    ordering: not applicable
+    determinism: "Deterministic for the stated Position, legal Move, and matching immediate history."
+    oracle:
+      type: reference-model
+      id: oracle/fide-fen-single-transition-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-contract-review-a, blind-contract-review-b]
+      approved_at: "2026-07-21"
+
+catalogue_audit:
+  interpretation: >-
+    A test listed under mapped_DESIGNED has every asserted behavior covered by
+    at least one card above. Partial coverage does not qualify. Records listed
+    under designed_requiring_split_or_block remain catalogue candidates even if
+    a valid subset is covered.
+  mapped_DESIGNED:
+    C-MTH-010: [T-TYP-001, T-TYP-002, T-BB-009]
+    C-BIT-010: [T-BB-001, T-BB-002, T-BB-003]
+    C-GRD-010: [T-BB-005, T-BB-006, T-GEO-001, T-GEO-002]
+    C-MOV-010: [T-MOV-001, T-MOV-002, T-MOV-004, T-STA-001, T-STA-003, T-STA-004, T-GEO-001, T-GEO-002, T-GEO-003, T-GEO-004, T-GEN-001, T-GEN-002, T-GEN-003, T-LEGAL-001, T-LEGAL-002, T-LEGAL-003, T-LEGAL-004, T-LEGAL-005, T-RULE-001, T-RULE-002, T-RULE-003, T-RULE-004, T-RULE-006, T-STATE-002, T-ORACLE-002, T-ORACLE-003]
+    C-MOV-011: [T-GEO-001, T-GEO-002, T-GEO-004, T-GEN-001, T-GEN-002, T-GEN-003, T-LEGAL-001, T-LEGAL-002, T-LEGAL-003, T-LEGAL-004, T-LEGAL-005, T-RULE-001, T-RULE-002, T-RULE-003, T-RULE-004, T-RULE-006, T-RULE-007, T-STATE-001, T-STATE-002, T-ORACLE-002, T-ORACLE-003]
+    C-MOV-012: [T-GEO-003]
+    C-UCI-010: [T-MOV-004, T-UTL-001, T-STA-001, T-STA-003, T-STA-004, T-ATK-001, T-ATK-002, T-ATK-003, T-STATE-002, T-ORACLE-003]
+    C-BRD-010: [T-BRD-001, T-BRD-002, T-BRD-003, T-BRD-004, T-BRD-005, T-BRD-007, T-FEN-001, T-POS-002, T-STA-001, T-STA-003, T-STA-004, T-ATK-001, T-ATK-002, T-ATK-003, T-STATE-001, T-STATE-002, T-RULE-001, T-RULE-003, T-RULE-006, T-ORACLE-003]
+    C-FEN-010: [T-MOV-004, T-FEN-001, T-FEN-003, T-POS-002, T-POS-003, T-STA-001, T-STA-003, T-STA-004, T-ATK-001, T-ATK-002, T-ATK-003, T-RULE-007, T-STATE-001, T-STATE-002, T-RULE-001, T-RULE-003, T-RULE-006, T-ORACLE-002, T-ORACLE-003]
+    C-FEN-011: [T-LEX-001, T-LEX-002]
+    C-CHS-010: [T-GEO-001, T-GEO-002, T-GEO-003, T-GEO-004, T-GEN-001, T-GEN-002, T-GEN-003, T-LEGAL-001, T-LEGAL-002, T-LEGAL-003, T-LEGAL-004, T-LEGAL-005, T-RULE-001, T-RULE-002, T-RULE-003, T-RULE-004, T-RULE-006, T-RULE-007, T-STATE-001, T-STATE-002, T-ORACLE-002, T-ORACLE-003]
+    C-ATK-010: [T-ATK-001, T-ATK-002, T-ATK-003, T-LEGAL-005, T-RULE-007, T-STATE-001, T-ORACLE-002, T-ORACLE-003]
+    C-ATK-011: [T-RULE-007]
+    C-CHS-011: [T-STA-001, T-STA-003, T-STA-004, T-RULE-001, T-RULE-003, T-RULE-006, T-STATE-002, T-ORACLE-003]
+  dependency_trace:
+    literal_transition_records:
+      tests: [T-STA-003, T-STA-004]
+      literal_token_to_semantic_move: [C-UCI-010, C-MOV-010]
+      exact_transition: C-CHS-011
+      post_transition_observers: [C-BRD-010, C-FEN-010]
+      binding: >-
+        At each current legal prefix, UciToMove receives the frozen literal UCI
+        token, DecodeMove verifies that token's exact source, target, and named
+        MoveType, and MakeMove applies that exact returned Move before the
+        declared public snapshot is observed.
+    direct_attack_records:
+      tests: [T-ATK-001, T-ATK-002, T-ATK-003]
+      fen_construction: C-FEN-010
+      public_snapshot: [C-BRD-010, C-FEN-010]
+      raw_square_normalization: C-UCI-010
+      direct_attack_and_check: C-ATK-010
+      binding: >-
+        Each legal Position is constructed from its literal FEN, its complete
+        semantic snapshot is captured through Board and Position observers, and
+        actual Sq/set-bit observations are converted to labels only through
+        UTIL::Square. Expected labelled geometry is independently derived.
+    terminal_classification_record:
+      tests: [T-RULE-007]
+      equivalent_fen_positions: C-FEN-010
+      unmasked_check: C-ATK-010
+      fitting_legal_generation: [C-CHS-010, C-MOV-011]
+      classification: C-ATK-011
+      binding: >-
+        The check query and legal generation use separate equivalent fresh
+        Positions. The expected legal set is fixed before list construction;
+        all().size() gates the generation call and len() is bounded before its
+        emptiness participates in the standard terminal classification.
+    special_move_generation_and_transition:
+      tests: [T-RULE-001, T-RULE-003, T-RULE-006]
+      generation_position: [C-CHS-010, C-MOV-011, C-MOV-010]
+      separate_equivalent_transition_position: [C-CHS-011, C-BRD-010, C-FEN-010]
+      binding: >-
+        Each decoded generated Move is retained from a dedicated fresh
+        generation Position and applied only to a separately established
+        equivalent Position; no post-GenerateLegalMoves state is reused.
+    generated_transition_exhaustion:
+      tests: [T-STATE-002]
+      fitting_generation: [C-FEN-010, C-CHS-010, C-MOV-011, C-MOV-010]
+      fresh_equivalent_transition_per_prefix_entry: [C-FEN-010, C-CHS-011]
+      transition_observers: [C-BRD-010, C-FEN-010, C-UCI-010]
+      binding: >-
+        After the expected set fits and the populated prefix passes its len
+        bound, every retained Move is applied only to its own fresh equivalent
+        transition Position. The dedicated generation Position is never made
+        upon, and duplicate entries if present are checked independently without
+        selecting one as canonical or asserting multiplicity.
+    T-ORACLE-003:
+      root_and_expected_positions: C-FEN-010
+      legal_token_to_move_adapter: C-UCI-010
+      replay_transition: C-CHS-011
+      replay_public_observations_before_generation: [C-BRD-010, C-FEN-010, C-ATK-010]
+      separate_terminal_generation_position: [C-FEN-010, C-CHS-010]
+      populated_legal_set_projection: C-MOV-011
+      binding: >-
+        The catalogue's approved legal move adapter is bound here to
+        UciToMove on the current legal Position followed by MakeMove of that
+        exact Move. Final placement, side, and InCheck are observed on the replay
+        Position before any terminal GenerateLegalMoves call; the legal set is
+        generated on a fresh Position imported from the same final row FEN. No
+        GenerateLegalMoves restoration or unlisted adapter semantic is assumed.
+  designed_requiring_split_or_block:
+    - tests: [T-BB-007]
+      disposition: CANDIDATE_BLOCKED
+      reason: >-
+        The exact numeric-index geometry chooses an internal square orientation,
+        which this batch excludes pending D-TYP-001/C-BB-006.
+    - tests: [T-HSH-001, T-HSH-002]
+      disposition: CANDIDATE_BLOCKED
+      reason: >-
+        Hash refresh mutation, component set, and draw/history-sensitive identity
+        are owner policy under D-POS-002 and D-TT-006; T-HSH-002 additionally
+        depends on the restoration boundary in D-POS-005.
+    - tests: [T-ORACLE-001, T-PERFT-001, T-PERFT-003]
+      disposition: CANDIDATE_INFRASTRUCTURE
+      reason: >-
+        These own test-fixture bytes, scoped digests, row counts, and loader
+        behavior rather than a TDFA declaration or application command. No
+        behavioral consumer independently reasserts a byte-frozen row count.
+  deliberate_exclusions:
+    - invalid, malformed, null, sentinel, overflow, and resource-failure inputs
+    - raw Move/Piece/enum numeric layouts and numeric-to-UCI square orientation
+    - MoveList/move_info unused storage, ordering, multiplicity, nonfresh append/replace, minimum capacity, constructor len, oversized-result, and overflow policy beyond C-MOV-011/C-MOV-012's observed-capacity and checked-prefix projections
+    - repeated PieceType pack arguments, pt_All inside a variadic pack, and sentinel Board queries outside C-BRD-010's distinct ordinary-type-pack and single aggregate-query domains
+    - automatic ZKey lifecycle, Zobrist component set, collision claims, and draw/history identity
+    - post-generation hash, cache, and hidden-history lifecycle beyond C-CHS-010's complete FEN-semantic restoration guarantee
+    - broad or nested UnmakeMove restoration beyond the stated placement-and-side projection
+    - disputed friendly-occupied, pinned-piece, and king-legality direct attack-map equality outside C-ATK-010's assertion mask; InCheck itself has no such exclusion
+    - default Position/StateInfo/Reset state and copy/move ownership
+    - draw adjudication and any application/search outcome not bound to a declared observable
+  fixture_hash_scope:
+    oracle_cases_tsv:
+      sha256: 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      scope: "Exact UTF-8 bytes from the column-name line through its final LF; metadata/comment lines are excluded."
+    oracle_perft_tsv:
+      sha256: 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+      scope: "Exact UTF-8 bytes from the column-name line through its final LF; metadata/comment lines are excluded."
+    perftsuite_epd:
+      sha256: 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      scope: "Exact whole-file bytes; upstream provenance is not recorded."

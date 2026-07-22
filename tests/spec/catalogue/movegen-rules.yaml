@@ -1,0 +1,2164 @@
+schema_version: 1
+catalogue_version: 5
+snapshot: &snapshot 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+contracts_version: 0
+status: CANDIDATE_WITH_EXPLICIT_BLOCKERS
+authoring_mode: implementation-blind
+author: &author blind-design-movegen-rules
+test_record_lifecycle: CANDIDATE
+approval_note: >-
+  Every local contract reference is PROPOSED, not an approved contract card.
+  DESIGNED test records are candidates only and cannot advance to
+  EXPECTATION_FROZEN until their referenced cards and oracle translations are
+  independently approved.
+
+scope:
+  included:
+    - finite chess-board geometry and destination encoding
+    - piece and pawn pseudo-legal movement
+    - attack maps and check detection
+    - complete legal move sets and king-safety filtering
+    - pins, single check, double check, en passant, castling, and promotion
+    - generator and recursive-state preservation
+    - offline legal-move and perft differential oracles
+    - standard checkmate, stalemate, and draw outcomes
+    - diagnostics and adversarial mutant sensitivity
+  excluded:
+    - search quality, evaluation, timing, and transposition-table behavior
+    - invalid FEN parsing behavior governed by D-POS-001
+    - legacy Testing.hpp helpers governed by D-LEG-001 and D-LEG-002
+    - any expectation inferred from TDFA source bodies or TDFA output
+
+information_firewall:
+  permitted_inputs:
+    - tests/README.md
+    - tests/spec/**
+    - tests/data/**
+    - perftsuite.epd
+  production_executed: false
+  implementation_bodies_inspected: false
+  comparison_policy: >-
+    Unless a future approved contract says otherwise, move collections are
+    compared as duplicate-free sets of decoded logical UCI moves, never by
+    production iteration order or raw encoded integer value. Before a MoveList
+    generator call, derive the expected set, construct a dedicated list, observe
+    all().size(), and call only when the expectation fits; afterward require
+    len()<=that observed capacity before indexing [0,len()). No constructor len
+    value or minimum capacity is assumed. For move_info, derive the expected set
+    first; null is an allowed empty representation, a nonempty expectation
+    requires non-null, and any non-null result must satisfy
+    count_<=encoded_move_.size() before prefix access. Every Position is
+    searchable and its template colour equals Position::ColourToMove().
+
+square_observation_policy:
+  expected_domain: >-
+    Test-owned geometry and mailbox expectations use literal file/rank labels;
+    they never derive a coordinate from a TDFA Sq value or bit position.
+  actual_normalization: >-
+    For observation only, enumerate each returned Sq or set bit and map it to a
+    canonical square label through UTIL::Square. Compare the resulting unordered
+    labelled set. This joint semantic observation does not assert which integer
+    denotes any label while C-BB-006 is unresolved.
+  raw_representation_exclusion: >-
+    No DESIGNED record asserts an exact numeric Sq, a literal U64 mask, a1-LSB
+    versus a8-LSB, rank-major versus file-major layout, or a numeric direction
+    sign. Those representation expectations remain blocked by C-BB-006.
+  directionality: >-
+    Normalization is raw-to-logical observation only. It does not authorize
+    reconstructing a canonical TDFA Move from a deduplicated logical tuple; the
+    recursive-perft records remain blocked until that reverse adapter is approved.
+
+external_contract_dependencies:
+  - id: C-MOV-011
+    use: observed all().size() gate, post-call len bound, and complete fitting populated-prefix/generated-Move decode without constructor-len or minimum-capacity assumptions
+    status: APPROVED
+  - id: C-MOV-012
+    use: nullable empty move_info representation or required non-null nonempty result, followed by count-bounded populated-prefix/generated-Move decode
+    status: APPROVED
+  - id: C-UTL-001
+    use: observation-only conversion of an actual Sq to a canonical square label
+    status: TENTATIVE
+  - id: C-BB-006
+    use: owns the deliberately excluded exact numeric Sq and BitBoard orientation
+    status: UNRESOLVED
+
+public_only: &public_only
+  required: false
+  justification: null
+  approvals: []
+
+diagnostic_profiles:
+  move_set: &diag_move_set >-
+    Report test id, fixture/corpus id, canonical six-field FEN, side and template
+    colour, fixed seed/case index when present, expected and actual sorted UCI
+    sets, missing moves, unexpected moves, duplicates before set conversion,
+    and the public position-state diff before/after the call.
+  geometry: &diag_geometry >-
+    Report test id, origin coordinate/index, colour, direction, friendly and
+    enemy occupancy as both square lists and 64-bit hex, expected and actual
+    normalized destination/attack square sets, the observed raw masks in hex
+    without treating them as expected literals, and the first differing ray or
+    delta.
+  state: &diag_state >-
+    Report test id, FEN, operation and move path, ply, full before/after public
+    snapshots (64 PieceOn values, aggregate occupancies, side, castling rights,
+    en-passant square, clocks, and ZKey), and the first differing field.
+  perft: &diag_perft >-
+    Report test id, source file checksum, physical line and stable row id, FEN,
+    tier and depth, expected/actual node counts as unsigned 64-bit values, a
+    sorted root divide of UCI move to child count, duplicates, and root-state
+    diff. Continue enough rows to show whether a failure is isolated, capped at
+    20 detailed mismatches plus totals by depth.
+  blocked: &diag_blocked >-
+    Report the unresolved decision id, exact proposed fixture and observation,
+    and why no expectation was asserted. A blocked test must not inspect TDFA
+    output to choose among the unresolved options.
+
+contract_references:
+  - id: C-GEN-001
+    title: Finite movement geometry
+    status: PROPOSED
+    authority:
+      type: mathematical
+      reference: oracle/board-geometry-v1 in this catalogue
+    symbols:
+      - MoveGen::GenerateMovesFromBB
+      - MoveGen::GetMovesForSliding
+      - MoveGen piece-specific generators
+    open_decisions: [D-GEN-001, D-GEN-002, D-MOV-002]
+  - id: C-GEN-002
+    title: Chess attack sets and check
+    status: PROPOSED
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols:
+      - MoveGen::*Attacks
+      - MoveGen::GenerateAllAttacks
+      - MoveGen::InCheck
+    open_decisions: [D-GEN-003]
+  - id: C-GEN-003
+    title: Complete pseudo-legal move set on valid aligned positions
+    status: PROPOSED
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols: [MoveGen::GeneratePseudoLegalMoves]
+    open_decisions: [D-GEN-001, D-GEN-002, D-MOV-002]
+  - id: C-GEN-004
+    title: Complete legal move set on valid aligned positions
+    status: PROPOSED
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols: [MoveGen::GenerateLegalMoves]
+    open_decisions: [D-GEN-001, D-GEN-002, D-MOV-002]
+  - id: C-GEN-005
+    title: Full FEN-semantic preservation by MoveGen queries
+    status: PROPOSED
+    authority:
+      type: intended-purpose
+      reference: tests/spec/intended-purpose-v1.md MoveGen restoration intent
+    symbols:
+      - MoveGen move and attack queries
+      - Board and Position FEN-semantic observers
+    open_decisions: []
+  - id: C-GEN-006
+    title: Reference perft over complete legal moves
+    status: PROPOSED
+    authority:
+      type: corpus
+      reference: oracle_perft-v1 and perftsuite-epd-sha256-v1
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    open_decisions: [D-POS-004, D-POS-005]
+  - id: C-GEN-007
+    title: Generator list mutation, ordering, duplicates, and capacity
+    status: PROPOSED
+    authority:
+      type: owner-decision
+      reference: D-GEN-001 and D-MOV-002
+    symbols: [all MoveList-writing MoveGen functions]
+    open_decisions: [D-GEN-001, D-MOV-002]
+  - id: C-GEN-008
+    title: Template mismatch and malformed-position behavior
+    status: PROPOSED
+    authority:
+      type: owner-decision
+      reference: D-GEN-002 and D-GEN-005
+    symbols: [all position-consuming MoveGen functions]
+    open_decisions: [D-GEN-002, D-GEN-005, D-POS-001, D-POS-006]
+  - id: C-RULE-001
+    title: En passant, castling, and promotion on legal positions
+    status: PROPOSED
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols:
+      - MoveGen pawn generators
+      - MoveGen::Castling
+      - MoveGen::GenerateLegalMoves
+    open_decisions: [D-GEN-004]
+  - id: C-RULE-002
+    title: Checkmate and stalemate classification
+    status: TENTATIVE
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols:
+      - MoveGen::InCheck
+      - MoveGen::GenerateLegalMoves
+    open_decisions: []
+  - id: C-RULE-003
+    title: Claimable and automatic draw adjudication
+    status: PROPOSED
+    authority:
+      type: FIDE
+      reference: https://handbook.fide.com/chapter/E012023
+    symbols: [application/search outcome boundary not yet assigned]
+    open_decisions: [D-RULE-001]
+  - id: C-GEN-009
+    title: Reversible metadata clocks hash and nested history
+    status: PROPOSED
+    authority:
+      type: owner-decision
+      reference: D-POS-002 D-POS-003 D-POS-005 and D-POS-007
+    symbols:
+      - Position::MakeMove
+      - Position::UnmakeMove
+      - Position state observers
+    open_decisions: [D-POS-002, D-POS-003, D-POS-005, D-POS-007]
+
+oracle_models:
+  - id: oracle/board-geometry-v1
+    definition: >-
+      Files and ranks are integer coordinates 0..7. Knight deltas are every
+      signed permutation of (1,2); king deltas are the eight nonzero pairs in
+      {-1,0,1}; out-of-range targets are discarded. A sliding ray advances one
+      coordinate step until the edge or first occupied square; an enemy first
+      blocker is a move destination and a friendly first blocker is not.
+    independence: >-
+      Expected labelled squares come from closed-form coordinate arithmetic; no
+      production masks, lookup tables, shifts, encoders, or move generators are
+      reused. TDFA Sq and BitBoard results are normalized only after observation
+      as specified by square_observation_policy.
+  - id: oracle/mailbox-legal-v1
+    definition: >-
+      A test-owned 8x8 mailbox reference enumerates piece-rule destinations,
+      clones the mailbox, applies captures and special moves logically, and
+      rejects a move exactly when the moving side's king is attacked afterward.
+      Castling separately checks rights, conventional king and rook placement,
+      empty path, and unattacked start/transit/destination. It returns logical
+      source/target/promotion tuples and never TDFA Move values. Promotion is a
+      logical choice in {q,r,b,n}, not a PieceType representation or numeric
+      MoveType range.
+    independence: >-
+      The implementation must be written from this rule description, contain no
+      production headers beyond a thin translation adapter, and receive an
+      independent review before any dependent expectation is frozen.
+  - id: oracle/attack-nondisputed-consensus-mask-v1
+    definition: >-
+      From the same labelled reference board, enumerate the allowed direct-
+      attack convention variants for friendly-occupied defended squares,
+      absolutely pinned attackers, and king-neighbour squares the king cannot
+      legally enter. Let I be the intersection of all variant attack sets and U
+      their union. The consensus assertion mask is I union complement(U), and
+      a direct attack result A passes exactly when A intersect mask equals I.
+      Pawn variants use diagonals rather than forward moves, slider variants
+      stop beyond the first blocker, and king variants never add castling.
+    independence: >-
+      Every variant is calculated by labelled coordinate/reference-board rules;
+      no TDFA attack function, mask, lookup, or observed result selects I, U, or
+      the consensus mask.
+  - id: oracle/fide-check-v1
+    definition: >-
+      InCheck is true exactly when the active side's king square is attacked by
+      the opponent under FIDE Article 3.1.3. An opposing piece still attacks for
+      this predicate when it is constrained from moving because moving would
+      leave or place its own king under attack; no consensus mask is applied.
+    independence: Exact labelled mailbox attack evaluation independent of TDFA.
+  - id: oracle/legal-shell-builder-v1
+    definition: >-
+      Given an exact non-king placement and aligned side, enumerate ordered White
+      king then Black king square pairs in a1..h8 order. Select the first pair
+      that is distinct, nonadjacent, does not overlap another piece, leaves
+      neither king attacked in the mailbox model, and satisfies ordinary pawn
+      rank/king-count structure. Failure to find a pair blocks that generated
+      case instead of manufacturing private state.
+    independence: Placement selection uses only the test mailbox attack model.
+
+fixture_registry:
+  oracle_cases:
+    path: tests/data/oracle_cases.tsv
+    format: tdfa-chess-oracle-v1
+    profile: committed
+    generation_args: --profile committed
+    generator: tools/generate_oracle_cases.py
+    python_chess: 1.11.2
+    seed: 0x0000000054444641
+    declared_curated_rows: 16
+    declared_history_rows: 3
+    declared_random_rows: 8
+    declared_rows: 27
+    data_sha256: 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+    case_ids:
+      - start
+      - kiwipete
+      - perft_endgame
+      - perft_promotions
+      - perft_castling
+      - perft_tactics
+      - castling_minimal
+      - en_passant_legal
+      - en_passant_pinned
+      - promotion_choices
+      - checkmate
+      - stalemate
+      - insufficient_material
+      - seventyfive_move_rule
+      - fifty_move_prospective
+      - fifty_move_clock_100
+      - threefold_prospective
+      - threefold_current
+      - fivefold_repetition
+      - random_000000
+      - random_000001
+      - random_000002
+      - random_000003
+      - random_000004
+      - random_000005
+      - random_000006
+      - random_000007
+  oracle_perft:
+    path: tests/data/oracle_perft.tsv
+    format: tdfa-chess-oracle-v1
+    profile: committed
+    generation_args: --profile committed
+    declared_positions: 6
+    declared_depth: 3
+    declared_rows: 18
+    data_sha256: 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+  perftsuite_epd:
+    path: perftsuite.epd
+    whole_file_sha256: 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+    physical_rows: 126
+    unique_positions: 125
+    physical_expectations: 755
+    unique_expectations: 749
+    physical_depth_rows: {D1: 126, D2: 126, D3: 126, D4: 126, D5: 126, D6: 125}
+    unique_depth_rows: {D1: 125, D2: 125, D3: 125, D4: 125, D5: 125, D6: 124}
+    permitted_duplicate:
+      physical_lines: [60, 63]
+      fen: 6KQ/8/8/8/8/8/8/7k b - - 0 1
+      expectations: {D1: 2, D2: 36, D3: 143, D4: 3637, D5: 14893, D6: 391507}
+      policy: >-
+        Both physical rows must parse and match byte-for-byte. Semantic perft
+        executes the unique position once; physical accounting retains both.
+        Any other duplicate remains an error.
+    physical_depth_node_totals:
+      D1: 1408
+      D2: 21134
+      D3: 486175
+      D4: 12225539
+      D5: 382938880
+      D6: 4387232996
+    unique_depth_node_totals:
+      D1: 1406
+      D2: 21098
+      D3: 486032
+      D4: 12221902
+      D5: 382923987
+      D6: 4386841489
+    provenance_note: >-
+      The local file is byte-frozen, but it does not record an upstream URL or
+      generator revision. It is independent of TDFA output but requires source
+      provenance review before EXPECTATION_FROZEN status.
+
+perft_tiers:
+  - id: smoke
+    depths: [1]
+    physical_rows: 126
+    unique_positions: 125
+    physical_nodes_total: 1408
+    unique_nodes_total: 1406
+    routine_gate: true
+  - id: presubmit
+    depths: [2, 3]
+    physical_rows_per_depth: 126
+    unique_positions_per_depth: 125
+    physical_nodes_total: 507309
+    unique_nodes_total: 507130
+    routine_gate: true
+  - id: nightly
+    depths: [4]
+    physical_rows: 126
+    unique_positions: 125
+    physical_nodes_total: 12225539
+    unique_nodes_total: 12221902
+    routine_gate: true
+  - id: extended
+    depths: [5]
+    physical_rows: 126
+    unique_positions: 125
+    physical_nodes_total: 382938880
+    unique_nodes_total: 382923987
+    routine_gate: false
+  - id: exhaustive_optional
+    depths: [6]
+    physical_rows: 125
+    unique_positions: 124
+    physical_nodes_total: 4387232996
+    unique_nodes_total: 4386841489
+    routine_gate: false
+    note: >-
+      Run only when explicitly requested or in an unconstrained scheduled job;
+      it is not part of a routine <=15-minute gate. The Kiwipete EPD row has no
+      D6 field, so no D6 expectation is invented for it.
+
+mutant_classes:
+  - {id: M-GEO-EDGE-WRAP, description: "leaper or slider wraps across a file/rank edge"}
+  - {id: M-GEO-DELTA, description: "one king/knight delta is added, omitted, or transposed"}
+  - {id: M-SLIDE-PASS, description: "slider passes through the first blocker"}
+  - {id: M-SLIDE-CAPTURE, description: "enemy blocker omitted or friendly blocker emitted as a move"}
+  - {id: M-SLIDE-RAY, description: "rank/file/diagonal/anti-diagonal lookup is crossed"}
+  - {id: M-GEN-SOURCE, description: "generated move has the wrong source square or move kind"}
+  - {id: M-GEN-DUPLICATE, description: "a logical move is emitted more than once"}
+  - {id: M-GEN-COLOUR, description: "generator uses the other side or ignores aligned side-to-move"}
+  - {id: M-PAWN-DIRECTION, description: "pawn forward/attack direction or rank orientation is reversed"}
+  - {id: M-PAWN-DOUBLE-RANK, description: "double push is allowed away from or denied on the home rank"}
+  - {id: M-PAWN-DOUBLE-BLOCK, description: "double push jumps an occupied intermediate square"}
+  - {id: M-PAWN-CAPTURE, description: "pawn captures forward or moves diagonally without capture"}
+  - {id: M-ATTACK-PAWN-MOVE, description: "pawn forward moves contaminate its attack map"}
+  - {id: M-ATTACK-DEFENDED, description: "friendly-occupied defended square is omitted or mishandled"}
+  - {id: M-ATTACK-PINNED, description: "own-king pin incorrectly removes a piece's standard attacks"}
+  - {id: M-CHECK-SIDE, description: "check is computed for the wrong king or colour"}
+  - {id: M-LEGAL-PIN, description: "a move exposing the moving king survives legal filtering"}
+  - {id: M-LEGAL-EVASION, description: "non-evasion survives check or a valid evasion is removed"}
+  - {id: M-LEGAL-DOUBLE, description: "a non-king move survives a genuine double check"}
+  - {id: M-KING-DANGER, description: "king may enter attack, capture a defended piece, or become adjacent"}
+  - {id: M-EP-OMIT, description: "a valid en-passant move is omitted"}
+  - {id: M-EP-CAPTURE-SQUARE, description: "en passant removes the target square or wrong pawn"}
+  - {id: M-EP-KING-SAFETY, description: "en-passant occupancy changes are ignored for king safety"}
+  - {id: M-CASTLE-RIGHTS, description: "castling ignores or misdecodes a rights bit"}
+  - {id: M-CASTLE-BLOCK, description: "castling crosses an occupied required-empty square"}
+  - {id: M-CASTLE-CHECK, description: "castling is allowed from, through, or into check"}
+  - {id: M-CASTLE-ROOK, description: "wrong/missing rook is used or rook lands on wrong square"}
+  - {id: M-PROMO-CHOICES, description: "one logical promotion choice is missing or mislabelled"}
+  - {id: M-PROMO-NONPROM, description: "an unpromoted last-rank pawn move is emitted"}
+  - {id: M-STATE-LEAK, description: "a query or unmake changes piece placement or side"}
+  - {id: M-STATE-METADATA, description: "rights, EP, clocks, hash, or nested history are updated or restored incorrectly"}
+  - {id: M-UNMAKE-SPECIAL, description: "capture, EP, castle, or promotion is not exactly reversed"}
+  - {id: M-PERFT-BASE, description: "depth-zero/base-depth count is off by one"}
+  - {id: M-PERFT-RECURSE, description: "recursion uses pseudo-legal moves, wrong colour, or misses unmake"}
+  - {id: M-PERFT-PARSER, description: "EPD parser skips a row, depth, or final semicolon field"}
+  - {id: M-PERFT-WIDTH, description: "aggregate count uses insufficient integer width"}
+  - {id: M-ORACLE-ORDER, description: "a differential compares list order instead of logical set"}
+  - {id: M-RULE-TERMINAL, description: "checkmate and stalemate are confused"}
+  - {id: M-RULE-DRAW, description: "claimable and automatic draw thresholds are conflated"}
+  - {id: M-MIRROR, description: "white/black or file/rank symmetry is broken"}
+
+tests:
+  - id: T-GEO-001
+    snapshot: *snapshot
+    title: Exhaustive knight geometry on all origins
+    status: DESIGNED
+    contracts: [C-GEN-001]
+    symbols:
+      - consteval std::array<BitBoard, 64> Magics::KnightAttackingMask()
+      - template<Colour colour_to_move> constexpr void MoveGen::KnightMoves(Position const*, MoveList*)
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Use every one of the 64 origin squares. The mask layer has no pieces or
+      occupancy. The generator integration layer uses a fresh list and a
+      oracle/legal-shell-builder-v1 to place one knight and the two kings.
+    action: >-
+      Normalize each geometry mask and decoded generator destination to labelled
+      squares, then compare with the signed-(1,2) coordinate model. For the
+      generator layer, remove every target occupied by a friendly shell piece
+      before comparison; retain an enemy-occupied target as a capture.
+    expected: >-
+      The normalized mask equals the complete geometric set for all 64 origins.
+      The generator set equals that geometric set minus friendly-occupied
+      targets, so a shell king on a knight target is never expected as a move.
+      Corner cardinality is 2, non-corner edge cardinality is 3 or 4 as fixed by
+      the model, and interior cardinality is at most 8. No destination wraps or
+      contains the origin; no exact numeric Sq or U64 mask is asserted.
+    oracle:
+      type: exhaustive-model
+      id: oracle/board-geometry-v1
+      provenance: closed-form model embedded above; 64 finite origins
+      independence_argument: production masks and shifts are not used
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEO-EDGE-WRAP, M-GEO-DELTA, M-GEN-SOURCE, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEO-002
+    snapshot: *snapshot
+    title: Exhaustive king step geometry on all origins
+    status: DESIGNED
+    contracts: [C-GEN-001]
+    symbols:
+      - consteval std::array<BitBoard, 64> Magics::KingAttackingMask()
+      - template<Colour colour_to_move> void MoveGen::KingMoves(Position const*, MoveList*)
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Use all 64 origins in the geometry layer and legal single-king placements
+      for both moving colours. For each labelled origin, scan a1,b1,...,h8 and
+      place the opposing king on the first square whose Chebyshev distance from
+      the origin is at least three. This keeps the opposing king and every square
+      it attacks outside the moving king's one-step destination set.
+    action: >-
+      Normalize the geometry/destination sets to labels and compare with every
+      in-board nonzero coordinate delta from {-1,0,1} squared. Castling is
+      excluded from this step model.
+    expected: >-
+      Exact equality for 64 origins: 3 targets at a corner, 5 at a non-corner
+      edge, and 8 in the interior; no wrapping, origin, or castling target. The
+      deterministic opposing king removes no expected step, and no exact numeric
+      Sq or U64 mask is asserted.
+    oracle:
+      type: exhaustive-model
+      id: oracle/board-geometry-v1
+      provenance: closed-form model embedded above; 64 finite origins
+      independence_argument: production masks and shifts are not used
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEO-EDGE-WRAP, M-GEO-DELTA, M-GEN-SOURCE]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEO-003
+    snapshot: *snapshot
+    title: Exhaustive ternary blocker geometry for every sliding line
+    status: DESIGNED
+    contracts: [C-GEN-001]
+    symbols:
+      - template<AttackDirection direction> constexpr move_info const* MoveGen::GetMovesForSliding(Sq, BitBoard, BitBoard)
+      - move_info::count_
+      - move_info::encoded_move_
+      - Moves::DecodeMove
+      - UTIL::Square
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      For every origin and each of File, Rank, Diagonal, and AntiDiagonal,
+      enumerate empty/friendly/enemy assignment for every other square on that
+      complete line, with the origin treated as the moving friendly piece and
+      all off-line squares empty. This is 139968 rank, 139968 file, 31712
+      diagonal, and 31712 anti-diagonal cases: 343360 total.
+    action: >-
+      Derive the direct two-ray expected set before the call. If it is nonempty,
+      require the returned pointer non-null; if empty, accept null as the empty
+      representation. For every non-null return, read count_, require
+      count_<=encoded_move_.size(), and only then decode indices [0,count_) and
+      compare the normalized logical destinations with that expected set.
+      For the all-empty line case and every case with exactly one friendly or
+      enemy line blocker, toggle each off-line square once as friendly and once
+      as enemy to prove line locality. Do not assert move order, multiplicity,
+      unused storage, pointer lifetime after observation, or attacks_ here.
+    expected: >-
+      A nonempty expectation has a non-null result; an empty expectation may be
+      null or a non-null record with count_==0. Every non-null result passes its
+      count bound. The checked prefix completely emits empty squares until the
+      first blocker in each ray; the first enemy blocker is also emitted, the
+      first friendly blocker is not, and no square beyond either blocker or
+      outside the selected line is emitted.
+    oracle:
+      type: exhaustive-model
+      id: oracle/board-geometry-v1
+      provenance: full ternary enumeration with independently calculated total 343360
+      independence_argument: no production lookup index, base-three table, or mask is reused
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEO-EDGE-WRAP, M-SLIDE-PASS, M-SLIDE-CAPTURE, M-SLIDE-RAY]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEO-004
+    snapshot: *snapshot
+    title: Destination-bitboard emission basis and union property
+    status: DESIGNED
+    contracts: [C-GEN-001]
+    symbols:
+      - constexpr void MoveGen::GenerateMovesFromBB(BitBoard, MoveList*, Sq, MoveType)
+      - MoveList::MoveList
+      - MoveList::all
+      - MoveList::len
+      - MoveList::operator[]
+      - Moves::DecodeMove
+      - UTIL::Square
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: >-
+      For each of 64 source squares and each exact non-marker semantic MoveType
+      mt_Quiet, mt_EnPassant, mt_Castling, mt_Capture, mt_QueenPromotion,
+      mt_RookPromotion, mt_BishopPromotion, and mt_KnightPromotion, derive the
+      63 labelled targets other than the source. For each fresh list observe
+      capacity=all().size() before reading len or calling the generator. Always
+      test the empty destination board. If capacity>0, test every singleton and
+      partition the 63 targets deterministically in label order into fresh-list
+      subsets of size at most the capacity; no 63-output single call is required.
+      If capacity==0, make no nonempty call and record that nonempty emission
+      coverage is unavailable without treating zero capacity as a contract
+      failure. NULL_MOVE, BAD_MOVE, mt_Promotion, and source==target are excluded.
+    action: >-
+      For every fitting call read post-call len(), require len()<=the observed
+      capacity before indexing, then normalize and decode source, target, and
+      exact named kind. When capacity>0, compare the union of all subset results
+      with the complete 63-target mathematical set and compare regrouped fitting
+      partitions metamorphically.
+    expected: >-
+      Empty input has an empty logical set; a singleton set contains the move
+      with the requested source, target, and kind whenever the observed capacity
+      admits it. Every fitting subset is complete and bounded before access; if
+      capacity>0, their union is exactly the 63 distinct logical tuples and is
+      invariant under deterministic regrouping. No minimum capacity, constructor
+      len, 63-entry single-call, equal-square/null-domain, raw representation, or
+      raw multiplicity expectation is asserted.
+    oracle:
+      type: exhaustive-model
+      id: oracle/destination-basis-v1
+      provenance: exhaustive 64-by-63 distinct-square singleton basis plus deterministic partitions
+      independence_argument: expected tuples are formed from test-owned labelled source/target pairs
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-SOURCE, M-GEO-EDGE-WRAP]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEN-001
+    snapshot: *snapshot
+    title: Piece-specific pseudo-move integration against mailbox geometry
+    status: DESIGNED
+    contracts: [C-GEN-001]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::BishopMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> constexpr void MoveGen::RookMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> constexpr void MoveGen::QueenMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> constexpr void MoveGen::KnightMoves(Position const*, MoveList*)
+    categories: [positive, boundary, differential, metamorphic]
+    setup: >-
+      Use the exact FEN in every one of the 27 committed oracle_cases rows and
+      invoke each applicable piece-specific generator into a fresh list with the
+      aligned side. Exhaustive origin/blocker geometry remains in T-GEO-001
+      through T-GEO-003; this record is only their corpus integration layer.
+    action: >-
+      Compare each decoded destination set with the test-owned mailbox movement
+      model and compare queen results with the set union of bishop and rook
+      geometry for the same queen origins.
+    expected: >-
+      Exact logical destination sets, no friendly captures, enemy first blockers
+      capturable, no traversal beyond blockers, and correct union across multiple
+      pieces. Sequence order and raw multiplicity are not observed.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1 movement layer
+      provenance: catalogue-defined mailbox and board-geometry rules
+      independence_argument: reference does not call TDFA masks, tables, encoders, or generators
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-SLIDE-PASS, M-SLIDE-CAPTURE, M-SLIDE-RAY, M-GEN-COLOUR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEN-002
+    snapshot: *snapshot
+    title: White and black pawn pseudo-movement boundaries
+    status: DESIGNED
+    contracts: [C-GEN-001, C-RULE-001]
+    symbols:
+      - void MoveGen::WhitePawnMoves(Position const*, MoveList*)
+      - void MoveGen::BlackPawnMoves(Position const*, MoveList*)
+    categories: [positive, negative, boundary, differential]
+    setup: >-
+      For every colour and each of its 48 valid pawn origins, enumerate ternary
+      empty/friendly-knight/enemy-knight occupancy on each in-board square among
+      one-forward, home-rank two-forward, and both capture diagonals. For each
+      finite case, place kings by scanning ordered square pairs a1..h8 and taking
+      the first distinct, nonadjacent pair on which neither king is attacked in
+      the mailbox position; reject the design if any case has no such pair. Align
+      side/template. EP and promotion-choice multiplicity are isolated elsewhere.
+    action: >-
+      Generate into a fresh list and compare decoded logical moves with the
+      mailbox pawn model for each canonical legal fixture.
+    expected: >-
+      Pawns move only toward the opposing back rank, never forward into an
+      occupied square, double only from the home rank across two empty squares,
+      capture only an enemy on an in-board diagonal, and never wrap files.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1 pawn movement layer
+      provenance: FIDE movement rules and exhaustive file/home-rank boundaries
+      independence_argument: direct rank/file tests do not reuse TDFA pawn shifts or masks
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PAWN-DIRECTION, M-PAWN-DOUBLE-RANK, M-PAWN-DOUBLE-BLOCK, M-PAWN-CAPTURE, M-GEO-EDGE-WRAP]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEN-003
+    snapshot: *snapshot
+    title: Composite pseudo-legal set equals the union of rule components
+    status: DESIGNED
+    contracts: [C-GEN-003, C-RULE-001]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::GeneratePseudoLegalMoves(Position const*, MoveList*)
+    categories: [positive, boundary, differential, metamorphic]
+    setup: >-
+      All 27 committed oracle_cases.tsv positions, all six distinct oracle_perft.tsv FENs,
+      the exact pinned fixtures from T-LEGAL-001, and exact valid special-move
+      fixtures from T-RULE-001 through T-RULE-006 excluding blocked malformed
+      T-RULE-005; always aligned and with a fresh list.
+    action: >-
+      Compare the composite logical set with the mailbox pseudo-legal set and,
+      where separately callable components have approved translations, their
+      set union. Preserve pseudo moves that fail only own-king safety so that the
+      legal distinction is observable.
+    expected: >-
+      Every and only movement-rule move is present as a logical set, including
+      special moves satisfying their own rule prerequisites; list order is
+      ignored. Ordinary pinned moves and non-evasions may be present here but
+      must be removed by GenerateLegalMoves. Duplicate policy remains isolated
+      in blocked T-GEN-004.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1 pseudo layer
+      provenance: fixed fixtures plus catalogue-defined mailbox model
+      independence_argument: expected set is calculated without TDFA component generators
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-COLOUR, M-LEGAL-PIN, M-LEGAL-EVASION]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEN-004
+    snapshot: *snapshot
+    title: Generator append replace order duplicate and capacity semantics
+    status: BLOCKED
+    contracts: [C-GEN-007]
+    symbols: [all MoveList-writing MoveGen functions]
+    categories: [positive, negative, boundary, state-transition]
+    setup: >-
+      Prepare empty and pre-seeded lists, repeat generator calls, permute piece
+      insertion order, and exercise exact-capacity and one-past-capacity inputs.
+    action: >-
+      Assert append versus replace, ordering stability, duplicate policy, and
+      overflow behavior only after the owner selects D-GEN-001 and D-MOV-002.
+    expected: No behavioral option is selected while D-GEN-001 and D-MOV-002 remain unresolved.
+    oracle:
+      type: standard
+      id: owner-decision/D-GEN-001+D-MOV-002
+      provenance: tests/spec/decision-ledger.md
+      independence_argument: owner decision, not observed implementation behavior, is authoritative
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-DUPLICATE, M-ORACLE-ORDER]
+    blocking_decisions: [D-GEN-001, D-MOV-002]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-GEN-005
+    snapshot: *snapshot
+    title: Template-colour mismatch and malformed-position behavior
+    status: BLOCKED
+    contracts: [C-GEN-008]
+    symbols: [all position-consuming MoveGen functions]
+    categories: [negative, boundary]
+    setup: >-
+      Candidate cases are a template colour unequal to ColourToMove, missing or
+      multiple kings, adjacent kings, pawns on back ranks, mutually checked
+      kings, overlapping/invalid state, and inconsistent castling or EP fields.
+    action: >-
+      Test rejection, assertion, sentinel, or defined result only after valid
+      preconditions and failure behavior are approved.
+    expected: No result, crash policy, or state-transition expectation is guessed.
+    oracle:
+      type: standard
+      id: owner-decision/D-GEN-002+D-GEN-005
+      provenance: tests/spec/decision-ledger.md
+      independence_argument: future explicit preconditions are the only authority
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-COLOUR]
+    blocking_decisions: [D-GEN-002, D-GEN-005, D-POS-001, D-POS-006]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ATK-001
+    snapshot: *snapshot
+    title: Exhaustive valid-rank pawn attack geometry for both colours
+    status: DESIGNED
+    contracts: [C-GEN-002]
+    symbols:
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::PawnAttacks(Position const*)
+      - Position::Position(std::string_view)
+      - Board::PieceOn
+      - Board::Pieces
+      - Position::ColourToMove
+      - Position::CastlingRights
+      - Position::EnPasBB
+      - Position::EnPasSq
+      - Position::HalfMoves
+      - Position::FullMoves
+      - UTIL::Square
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Place one pawn on every square of ranks 2 through 7 for each colour (96
+      origin-colour cases), with kings placed by oracle/legal-shell-builder-v1.
+      Each Position's active colour equals the queried pawn template colour.
+      For an empty-target case, exclude both tested diagonals from king-shell
+      placement; for an enemy-target case, place the enemy non-king before the
+      shell builder runs. Friendly-occupied target semantics are isolated in
+      blocked T-ATK-004. Serialize each completed test-owned mailbox as a
+      canonical six-field FEN and construct the queried Position from that FEN.
+    action: >-
+      Snapshot the FEN-semantic Position fields, normalize the returned mask to
+      labelled squares, compare under oracle/attack-nondisputed-consensus-mask-v1,
+      and require the snapshot unchanged; never compare a literal U64.
+    expected: >-
+      Occupancy does not turn forward movement into an attack; both in-board
+      empty/enemy diagonals are attacks, clipped on a/h files, and white/black
+      results rank-mirror exactly. No friendly-occupancy convention is asserted.
+    oracle:
+      type: exhaustive-model
+      id: oracle/attack-nondisputed-consensus-mask-v1
+      provenance: FIDE pawn attacks over all 96 valid origin-colour cases
+      independence_argument: direct coordinates, not production pawn move generation, form expectations
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PAWN-DIRECTION, M-ATTACK-PAWN-MOVE, M-GEO-EDGE-WRAP, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ATK-002
+    snapshot: *snapshot
+    title: Executable leaper and sliding attack integration on exact legal fixtures
+    status: DESIGNED
+    contracts: [C-GEN-002]
+    symbols:
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::KnightAttacks(Position const*)
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::BishopAttacks(Position const*)
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::RookAttacks(Position const*)
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::QueenAttacks(Position const*)
+      - template<Colour colour_to_move> constexpr BitBoard MoveGen::KingAttacks(Position const*)
+      - Position::Position(std::string_view)
+      - Board::PieceOn
+      - Board::Pieces
+      - Position::ColourToMove
+      - Position::CastlingRights
+      - Position::EnPasBB
+      - Position::EnPasSq
+      - Position::HalfMoves
+      - Position::FullMoves
+      - UTIL::Square
+    categories: [positive, differential, metamorphic]
+    setup: >-
+      Use exactly these White-to-move FEN | queried function/origin rows:
+      8/7k/8/1R3r2/3N4/8/8/K7 w - - 0 1 | KnightAttacks<White>/d4
+      (friendly rook b5, enemy rook f5);
+      7k/8/8/2N1n3/3K4/8/8/8 w - - 0 1 | KingAttacks<White>/d4
+      (friendly knight c5, enemy knight e5);
+      8/8/1n3N1k/8/3B4/8/1r3R2/K7 w - - 0 1 | BishopAttacks<White>/d4
+      (enemy knight b6, friendly knight f6, enemy rook b2, friendly rook f2);
+      8/7k/3B4/8/1n1R1N2/8/3b4/K7 w - - 0 1 | RookAttacks<White>/d4
+      (friendly bishop d6, enemy bishop d2, enemy knight b4, friendly knight f4);
+      8/7k/3N1B2/8/3Q1b2/8/1r6/K7 w - - 0 1 | QueenAttacks<White>/d4
+      (friendly knight d6, friendly bishop f6, enemy bishop f4, enemy rook b2).
+      Also use exactly their rank-flip/colour-swap rows, querying Black at d5:
+      k7/8/8/3n4/1r3R2/8/7K/8 b - - 0 1;
+      8/8/8/3k4/2n1N3/8/8/7K b - - 0 1;
+      k7/1R3r2/8/3b4/8/1N3n1K/8/8 b - - 0 1;
+      k7/3B4/8/1N1r1n2/8/3b4/7K/8 b - - 0 1;
+      k7/1R6/8/3q1B2/8/3n1b2/7K/8 b - - 0 1.
+      Before any TDFA query, a test-owned FEN/mailbox check requires the exact
+      named pieces, one king per colour, distinct nonadjacent kings, no pawn,
+      neither king attacked in the root, and template colour equal active colour.
+    action: >-
+      Snapshot the FEN-semantic fields; normalize returned masks to labelled
+      sets and compare them under oracle/attack-nondisputed-consensus-mask-v1.
+      For sliders, derive each ray from the named d4/d5 piece and named blockers;
+      for leapers, derive labelled deltas directly. Require king attacks to omit
+      castling and every query to preserve the snapshot.
+    expected: >-
+      On the consensus mask, each exact row has labelled FIDE geometry through
+      empty squares and stops beyond its first named blocker; enemy blocker
+      squares and leaper targets are retained where the convention variants
+      agree. White rows map exactly to their Black transforms, king attacks add
+      no castle, and all FEN-semantic fields are unchanged. No exhaustive-origin,
+      exhaustive-occupancy, disputed-square, or literal numeric-mask claim remains.
+    oracle:
+      type: reference-model
+      id: oracle/attack-nondisputed-consensus-mask-v1
+      provenance: ten literal independently legality-checked FEN rows with exact named query pieces and blockers
+      independence_argument: test-owned labelled mailbox geometry and legality checks use no production attack, movement, mask, lookup, or generated state
+    diagnostics: *diag_geometry
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEO-EDGE-WRAP, M-GEO-DELTA, M-SLIDE-PASS, M-SLIDE-RAY, M-GEN-COLOUR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ATK-003
+    snapshot: *snapshot
+    title: Aggregate attacks and check detection on valid positions
+    status: DESIGNED
+    contracts: [C-GEN-002]
+    symbols:
+      - template<Colour colour_to_move> BitBoard MoveGen::GenerateAllAttacks(Position const*)
+      - template<Colour colour_to_move> bool MoveGen::InCheck(Position const*)
+      - Position::Position(std::string_view)
+      - Board::PieceOn
+      - Board::Pieces
+      - Position::ColourToMove
+      - Position::CastlingRights
+      - Position::EnPasBB
+      - Position::EnPasSq
+      - Position::HalfMoves
+      - Position::FullMoves
+      - UTIL::Square
+    categories: [positive, negative, differential, metamorphic]
+    setup: >-
+      All 27 committed oracle_cases.tsv rows plus the exact check fixtures in
+      T-LEGAL-002 and T-LEGAL-003, in which each piece
+      type separately gives check, a blocker removes sliding check, two pieces
+      give double check, and attacks overlap. The queried template colour equals
+      Position::ColourToMove() in every case.
+    action: >-
+      Snapshot the FEN-semantic fields; compare aggregate attacks under
+      oracle/attack-nondisputed-consensus-mask-v1, compare InCheck without any
+      mask to oracle/fide-check-v1, and require both queries to preserve the snapshot.
+    expected: >-
+      Exact consensus union on the attack assertion mask; the unmasked corpus
+      in_check column matches InCheck, including FIDE attacks by pinned pieces;
+      blocking toggles slider check, overlaps do not cancel, queries preserve
+      the Position, and colour/rank mirroring preserves the result.
+    oracle:
+      type: reference-model
+      id: oracle/attack-nondisputed-consensus-mask-v1+oracle/fide-check-v1+oracle_cases-v1
+      provenance: oracle_cases data checksum 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      independence_argument: fixture values and coordinate union are independent of TDFA
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-CHECK-SIDE, M-GEN-COLOUR, M-SLIDE-PASS, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ATK-004
+    snapshot: *snapshot
+    title: Friendly-defended pinned and king-constrained attack semantics
+    status: BLOCKED
+    contracts: [C-GEN-002]
+    symbols:
+      - MoveGen::*Attacks
+      - MoveGen::GenerateAllAttacks
+    categories: [boundary, negative, differential]
+    setup: >-
+      Candidate legal positions put a friendly piece as a first slider blocker,
+      pin a knight/bishop/rook/pawn to its own king, and constrain a king from
+      entering otherwise geometric squares. Record the standard FIDE-style
+      reference set separately from the production observation.
+    action: >-
+      Bind exact expectations for defended friendly occupancy, pinned-piece
+      attacks, and king-illegal squares only after D-GEN-003 is decided.
+    expected: >-
+      No internal attack-map convention is selected. The recommended standard
+      model includes defended friendly occupancy and attacks by pinned pieces,
+      but that recommendation is not frozen as TDFA's internal API contract.
+    oracle:
+      type: standard
+      id: owner-decision/D-GEN-003
+      provenance: tests/spec/contracts/internal-contract-batches.md
+      independence_argument: contract approval, not observed masks, selects the convention
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-ATTACK-DEFENDED, M-ATTACK-PINNED, M-KING-DANGER]
+    blocking_decisions: [D-GEN-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-LEGAL-001
+    snapshot: *snapshot
+    title: Pseudo-legal versus legal moves for absolute pins
+    status: DESIGNED
+    contracts: [C-GEN-003, C-GEN-004]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::GeneratePseudoLegalMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [positive, negative, differential]
+    setup: >-
+      Use legal aligned fixtures for a rook pinned on the king file
+      (k3r3/8/8/8/8/8/4R3/4K3 w - - 0 1), a knight on the same pin line
+      (k3r3/8/8/8/8/8/4N3/4K3 w - - 0 1), a diagonally pinned bishop
+      (7k/8/8/8/1b6/8/3B4/4K3 w - - 0 1), and a diagonally pinned pawn with a
+      pseudo-capture (7k/8/8/8/1b6/4n3/3P4/4K3 w - - 0 1). Apply the exact
+      rank-flip/colour-swap transform from T-LEGAL-005 for black cases.
+    action: Generate pseudo and legal sets independently into fresh lists and compare both to the two reference layers.
+    expected: >-
+      Geometrically valid pinned-piece moves appear in pseudo output. Legal output
+      retains only moves that keep the line blocked, capture the pinner safely,
+      or move the king; a pinned knight has no legal knight move. Unrelated legal
+      king moves remain. Raw multiplicity is not asserted.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1
+      provenance: exact FENs plus independently reviewed clone-and-check model
+      independence_argument: legal filtering uses a cloned mailbox and coordinate attacks only
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-LEGAL-PIN, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-LEGAL-002
+    snapshot: *snapshot
+    title: Complete single-check evasion set
+    status: DESIGNED
+    contracts: [C-GEN-004]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [positive, negative, differential]
+    setup: >-
+      Use committed in-check case perft_promotions plus exact legal FENs:
+      k3r3/8/8/1B6/8/8/8/3QK3 w - - 0 1 (slider check with a capture and an
+      interposition), k7/8/8/8/8/5n2/8/4K3 w - - 0 1 (knight check), and
+      k7/8/8/8/3p4/4K3/8/8 w - - 0 1 (pawn check). Apply only the exact
+      rank-flip/colour-swap transform for black cases; no adjacent-king position
+      is admitted.
+    action: Compare the complete fresh-list legal set with oracle/mailbox-legal-v1 and classify each move by evasion mechanism.
+    expected: >-
+      Every legal king move, checker capture, and available slider interposition
+      appears; no move leaving the king attacked appears; and leaper/pawn checks
+      have no spurious block. For perft_promotions the exact logical set is
+      b4c5 c4c5 d2d4 f1f2 f3d4 g1h1.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1+oracle_cases/perft_promotions
+      provenance: committed oracle case perft_promotions plus the exact FENs above
+      independence_argument: expected evasions are not derived from TDFA pseudo moves
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-LEGAL-EVASION, M-KING-DANGER, M-CHECK-SIDE]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-LEGAL-003
+    snapshot: *snapshot
+    title: Double check permits only legal king moves
+    status: DESIGNED
+    contracts: [C-GEN-004]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [positive, negative, differential]
+    setup: >-
+      Use k3r3/8/8/8/8/5n2/1R4P1/4K3 w - - 0 1 (rook+knight, with g2f3 able
+      to capture one checker and b2e2 able to block one ray) and
+      k3r3/8/8/8/1b6/8/8/4K3 w - - 0 1 (rook+bishop). Apply the exact
+      rank-flip/colour-swap transform for black cases.
+    action: Compare the complete legal set with the clone-and-check reference and inspect source piece types.
+    expected: >-
+      Every emitted move originates at the checked king and reaches a square not
+      attacked after the move; all non-king captures and blocks are absent; every
+      safe king move is present as a logical set member; multiplicity is not asserted.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1
+      provenance: exact double-check FENs above and clone-and-check model
+      independence_argument: reference tests final king safety rather than copying an optimized double-check branch
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-LEGAL-DOUBLE, M-LEGAL-EVASION, M-KING-DANGER]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-LEGAL-004
+    snapshot: *snapshot
+    title: King destinations account for attacks after captures and vacating origin
+    status: DESIGNED
+    contracts: [C-GEN-004]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::KingMoves(Position const*, MoveList*)
+    categories: [positive, negative, boundary, differential]
+    setup: >-
+      Use legal separated-kings FEN 8/8/8/8/8/4k3/8/4K3 w - - 0 1, where
+      candidate moves would create illegal adjacency; undefended-checker FEN
+      4k3/8/8/8/8/8/4r3/4K3 w - - 0 1; defended-capture FEN
+      k7/8/8/1b6/8/8/4r3/4K3 w - - 0 1; and origin-vacating x-ray FEN
+      k7/8/8/8/8/8/8/4K2r w - - 0 1.
+    action: Compare piece-level pseudo king destinations and final legal destinations with the two mailbox layers.
+    expected: >-
+      Pseudo geometry is complete, while legal output excludes adjacency, every
+      attacked destination after final occupancy, defended captures, and x-ray
+      destinations; safe captures and safe empty destinations remain.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1
+      provenance: FIDE king safety evaluated on cloned final occupancy
+      independence_argument: final-position attack calculation is independent of production precomputed attacks
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-KING-DANGER, M-SLIDE-PASS, M-LEGAL-EVASION]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-LEGAL-005
+    snapshot: *snapshot
+    title: Colour and rank-flip metamorphism
+    status: DESIGNED
+    contracts: [C-GEN-001, C-GEN-002, C-GEN-003, C-GEN-004, C-RULE-001]
+    symbols: [all move and attack generation functions]
+    categories: [metamorphic, differential, boundary]
+    setup: >-
+      Every exact rule fixture and committed oracle FEN for which the transform
+      remains legal. Flip ranks, swap piece colours and side, swap white/black
+      castling rights without exchanging wings, and map the EP square by rank.
+      File reflection is deliberately excluded because it moves kings off the
+      conventional e-file and is not a castling symmetry of standard chess.
+    action: >-
+      Generate original and transformed logical move sets and normalized labelled
+      attack sets, then map transformed results back by the inverse coordinate
+      transform. Compare attack maps only under each position's independently
+      derived consensus mask, compare InCheck without a mask, and do not compare
+      literal raw masks.
+    expected: >-
+      Mapped logical move sets, consensus attack projections, and exact check
+      flags are identical;
+      promotion choices, EP, and same-wing castling map exactly under the
+      rank/colour transform. Raw list multiplicity is not compared.
+    oracle:
+      type: metamorphic
+      id: oracle/chess-symmetry-v1
+      provenance: bijective coordinate and colour transformations defined in setup
+      independence_argument: only input/output coordinates are transformed; no expected set comes from TDFA internals
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-MIRROR, M-GEN-COLOUR, M-PAWN-DIRECTION, M-CASTLE-RIGHTS]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-001
+    snapshot: *snapshot
+    title: Ordinary legal en passant generation and capture
+    status: DESIGNED
+    contracts: [C-GEN-003, C-GEN-004, C-RULE-001]
+    symbols:
+      - void MoveGen::WhitePawnMoves(Position const*, MoveList*)
+      - void MoveGen::BlackPawnMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+    categories: [positive, state-transition, differential]
+    setup: >-
+      Use only committed case en_passant_legal and its exact rank-flip/colour-swap
+      transform. Malformed or inconsistent EP fields remain in blocked T-GEN-005;
+      EP creation/expiry remains in blocked T-STATE-003. For each case construct
+      separate equivalent fresh Positions for generation and transition.
+    action: >-
+      Compare pseudo/legal sets on the generation Position. Retain the populated-
+      prefix Move whose decode is the expected EP tuple, make that Move only on
+      the untouched equivalent transition Position, inspect placement/side, then
+      matching-unmake there and compare root placement/side.
+    expected: >-
+      e5d6 is present in the oracle legal case; the moving pawn lands on d6, the
+      black pawn on d5 is removed although d6 began empty, no ordinary capture
+      from the landing square is inferred, and unmake restores placement/side.
+      EP expiry, clocks, hash, and history restoration are isolated in blocked
+      T-STATE-003; no malformed-state result is inferred.
+    oracle:
+      type: corpus
+      id: oracle_cases/en_passant_legal+oracle/mailbox-legal-v1
+      provenance: oracle_cases data checksum 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      independence_argument: fixed legal set and mailbox special-move transition are independent of TDFA
+    diagnostics: *diag_state
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-EP-OMIT, M-EP-CAPTURE-SQUARE, M-UNMAKE-SPECIAL, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-002
+    snapshot: *snapshot
+    title: En passant king-safety edge cases
+    status: DESIGNED
+    contracts: [C-GEN-004, C-RULE-001]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [positive, negative, regression, differential]
+    setup: >-
+      Use oracle en_passant_pinned; the check-evasion FEN
+      k7/8/8/3pP3/4K3/8/8/8 w - d6 0 2; the horizontal discovered-rook FEN
+      4k3/8/8/r4pPK/8/8/8/8 w - f6 0 2; and colour/rank mirrors.
+    action: Compare the legal set with a reference that removes both the captured pawn and moving pawn origin before checking final king safety.
+    expected: >-
+      e5d6 is absent in oracle en_passant_pinned, present as a valid check evasion
+      in the first hand FEN, and g5f6 is absent in the horizontal rook FEN. The
+      ordinary e5e6 move remains in the pinned oracle case.
+    oracle:
+      type: reference-model
+      id: oracle_cases/en_passant_pinned+oracle/mailbox-legal-v1
+      provenance: exact corpus row and explicit FENs in setup
+      independence_argument: reference reconstructs final occupancy before attack testing
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-EP-KING-SAFETY, M-LEGAL-PIN, M-LEGAL-EVASION, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-003
+    snapshot: *snapshot
+    title: Both castling wings for both colours
+    status: DESIGNED
+    contracts: [C-GEN-003, C-GEN-004, C-RULE-001]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::Castling(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+    categories: [positive, state-transition, differential, metamorphic]
+    setup: >-
+      Use committed castling_minimal for White and exact Black-to-move FEN
+      r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1; derive variants only by replacing
+      the rights field with K, Q, k, or q. Paths are empty, king/rook placement
+      is conventional, and relevant king squares are unattacked. For each castle,
+      construct separate equivalent fresh Positions for generation and transition.
+    action: >-
+      Compare pseudo/legal castling moves on the generation Position; retain each
+      expected decoded castle Move, then make and matching-unmake it only on the
+      untouched equivalent transition Position; inspect king/rook placement and side.
+    expected: >-
+      Exactly the rights-authorized castles appear (e1g1/e1c1 or e8g8/e8c8).
+      Making moves king e-to-g and rook h-to-f or king e-to-c and rook a-to-d;
+      unmake restores king/rook placement and side. Rights, clocks, hash, and
+      nested-history restoration are isolated in blocked T-STATE-003.
+    oracle:
+      type: corpus
+      id: oracle_cases/castling_minimal+oracle/mailbox-legal-v1
+      provenance: exact corpus legal set and FIDE castling transition
+      independence_argument: expected moves and rook transitions are direct rule data
+    diagnostics: *diag_state
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-CASTLE-RIGHTS, M-CASTLE-ROOK, M-UNMAKE-SPECIAL, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-004
+    snapshot: *snapshot
+    title: Standard castling denial conditions
+    status: DESIGNED
+    contracts: [C-GEN-004, C-RULE-001]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::Castling(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [negative, boundary, differential]
+    setup: >-
+      White base is 8/3k4/8/8/8/8/8/R3K2R w KQ - 0 1. Test rights -, K, and Q;
+      insert one white knight in turn on b1,c1,d1,f1,g1 for path occupancy; and
+      insert one black rook in turn on e8,f8,g8,d8,c8,b8 (with black king d7)
+      to attack the king start/transit/destination or only b1. Add the exact
+      rook-square-only fixtures 7r/3k4/8/8/8/8/8/R3K2R w KQ - 0 1 (h1 attacked,
+      e1/f1/g1 unattacked) and r7/3k4/8/8/8/8/8/R3K2R w KQ - 0 1 (a1 attacked,
+      e1/d1/c1 unattacked). Apply the exact rank-flip/colour-swap transform for
+      Black. No other hand fixture is used.
+    action: Compare castle membership with the FIDE mailbox reference in a fresh list.
+    expected: >-
+      Castling is absent without its right, with any path blocker, or when start,
+      transit, or destination is attacked. An attack only on b1/b8 does not bar
+      queen-side castling. In the two explicit rook-square-only fixtures, e1g1
+      and e1c1 respectively remain present; their Black transforms do likewise.
+      An attacked rook square alone does not bar castling unless the attacker
+      also attacks a required king square.
+    oracle:
+      type: standard
+      id: oracle/mailbox-legal-v1 castling preconditions
+      provenance: FIDE Laws of Chess castling conditions
+      independence_argument: each condition is toggled independently in explicit legal fixtures
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-CASTLE-RIGHTS, M-CASTLE-BLOCK, M-CASTLE-CHECK]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-005
+    snapshot: *snapshot
+    title: Castling rights inconsistent with king or rook placement
+    status: BLOCKED
+    contracts: [C-RULE-001, C-GEN-008]
+    symbols:
+      - template<Colour colour_to_move> constexpr void MoveGen::Castling(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [negative, boundary]
+    setup: >-
+      Candidate FENs retain a castling-right letter while removing the rook,
+      replacing it with another piece, moving the rook to another square, moving
+      the king off e1/e8, or placing a promoted rook on the conventional square.
+    action: Assert whether such a position is rejected or simply yields no castle only after D-GEN-004 and FEN validity policy are approved.
+    expected: >-
+      No behavior is frozen. The recommended rule requires the actual king and
+      corresponding rook on conventional squares in addition to the rights bit.
+    oracle:
+      type: standard
+      id: owner-decision/D-GEN-004
+      provenance: tests/spec/contracts/internal-contract-batches.md
+      independence_argument: approved validity/precondition policy must select the observable behavior
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-CASTLE-ROOK, M-CASTLE-RIGHTS]
+    blocking_decisions: [D-GEN-004, D-POS-001, D-POS-006]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-006
+    snapshot: *snapshot
+    title: Quiet and capture promotion choices for both colours
+    status: DESIGNED
+    contracts: [C-GEN-003, C-GEN-004, C-RULE-001]
+    symbols:
+      - void MoveGen::WhitePawnMoves(Position const*, MoveList*)
+      - void MoveGen::BlackPawnMoves(Position const*, MoveList*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - bool Moves::IsPromotionMove(Move)
+      - void Moves::DecodeMove(Move, Sq*, Sq*, MoveType*)
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+    categories: [positive, negative, boundary, differential, state-transition]
+    setup: >-
+      Use oracle promotion_choices plus quiet/capture fixtures
+      4k3/P7/8/8/8/8/8/4K3 w - - 0 1,
+      1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1,
+      4k3/8/8/8/8/8/p7/4K3 b - - 0 1, and
+      4k3/8/8/8/8/8/p7/1R2K3 b - - 0 1. For each generated
+      promotion, construct a separate equivalent fresh transition Position.
+    action: >-
+      Compare logical source/target/promotion-choice sets. Project promotion only
+      through DecodeMove's exact named MoveType: mt_QueenPromotion,
+      mt_RookPromotion, mt_BishopPromotion, or mt_KnightPromotion; also require
+      IsPromotionMove. Retain the matching populated-prefix Move, then make/unmake
+      it only on its untouched equivalent transition Position and inspect the
+      promoted piece and restoration. Do not call PTypeOfProm.
+    expected: >-
+      Each legal last-rank destination has exactly q, r, b, and n choices, no
+      unpromoted move, and no king/pawn promotion. Capture variants remove the
+      target. The logical q/r/b/n choice corresponds exactly to the four named
+      promotion MoveTypes above; no PieceType marker/ordinary representation or
+      numeric enum range is asserted. Make installs the selected piece and
+      unmake restores pawn, captured piece, and side. Rights, clocks, EP, hash,
+      and nested history are isolated in blocked T-STATE-003.
+    oracle:
+      type: corpus
+      id: oracle_cases/promotion_choices+oracle/mailbox-legal-v1
+      provenance: exact corpus row, explicit FENs, and the four FIDE promotion choices
+      independence_argument: logical promotion tuples are fixed before TDFA encoding is inspected
+    diagnostics: *diag_state
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PROMO-CHOICES, M-PROMO-NONPROM, M-UNMAKE-SPECIAL, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-007
+    snapshot: *snapshot
+    title: Checkmate and stalemate from check plus legal set
+    status: DESIGNED
+    contracts: [C-GEN-002, C-GEN-004, C-RULE-002]
+    symbols:
+      - template<Colour colour_to_move> bool MoveGen::InCheck(Position const*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - MoveList::MoveList
+      - MoveList::all
+      - MoveList::len
+      - Position::Position(std::string_view)
+    categories: [positive, negative, boundary, differential]
+    setup: >-
+      Use committed checkmate and stalemate rows and their legal rank-flip/colour
+      transforms; committed perft_promotions is the in-check nonterminal control,
+      and committed start is the ordinary nonterminal control. For every row use
+      separate equivalent fresh Positions for InCheck and terminal legal
+      generation. Independently derive each complete legal set before TDFA
+      observation, then construct a fresh MoveList and observe all().size().
+    action: >-
+      Read aligned InCheck on its query Position; on the separate equivalent
+      Position call legal generation only when the independently expected set
+      fits the observed capacity. After a call require len()<=capacity before
+      using len()==0 to classify checkmate as in_check plus empty and stalemate
+      as not-in-check plus empty.
+    expected: >-
+      The checkmate row yields true/empty and the stalemate row false/empty.
+      Their empty expectations fit every observed capacity. Each nonterminal
+      control is required nonempty when its independently expected set fits; if
+      it does not fit, that control call is skipped and recorded as unavailable,
+      not failed. No constructor len, minimum capacity, result string, game_over,
+      is_checkmate, is_stalemate, or other corpus outcome flag is asserted.
+    oracle:
+      type: corpus
+      id: oracle/fide-check-v1+oracle/mailbox-legal-v1 terminal classification
+      provenance: oracle_cases data checksum 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      independence_argument: fixed corpus flags and standard definitions are independent of TDFA
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-RULE-TERMINAL, M-CHECK-SIDE, M-LEGAL-EVASION]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-RULE-008
+    snapshot: *snapshot
+    title: Insufficient material fifty seventy-five threefold and fivefold outcomes
+    status: BLOCKED
+    contracts: [C-RULE-003]
+    symbols: [application/search outcome boundary not yet assigned]
+    categories: [positive, negative, boundary, state-transition, differential]
+    setup: >-
+      Preserve exact committed rows insufficient_material,
+      fifty_move_prospective, fifty_move_clock_100, seventyfive_move_rule,
+      threefold_prospective, threefold_current, and fivefold_repetition, including
+      each history row's root_fen and complete history_uci.
+    action: >-
+      Bind the corpus outcome columns and repetition histories to a TDFA
+      observable only after D-RULE-001 assigns draw adjudication scope and claim
+      policy. Checkmate precedence and automatic-versus-claimable behavior must
+      then be specified explicitly.
+    expected: >-
+      Independent corpus expectations are retained but not bound to an unassigned
+      API: K-v-K is insufficient; fifty_move_prospective at halfmove 99 can claim
+      by a qualifying next move; fifty_move_clock_100 can claim currently;
+      halfmove 150 is automatic; threefold_prospective can claim by one move,
+      threefold_current is already repeated and claimable, and fivefold is
+      automatic. No search score, best move, or protocol response is guessed.
+    oracle:
+      type: corpus
+      id: oracle_cases/draw-columns+FIDE
+      provenance: exact oracle rows plus FIDE draw thresholds
+      independence_argument: standard/corpus outcomes await an explicitly selected application boundary
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-RULE-DRAW, M-RULE-TERMINAL, M-STATE-METADATA]
+    blocking_decisions: [D-RULE-001]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-STATE-001
+    snapshot: *snapshot
+    title: Move and attack queries preserve complete FEN-semantic state
+    status: DESIGNED
+    contracts: [C-GEN-005]
+    symbols:
+      - all MoveGen move generators
+      - all MoveGen attack queries
+      - MoveGen::InCheck
+      - MoveList::MoveList
+      - MoveList::all
+      - MoveList::len
+      - MoveList::operator[]
+      - Position::Position(std::string_view)
+      - Board::PieceOn
+      - Board::Pieces
+      - Position::ColourToMove
+      - Position::CastlingRights
+      - Position::EnPasBB
+      - Position::EnPasSq
+      - Position::HalfMoves
+      - Position::FullMoves
+    categories: [state-transition, regression, differential]
+    setup: >-
+      All 27 committed oracle_cases rows, every exact special-move fixture, and
+      the six compact perft roots. Through public observers snapshot PieceOn on
+      all 64 squares, Pieces by colour/type, active side, named castling rights,
+      en-passant target or absence, halfmove clock, and fullmove number. Before
+      each list-writing query independently derive its complete expected logical
+      set, construct a fresh list, and observe all().size().
+    action: >-
+      Invoke each applicable attack query once and repeatedly. Invoke each
+      list-writing generator only when its expected set fits the observed
+      capacity, require post-call len()<=capacity before any prefix access, and
+      use a fresh equivalent dedicated Position and list for every generation
+      call, including repetitions and calls sequenced around attack queries.
+      Compare the complete public snapshot before and after every call without
+      private access.
+    expected: >-
+      Placement, aggregate occupancies, side, named rights, en-passant target or
+      absence, and both clocks are identical before and after every query;
+      repeated calls on fresh equivalent instances have the same identity
+      result. Constructor len, minimum capacity, oversized calls, raw hash,
+      private caches/history, and continuation behavior are not asserted.
+    oracle:
+      type: metamorphic
+      id: oracle/full-fen-semantic-identity-v1
+      provenance: exact before/after identity over all public FEN-semantic observables
+      independence_argument: expected state is captured before, not calculated by production logic
+    diagnostics: *diag_state
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-STATE-LEAK, M-UNMAKE-SPECIAL]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-STATE-002
+    snapshot: *snapshot
+    title: Make and unmake every generated legal move restores root state
+    status: DESIGNED
+    contracts: [C-GEN-004, C-GEN-005, C-RULE-001]
+    symbols:
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - MoveList::MoveList
+      - MoveList::all
+      - MoveList::len
+      - MoveList::operator[]
+      - Moves::DecodeMove
+      - UTIL::Square
+      - Position::Position(std::string_view)
+      - Board::PieceOn
+      - Board::Pieces
+      - Position::ColourToMove
+    categories: [state-transition, exhaustive, regression]
+    setup: >-
+      For all 27 committed oracle rows, the six compact perft roots, and every
+      exact special-rule fixture, independently derive the complete logical
+      legal set before TDFA observation. Construct a dedicated generation
+      Position and MoveList, observe all().size(), and retain only roots whose
+      expected set fits. Capture the test-owned placement/side snapshot. Include
+      quiet, capture, double push, EP, both castles, and every colour-by-
+      promotion-kind case.
+    action: >-
+      Generate once on the dedicated generation Position, require
+      len()<=observed capacity before prefix access, and compare the decoded
+      logical set with the independent expectation. For every Move in the
+      checked populated prefix, construct a separate equivalent fresh transition
+      Position from the root FEN, make that exact retained Move, validate the
+      resulting mailbox placement and side, immediately unmake the identical
+      Move in LIFO order, and compare the narrow root snapshot. Never make a
+      Move on the generation Position and never reuse one transition Position
+      for another populated entry. Duplicate prefix entries, if any, therefore
+      receive independent identical transition checks without a multiplicity
+      assertion.
+    expected: >-
+      Every fitting generated logical set is complete and bounded before access.
+      On every separate equivalent transition Position, Make matches the
+      standard piece transition and matching Unmake restores placement, captured
+      piece, and side. The generation Position is never transition provenance;
+      no post-unmake generator result is compared. Nonfitting roots, ordering,
+      multiplicity, rights/EP/clocks after unmake, hash, private history, and
+      nested restoration remain outside this record.
+    oracle:
+      type: reference-model
+      id: oracle/mailbox-legal-v1+oracle/public-placement-identity-v1
+      provenance: corpus roots and catalogue special fixtures
+      independence_argument: transition is checked against a test-owned mailbox and captured root snapshot
+    diagnostics: >-
+      Report test id, fixture/FEN, logical move and retained generated Move,
+      before/made/unmade 64-square PieceOn maps, colour occupancies, and side.
+      Do not read unresolved rights, EP, clocks, ZKey, or private history for
+      this record.
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-STATE-LEAK, M-UNMAKE-SPECIAL, M-CASTLE-ROOK, M-EP-CAPTURE-SQUARE, M-PROMO-CHOICES]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-STATE-003
+    snapshot: *snapshot
+    title: EP expiry castling rights clocks hash and nested restoration
+    status: BLOCKED
+    contracts: [C-GEN-009]
+    symbols:
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+      - Position state observers
+    categories: [boundary, state-transition, regression]
+    setup: >-
+      Exact candidate sequences are: startpos e2e4 a7a6 (EP creation then
+      one-reply expiry); castling_minimal h1h2 a8a7 h2h1 a7a8 and
+      e1e2 e8e7 e2e1 e7e8 (rights do not return merely because pieces return);
+      castling_minimal a1a8 (moving-rook and captured-rook rights); startpos
+      g1f3 g8f6 e2e4 d7d5 (quiet/pawn halfmove resets and fullmove updates); and
+      the committed threefold_current root/history replay followed by complete
+      reverse LIFO unmake (nested clocks, hash, rights, EP, and history).
+    action: >-
+      Assert exact EP lifetime, castling-right transitions, half/fullmove values,
+      ZKey identity, continuation behavior, and nested restoration only after the
+      Position decisions are approved.
+    expected: >-
+      No internal metadata or history expectation is frozen. Standard candidate
+      outcomes are recorded in setup, but D-POS-002, D-POS-003, D-POS-005, and
+      D-POS-007 must define the observable restoration set and conventions.
+    oracle:
+      type: standard
+      id: owner-decision/D-POS-002+D-POS-003+D-POS-005+D-POS-007
+      provenance: tests/spec/decision-ledger.md plus exact candidate sequences above
+      independence_argument: owner-approved state conventions, not TDFA output, select expectations
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-STATE-METADATA, M-UNMAKE-SPECIAL, M-CASTLE-RIGHTS]
+    blocking_decisions: [D-POS-002, D-POS-003, D-POS-005, D-POS-007]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ORACLE-001
+    snapshot: *snapshot
+    title: Offline legal-move corpus format checksum and row integrity
+    status: DESIGNED
+    contracts: []
+    symbols: [test fixture loader for tests/data/oracle_cases.tsv]
+    categories: [positive, negative, boundary, regression]
+    setup: Exact UTF-8 bytes of tests/data/oracle_cases.tsv.
+    action: >-
+      Parse comments and TSV strictly, require the declared columns, recompute
+      SHA-256 from the column header through final LF, count rows/profile/source,
+      validate canonical six-field FEN shape and sorted unique legal_uci tokens,
+      and treat a single hyphen as empty/unavailable only.
+    expected: >-
+      Format tdfa-chess-oracle-v1; checksum
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77;
+      27 rows: 16 curated, 3 history, and 8 random_walk; profile committed with
+      generation_args --profile committed; every listed move is ASCII-sorted and
+      unique; empty move sets use one hyphen. Case ids exactly match the 27 ids
+      frozen in fixture_registry.oracle_cases.case_ids.
+    oracle:
+      type: corpus
+      id: oracle_cases-v1-committed
+      provenance: embedded metadata, generator name, python-chess 1.11.2, fixed seed and checksum
+      independence_argument: fixture integrity is verified without executing TDFA
+    diagnostics: >-
+      Report path, physical line, metadata key, expected/actual checksum/count,
+      first malformed column/token, and exact offending row id without normalizing bytes.
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-PARSER, M-ORACLE-ORDER]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ORACLE-002
+    snapshot: *snapshot
+    title: Differential legal sets and check flags for every offline corpus row
+    status: DESIGNED
+    contracts: [C-GEN-002, C-GEN-004]
+    symbols:
+      - template<Colour colour_to_move> bool MoveGen::InCheck(Position const*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [positive, boundary, differential, regression]
+    setup: >-
+      Every row returned after T-ORACLE-001 validates the fixture. The two
+      committed rows with in_check=1 are
+      perft_promotions and checkmate; no nonexistent case id named in_check is
+      required.
+    action: Import the row FEN, dispatch the aligned colour template, and compare InCheck and the sorted duplicate-free logical UCI set.
+    expected: >-
+      Exact equality with turn, in_check, and legal_uci for every returned row.
+      Checksum, profile, and byte-frozen row-count assertions remain solely in
+      infrastructure record T-ORACLE-001 and are not repeated here.
+    oracle:
+      type: corpus
+      id: oracle_cases-v1-committed
+      provenance: data checksum 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      independence_argument: offline fixture was authored without TDFA output and is logical-UCI based
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-COLOUR, M-LEGAL-PIN, M-EP-KING-SAFETY, M-CASTLE-CHECK, M-PROMO-CHOICES]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-ORACLE-003
+    snapshot: *snapshot
+    title: Committed history and fixed-seed random-walk differential rows
+    status: DESIGNED
+    contracts: [C-GEN-002, C-GEN-004, C-GEN-005]
+    symbols:
+      - template<Colour colour_to_move> bool MoveGen::InCheck(Position const*)
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+    categories: [differential, regression]
+    setup: >-
+      The exact committed rows threefold_prospective, threefold_current,
+      fivefold_repetition, and random_000000 through random_000007, with their
+      recorded root_fen and complete history_uci. Corpus seed is
+      0x0000000054444641 and checksum is
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77.
+    action: >-
+      Replay each committed history from root_fen using the approved legal move
+      adapter on a fresh replay Position. Before any terminal legal generation,
+      require its public placement/side to match fen and compare aligned InCheck.
+      Separately import the row's final fen into a fresh equivalent Position,
+      generate its legal moves terminally into a fresh list, and compare the
+      populated-prefix logical set with the row. Observe neither Position after
+      its terminal GenerateLegalMoves call.
+    expected: >-
+      Exact final placement/side, set, and check equality for all 11 committed
+      history/random rows, with no ordering or multiplicity assertion. No
+      uncommitted 10000-position corpus is claimed by this record.
+    oracle:
+      type: corpus
+      id: oracle_cases-v1-committed/history+random
+      provenance: committed profile checksum and recorded root/history for each named row
+      independence_argument: replay targets and logical move sets are frozen offline, not generated by TDFA
+    diagnostics: *diag_move_set
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-COLOUR, M-LEGAL-PIN, M-LEGAL-EVASION, M-EP-KING-SAFETY, M-MIRROR]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-001
+    snapshot: *snapshot
+    title: Compact perft corpus format checksum and complete row ingestion
+    status: DESIGNED
+    contracts: []
+    symbols: [test fixture loader for tests/data/oracle_perft.tsv]
+    categories: [positive, negative, boundary, regression]
+    setup: Exact UTF-8 bytes of tests/data/oracle_perft.tsv.
+    action: >-
+      Strictly parse comments/header/TSV, recompute scoped SHA-256, validate
+      positive depth and unsigned-64 node syntax, and group every row by case id.
+    expected: >-
+      Checksum 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789;
+      six positions; depths 1,2,3 exactly once per position; 18 total rows; no
+      duplicate case-depth key and no silently ignored final row.
+    oracle:
+      type: corpus
+      id: oracle_perft-v1-committed
+      provenance: embedded metadata and scoped SHA-256
+      independence_argument: loader integrity does not execute TDFA
+    diagnostics: >-
+      Report path, physical line, case-depth key, expected/actual checksum/count,
+      offending token, duplicates, and missing/extra key sets.
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-PARSER, M-PERFT-WIDTH]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-002
+    snapshot: *snapshot
+    title: Differential perft for all 18 compact corpus rows
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+    categories: [positive, boundary, differential, regression]
+    setup: All 18 rows of tests/data/oracle_perft.tsv after T-PERFT-001 succeeds.
+    action: >-
+      Do not recurse yet. Deduplicating to logical tuples discards the TDFA Move
+      required by MakeMove, while selecting or reconstructing one representative
+      silently chooses an unapproved encoding/UCI adapter. Raw traversal is the
+      separately blocked alternative in T-PERFT-010.
+    expected: >-
+      BLOCKED: after a reverse adapter or duplicate-free raw traversal contract
+      is approved, require exact node equality for start, kiwipete,
+      perft_endgame, perft_promotions, perft_castling, and perft_tactics at each
+      depth 1..3, consume all 18 keys, and restore root placement/side. The
+      corpus values are frozen, but no TDFA perft result is asserted yet.
+    oracle:
+      type: corpus
+      id: oracle_perft-v1-committed
+      provenance: data checksum 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+      independence_argument: fixed node counts and test-owned recursion do not call legacy perft helpers
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-BASE, M-PERFT-RECURSE, M-STATE-LEAK, M-UNMAKE-SPECIAL]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-003
+    snapshot: *snapshot
+    title: EPD suite checksum parser cardinality and depth completeness
+    status: DESIGNED
+    contracts: []
+    symbols: [test fixture loader for perftsuite.epd]
+    categories: [positive, negative, boundary, exhaustive, regression]
+    setup: Exact bytes of perftsuite.epd at SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07.
+    action: >-
+      Parse every nonblank line as six-field FEN followed by semicolon-delimited
+      Dn unsigned counts; reject duplicate depth tags within a row and unknown
+      trailing content; retain physical line as stable row id; aggregate both
+      physical rows and unique FEN/expectation tuples in U64. Permit only the
+      byte-identical duplicate at physical lines 60 and 63.
+    expected: >-
+      Exactly 126 physical rows, 125 unique positions, 755 physical expectations,
+      and 749 unique expectations. Lines 60 and 63 are the one permitted exact
+      duplicate: 6KQ/8/8/8/8/8/8/7k b - - 0 1 with D1=2 D2=36 D3=143
+      D4=3637 D5=14893 D6=391507. Physical totals are D1=1408 D2=21134
+      D3=486175 D4=12225539 D5=382938880 D6=4387232996; unique totals are
+      D1=1406 D2=21098 D3=486032 D4=12221902 D5=382923987 D6=4386841489.
+      Kiwipete alone lacks D6; every applicable final D6 field is consumed.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1
+      provenance: exact local whole-file SHA-256; upstream provenance not recorded
+      independence_argument: byte/cardinality assertions do not execute TDFA
+    diagnostics: >-
+      Report whole-file checksum, physical line, FEN, field index/tag, duplicate
+      keys, depth histograms, expected/actual totals, and unconsumed suffix.
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-PARSER, M-PERFT-WIDTH]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-004
+    snapshot: *snapshot
+    title: EPD smoke D1 for 126 physical rows and 125 unique positions
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [positive, exhaustive, differential, regression]
+    setup: All 126 physical D1 rows, deduplicated to 125 unique FEN/expectation tuples after T-PERFT-003.
+    action: Do not run logical-set perft until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, require exact equality for 125 unique
+      executions and all 126 physical mappings; unique aggregate 1406, physical
+      aggregate 1408, and unchanged root placement/side.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1/D1
+      provenance: whole-file SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      independence_argument: frozen EPD node values are not produced by TDFA
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-BASE, M-PERFT-PARSER, M-STATE-LEAK]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-005
+    snapshot: *snapshot
+    title: EPD presubmit D2-D3 for 126 physical rows and 125 unique positions
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [positive, exhaustive, differential, regression]
+    setup: >-
+      All physical D2/D3 fields (252 physical keys), deduplicated to 250 unique
+      FEN/depth/expectation tuples.
+    action: Do not run logical-set perft until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, require exact equality for 125 unique
+      positions and all 126 physical rows at each depth; unique aggregates
+      D2=21098 and D3=486032; physical aggregates D2=21134 and D3=486175;
+      unchanged root placement/side.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1/D2-D3
+      provenance: whole-file SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      independence_argument: frozen EPD node values are not produced by TDFA
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-RECURSE, M-LEGAL-PIN, M-LEGAL-EVASION, M-UNMAKE-SPECIAL]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-006
+    snapshot: *snapshot
+    title: EPD nightly D4 for 126 physical rows and 125 unique positions
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [positive, exhaustive, differential, regression]
+    setup: All 126 physical D4 fields, deduplicated to 125 unique tuples.
+    action: Do not run logical-set perft until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, require exact equality for every
+      mapping, unique aggregate 12221902, physical aggregate 12225539, complete
+      coverage, and unchanged root placement/side.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1/D4
+      provenance: whole-file SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      independence_argument: frozen EPD node values are independent of TDFA
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-RECURSE, M-STATE-LEAK, M-UNMAKE-SPECIAL, M-PERFT-PARSER]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-007
+    snapshot: *snapshot
+    title: EPD extended D5 for 126 physical rows and 125 unique positions
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [positive, exhaustive, differential, regression]
+    setup: >-
+      All 126 physical D5 fields, deduplicated to 125 unique tuples; scheduled
+      outside routine presubmit.
+    action: Do not run logical-set perft until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, require exact equality for every
+      mapping, unique aggregate 382923987, physical aggregate 382938880,
+      complete coverage, and unchanged root placement/side.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1/D5
+      provenance: whole-file SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      independence_argument: frozen EPD node values are independent of TDFA
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-RECURSE, M-UNMAKE-SPECIAL, M-PERFT-WIDTH]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-008
+    snapshot: *snapshot
+    title: Optional exhaustive EPD D6 tier for every available expectation
+    status: BLOCKED
+    contracts: [C-GEN-004, C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [positive, exhaustive, differential, regression]
+    setup: >-
+      The 125 physical EPD rows containing D6, deduplicated to 124 unique tuples.
+      Kiwipete is intentionally absent because its source row ends at D5. This
+      tier is opt-in/scheduled and not a routine <=15-minute gate.
+    action: Do not run logical-set perft until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, require exact equality for 124 unique
+      executions and 125 physical mappings; unique aggregate 4386841489 and
+      physical aggregate 4387232996 (both exceed unsigned 32-bit range); no
+      invented Kiwipete expectation; unchanged root placement/side.
+    oracle:
+      type: corpus
+      id: perftsuite-epd-sha256-v1/D6
+      provenance: whole-file SHA-256 363e5205dfff3205fc50b376fb1770f9156464456282372c8c0a0e5b45a0bf07
+      independence_argument: source values and explicit availability mask are independent of TDFA
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-RECURSE, M-PERFT-PARSER, M-PERFT-WIDTH, M-UNMAKE-SPECIAL]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-009
+    snapshot: *snapshot
+    title: Perft divide conservation and state restoration at every root
+    status: BLOCKED
+    contracts: [C-GEN-005, C-GEN-006]
+    symbols:
+      - MoveGen::GenerateLegalMoves
+      - Position::MakeMove
+      - Position::UnmakeMove
+    categories: [state-transition, metamorphic, differential, regression]
+    setup: >-
+      Every compact-corpus root and every unique EPD root in the running tier;
+      capture root placement/side and deduplicated logical legal set.
+    action: >-
+      Do not choose or reconstruct a TDFA Move for each distinct logical root
+      child until the traversal adapter gate in T-PERFT-010 is approved.
+    expected: >-
+      BLOCKED: once the gate is approved, the divide sum must equal the unique
+      row node count; every distinct root move has one entry; every child restores
+      root placement/side before the next. Raw multiplicity and metadata/history
+      restoration remain outside this record.
+    oracle:
+      type: metamorphic
+      id: oracle/perft-divide-conservation-v1
+      provenance: arithmetic partition of the frozen perft total plus captured root identity
+      independence_argument: conservation and identity do not depend on production move ordering
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-PERFT-RECURSE, M-STATE-LEAK, M-ORACLE-ORDER]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+  - id: T-PERFT-010
+    snapshot: *snapshot
+    title: Perft traversal Move selection and raw MoveList multiplicity
+    status: BLOCKED
+    contracts: [C-GEN-006, C-GEN-007]
+    symbols:
+      - template<Colour colour_to_move> void MoveGen::GenerateLegalMoves(Position*, MoveList*)
+      - void Position::MakeMove(Move)
+      - void Position::UnmakeMove(Move)
+      - void Moves::DecodeMove(Move, Sq*, Sq*, MoveType*)
+      - Move UTIL::UciToMove(std::string_view, Position const&)
+    categories: [boundary, differential, regression]
+    setup: >-
+      Candidate roots are all 18 compact perft rows and the unique EPD D1-D3
+      tuples. Record two possible traversal designs: traverse every raw MoveList
+      entry after duplicate/capacity semantics are approved, or deduplicate to
+      logical tuples and reconstruct a canonical Move through a separately
+      approved position-aware UCI adapter.
+    action: >-
+      Do not run either traversal. Raw recursion awaits D-GEN-001/D-MOV-002;
+      logical-set recursion awaits approval of exact valid Move projection and
+      reverse construction under D-MOV-001/D-MOV-003. In particular, do not keep
+      an arbitrary first duplicate or synthesize encoding bits in the test.
+    expected: >-
+      BLOCKED: no TDFA perft count is asserted until at least one complete
+      traversal route is contractual. Corpus ingestion and all frozen node
+      values remain covered independently by T-PERFT-001/T-PERFT-003.
+    oracle:
+      type: corpus
+      id: owner-decision/perft-move-traversal-adapter+perft-corpora
+      provenance: decision ledger and the two frozen perft corpora
+      independence_argument: contract approval must define whether raw entries are a legal perft traversal domain
+    diagnostics: *diag_blocked
+    private_access: *public_only
+    implementation: {files: [], test_names: []}
+    mutants: [M-GEN-DUPLICATE, M-PERFT-RECURSE, M-GEN-SOURCE]
+    blocking_decisions: [D-GEN-001, D-MOV-001, D-MOV-002, D-MOV-003]
+    author: *author
+    reviewers: []
+    findings: []
+
+coverage:
+  - contract: C-GEN-001
+    required_categories: [positive, negative, boundary, exhaustive, metamorphic, differential]
+    tests: [T-GEO-001, T-GEO-002, T-GEO-003, T-GEO-004, T-GEN-001, T-GEN-002, T-LEGAL-005]
+    gaps: [raw invalid indices and occupancy preconditions await D-GEN-002; exact numeric Sq and U64 layouts remain excluded by C-BB-006]
+  - contract: C-GEN-002
+    required_categories: [positive, negative, boundary, exhaustive, metamorphic, differential]
+    tests: [T-ATK-001, T-ATK-002, T-ATK-003, T-ATK-004, T-LEGAL-005, T-RULE-007, T-ORACLE-002, T-ORACLE-003]
+    gaps: [T-ATK-004 retains exact disputed attack-map membership under D-GEN-003; DESIGNED equality uses the consensus mask while InCheck stays exact and unmasked; numeric Sq/U64 layouts remain excluded]
+  - contract: C-GEN-003
+    required_categories: [positive, negative, boundary, differential]
+    tests: [T-GEN-003, T-LEGAL-001, T-LEGAL-005, T-RULE-001, T-RULE-003, T-RULE-006]
+    gaps: [append order duplicate and capacity semantics isolated in blocked T-GEN-004]
+  - contract: C-GEN-004
+    required_categories: [positive, negative, boundary, exhaustive, state-transition, metamorphic, differential, regression]
+    tests: [T-LEGAL-001, T-LEGAL-002, T-LEGAL-003, T-LEGAL-004, T-LEGAL-005, T-RULE-001, T-RULE-002, T-RULE-003, T-RULE-004, T-RULE-006, T-RULE-007, T-STATE-002, T-ORACLE-002, T-ORACLE-003, T-PERFT-002, T-PERFT-004, T-PERFT-005, T-PERFT-006, T-PERFT-007, T-PERFT-008]
+    gaps: [malformed and template-mismatch behavior isolated in blocked T-GEN-005; recursive perft traversal awaits T-PERFT-010]
+  - contract: C-GEN-005
+    required_categories: [state-transition, metamorphic, regression]
+    tests: [T-STATE-001, T-STATE-002, T-ORACLE-003, T-PERFT-002, T-PERFT-004, T-PERFT-005, T-PERFT-006, T-PERFT-007, T-PERFT-008, T-PERFT-009]
+    gaps: [raw hash cache hidden-history and nested-unmake lifecycle remain isolated in blocked T-STATE-003; recursive perft traversal awaits T-PERFT-010]
+  - contract: C-GEN-006
+    required_categories: [positive, boundary, exhaustive, differential, regression]
+    tests: [T-PERFT-002, T-PERFT-004, T-PERFT-005, T-PERFT-006, T-PERFT-007, T-PERFT-008, T-PERFT-009, T-PERFT-010]
+    gaps: [EPD upstream provenance is absent; D6 is optional; all TDFA perft traversal is blocked pending an approved raw-list or logical-to-Move route in T-PERFT-010]
+  - contract: C-GEN-007
+    required_categories: [positive, negative, boundary, state-transition]
+    tests: [T-GEN-004, T-PERFT-010]
+    gaps: [C-MOV-011/C-MOV-012 cover only fresh populated-prefix observation; nonfresh mutation ordering multiplicity capacity overflow and raw traversal remain blocked]
+  - contract: C-GEN-008
+    required_categories: [negative, boundary]
+    tests: [T-GEN-005, T-RULE-005]
+    gaps: [blocked by D-GEN-002 D-GEN-004 D-GEN-005 and Position validity decisions]
+  - contract: C-RULE-001
+    required_categories: [positive, negative, boundary, state-transition, differential]
+    tests: [T-GEN-002, T-GEN-003, T-LEGAL-005, T-RULE-001, T-RULE-002, T-RULE-003, T-RULE-004, T-RULE-005, T-RULE-006, T-STATE-002]
+    gaps: [inconsistent castling-state behavior isolated in blocked T-RULE-005]
+  - contract: C-RULE-002
+    required_categories: [positive, negative, boundary, differential]
+    tests: [T-RULE-007]
+    gaps: [application-level terminal reporting remains part of D-RULE-001]
+  - contract: C-RULE-003
+    required_categories: [positive, negative, boundary, state-transition, differential]
+    tests: [T-RULE-008]
+    gaps: [blocked by D-RULE-001 and absence of an assigned observable boundary]
+  - contract: C-GEN-009
+    required_categories: [boundary, state-transition, regression]
+    tests: [T-STATE-003]
+    gaps: [blocked by D-POS-002 D-POS-003 D-POS-005 and D-POS-007]
+
+catalogue_gaps:
+  - id: G-ORACLE-001
+    severity: MEDIUM
+    description: >-
+      oracle_cases.tsv commits 8 reproducible random_walk rows and 3 history rows,
+      all covered by T-ORACLE-003. A larger 10000-position artifact does not
+      exist and is not claimed by this catalogue.
+    closure: Generate, checksum, commit, and independently review a larger corpus before expanding T-ORACLE-003.
+  - id: G-ORACLE-002
+    severity: MEDIUM
+    description: perftsuite.epd has an exact local checksum but no recorded upstream provenance.
+    closure: Record and review an authoritative source without changing expectations merely because TDFA differs.
+  - id: G-CONTRACT-001
+    severity: BLOCKER
+    description: >-
+      Local C-GEN/C-RULE references are not approved cards and contracts_version
+      remains 0; DESIGNED records must not advance to EXPECTATION_FROZEN until
+      their relevant cards are approved under the contract-card schema.
+    closure: Resolve listed decisions, approve versioned cards with two independent reviewers, and update traceability.

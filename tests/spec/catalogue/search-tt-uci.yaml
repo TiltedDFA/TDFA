@@ -1,0 +1,2287 @@
+schema_version: 1
+snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+contracts_version: 1
+catalogue: search-tt-uci
+status: BLOCKED_PENDING_CONTRACT_APPROVAL_AND_DECISIONS
+authoring_stage: blind-test-design
+
+information_firewall:
+  permitted_inputs:
+    - tests/README.md
+    - tests/spec/**
+    - tests/data/**
+  implementation_inspected: false
+  product_executed: false
+  external_material_fetched: true
+  external_authorities:
+    - id: uci-april-2006
+      url: https://backscattering.de/chess/uci/
+      accessed: 2026-07-21
+    - id: fide-laws-2023
+      url: https://handbook.fide.com/chapter/E012023
+      accessed: 2026-07-21
+
+status_policy:
+  DESIGNED: >-
+    The asserted observation follows from UCI/FEN/FIDE, ordinary C++ object
+    lifetime, a frozen corpus, or an implementation-independent algebra. It
+    does not select an answer to an open owner decision.
+  BLOCKED: >-
+    The setup, action, diagnostic record, and mutant classes are frozen, but no
+    disputed score, time, replacement, failure, or recovery result is guessed.
+    The named decisions and every cited contract card must be approved before
+    the expectation can be frozen.
+  subprocess_watchdog: >-
+    A watchdog is a harness liveness ceiling, not a TimeManager oracle or a
+    promise about search polling latency. A watchdog failure cannot be used to
+    infer the missing internal time contract.
+
+scope_notes:
+  - >-
+    C++ visibility does not make an API application-facing. Direct utility
+    calls below are valid-domain supporting-symbol checks; application behavior
+    is observed only through the child process.
+  - >-
+    Invalid UTIL::UciToMove, UTIL::MoveToStr, RemoveWhiteSpace, SplitFen, and
+    IsDigit policies remain under D-MOV-001, D-MOV-003, and D-UTIL-001. This
+    catalogue does not duplicate or override the blocked invalid-input designs
+    in the primitives-position catalogue.
+  - >-
+    No test uses sleep duration as a semantic expectation. Deterministic search
+    cancellation remains blocked unless an approved clock or polling seam is
+    made available without changing release behavior.
+
+contract_context:
+  - id: C-EVAL-001
+    status: UNRESOLVED
+    symbols:
+      - Eval::CountMaterial<Colour>
+      - Eval::Mobility<Colour>
+      - Eval::PawnProgress<Colour>
+    authority: owner decision D-EVAL-001 plus an independently specified arithmetic model
+    decisions: [D-EVAL-001]
+  - id: C-EVAL-002
+    status: UNRESOLVED
+    symbols:
+      - Eval::Evaluate
+      - Eval::POS_INF
+      - Eval::NEG_INF
+      - Eval::OUT_OF_TIME
+    authority: owner decision D-EVAL-001
+    decisions: [D-EVAL-001]
+  - id: C-EVAL-003
+    status: UNRESOLVED
+    symbols:
+      - Eval::UpdateData
+      - Eval::is_middle_game
+      - Eval::Evaluate
+    authority: owner decision D-EVAL-001
+    decisions: [D-EVAL-001]
+
+  - id: C-SRCH-001
+    status: UNRESOLVED
+    symbols: [Search::GoSearch, Search::FindBestMove]
+    authority: owner decisions D-SRCH-001 and D-EVAL-001 plus FIDE terminal positions
+    decisions: [D-EVAL-001, D-SRCH-001, D-RULE-001]
+  - id: C-SRCH-002
+    status: UNRESOLVED
+    symbols: [Search::GoSearch, Search::FindBestMove, TransposTable]
+    authority: semantic transparency of a cache plus owner decision D-SRCH-002
+    decisions: [D-SRCH-002, D-TT-006]
+  - id: C-SRCH-003
+    status: UNRESOLVED
+    symbols: [Search::GoSearch, Search::FindBestMove, Position]
+    authority: owner decision D-SRCH-003 and reversible-position state model
+    decisions: [D-SRCH-003]
+  - id: C-SRCH-004
+    status: UNRESOLVED
+    symbols: [Search::GoSearch, Search::FindBestMove, TimeManager]
+    authority: owner decision D-SRCH-004
+    decisions: [D-SRCH-003, D-SRCH-004]
+
+  - id: C-TIME-001
+    status: UNRESOLVED
+    symbols: [TimeManager::SetOptions, TimeManager::StartTiming, TimeManager::OutOfTime]
+    authority: owner decision D-TIME-001
+    decisions: [D-TIME-001]
+  - id: C-TIME-002
+    status: UNRESOLVED
+    symbols: ["Timer<T>::Timer", "Timer<T>::~Timer"]
+    authority: owner decision D-TIME-002
+    decisions: [D-TIME-002]
+
+  - id: C-TT-001
+    status: UNRESOLVED
+    symbols: [TransposTable::TransposTable, TransposTable::~TransposTable, TransposTable::GetNumElems]
+    authority: ordinary C++ object lifetime and deterministic observer algebra
+    decisions: [D-TT-001, D-TT-005]
+  - id: C-TT-002
+    status: UNRESOLVED
+    symbols: [TransposTable::Resize, TransposTable::GetNumElems]
+    authority: owner decision D-TT-001
+    decisions: [D-TT-001]
+  - id: C-TT-003
+    status: UNRESOLVED
+    symbols: [TransposTable::Store, TransposTable::Probe, HashEntry]
+    authority: finite partial-map algebra plus owner decisions D-TT-002 and D-TT-003
+    decisions: [D-TT-001, D-TT-002, D-TT-003]
+  - id: C-TT-004
+    status: UNRESOLVED
+    symbols: [TransposTable::Store, TransposTable::Probe, TransposTable::Clear]
+    authority: finite partial-map invalidation algebra plus owner decisions D-TT-002 and D-TT-003
+    decisions: [D-TT-002, D-TT-003]
+  - id: C-TT-005
+    status: UNRESOLVED
+    symbols: [TransposTable, HashEntry]
+    authority: owner decisions D-TT-004 and D-TT-005
+    decisions: [D-TT-004, D-TT-005]
+  - id: C-TT-006
+    status: UNRESOLVED
+    symbols: [TransposTable::Store, TransposTable::Probe, Search::GoSearch]
+    authority: FIDE history-sensitive draw state plus owner decision D-TT-006
+    decisions: [D-TT-006, D-RULE-001]
+
+  - id: C-APP-001
+    status: APPROVED
+    symbols: [handshaken idle quit, ordinary process exit]
+    authority: UCI quit command and ordinary pipe/process lifecycle
+    decisions: []
+  - id: C-APP-002
+    status: APPROVED
+    symbols: [uci]
+    authority: "UCI protocol: https://backscattering.de/chess/uci/"
+    decisions: []
+  - id: C-APP-003
+    status: APPROVED
+    symbols: [isready]
+    authority: "UCI protocol: https://backscattering.de/chess/uci/"
+    decisions: []
+  - id: C-APP-004
+    status: UNRESOLVED
+    symbols: [setoption name Hash value N]
+    authority: UCI option grammar plus owner decision D-UCI-006
+    decisions: [D-UCI-002, D-UCI-006]
+  - id: C-APP-005
+    status: UNRESOLVED
+    symbols: [ucinewgame]
+    authority: UCI protocol plus owner decision defining discarded engine state
+    decisions: [D-UCI-005, D-TT-006]
+  - id: C-APP-006
+    status: TENTATIVE
+    symbols: [position startpos moves]
+    authority: UCI position grammar and FIDE legal move transitions
+    decisions: [D-UCI-003, D-UCI-004]
+  - id: C-APP-007
+    status: UNRESOLVED
+    symbols: [position fen moves]
+    authority: UCI position grammar, six-field FEN, and owner recovery decisions
+    decisions: [D-UCI-003, D-UCI-004]
+  - id: C-APP-008
+    status: UNRESOLVED
+    symbols: [go]
+    authority: UCI go grammar plus owner decisions for supported limits and draw scope
+    decisions: [D-UCI-001, D-RULE-001]
+  - id: C-APP-009
+    status: UNRESOLVED
+    symbols: [stop]
+    authority: UCI stop command plus owner decision D-UCI-005
+    decisions: [D-UCI-005]
+  - id: C-APP-010
+    status: APPROVED
+    symbols: [application emitted moves]
+    authority: UCI long-algebraic move notation on the valid legal-move domain
+    decisions: []
+  - id: C-APP-011
+    status: UNRESOLVED
+    symbols: [malformed application input]
+    authority: application memory safety plus owner decision D-UCI-003
+    decisions: [D-UCI-003, D-UCI-004]
+  - id: C-APP-012
+    status: UNRESOLVED
+    symbols: [stdout, stderr]
+    authority: UCI protocol channel plus owner decision D-UCI-008
+    decisions: [D-UCI-008]
+  - id: C-APP-013
+    status: UNRESOLVED
+    symbols: [bench, print]
+    authority: owner decision D-UCI-007
+    decisions: [D-UCI-007, D-DBG-001]
+
+  - id: C-APP-014
+    status: APPROVED
+    symbols: [UCI ASCII whitespace and line framing, blank input, unknown application input]
+    authority: UCI arbitrary-whitespace line-ending and unknown-token rules
+    decisions: []
+
+  - id: C-APP-015
+    status: APPROVED
+    symbols: [protocol-framed stdout]
+    authority: UCI engine-to-GUI line grammar
+    decisions: []
+
+  - id: C-UTL-001
+    status: TENTATIVE
+    symbols: [UTIL::Square, UTIL::PromotionChar, UTIL::MoveToStr, UTIL::UciToMove]
+    authority: internal valid-domain conversion contract plus UCI long-algebraic notation
+    decisions: [D-MOV-001, D-MOV-003]
+
+oracle_definitions:
+  semantic-root-snapshot-v1:
+    fields:
+      - labelled piece map over a1 through h8
+      - white and black occupancy sets
+      - per-piece-type occupancy sets
+      - active colour
+      - castling-right set by named rights, never assumed numeric values
+      - en-passant target label or absent marker
+      - halfmove and fullmove counters
+      - explicit HashCurrentPostion return, compared only for equal restored states
+    hidden_history_probe: >-
+      After an allegedly preserving operation, apply and unapply each selected
+      legal root move and compare every prefix/restoration with a fresh
+      independently constructed reference position. This exercises hidden
+      reversible-state damage without private access.
+    exclusions:
+      - No absent en-passant square sentinel is guessed.
+      - No distinct-state hash inequality is required.
+      - No move ordering is observed.
+
+  reference-evaluation-v1:
+    state: BLOCKED_PENDING_D_EVAL_001
+    planned_inputs:
+      - semantic position decoded independently from FEN
+      - piece counts by named colour and named PieceType
+      - independently generated legal mobility sets if mobility is defined as legal
+      - independently generated pseudo-legal mobility sets if that definition is selected
+      - pawn ranks expressed as standard square labels
+    freeze_rule: >-
+      After D-EVAL-001 is decided, record every component formula, named
+      coefficient, phase boundary, perspective transform, numeric range, and
+      exceptional score before compiling a TDFA test. No current TDFA value may
+      be copied into the oracle.
+    prohibited_shortcuts:
+      - Treating Eval::Evaluate output as its own expected leaf value.
+      - Inferring a sign convention from a passing example.
+      - Assuming conventional material values whose dossier initializers are omitted.
+
+  reference-negamax-v1:
+    state: BLOCKED_PENDING_D_EVAL_001_AND_D_SRCH_001
+    tree_source: >-
+      A test-owned chess transition model enumerates legal children as unordered
+      sets. It must be checked against the frozen legal-move/perft corpus but may
+      not call TDFA generation, make/unmake, evaluation, search, or TT code.
+    recurrence: >-
+      Once perspective is approved, transform every leaf and terminal score to
+      side-to-move coordinates and compute N(p,d)=max over legal moves m of
+      -N(child(p,m),d-1). If the approved evaluation is fixed-colour rather than
+      side-to-move, freeze the explicit sign transform first. Alpha/beta is an
+      optimization of this complete recurrence, not the oracle.
+    terminal_rule: >-
+      Checkmate, stalemate, draw, mate-distance, and depth-zero leaf values are
+      parameters that remain absent until D-SRCH-001 and D-RULE-001 are decided.
+    best_move_rule: >-
+      The model returns the complete unordered argmax set. A selected root move
+      is compared by membership unless an owner decision explicitly makes tie
+      ordering contractual.
+    fixture_freeze: >-
+      Freeze root FEN, depth, complete leaf/terminal table, expected root score,
+      and argmax set in an offline fixture before the test is compiled or TDFA
+      is run.
+
+  tt-abstract-match-v1:
+    definition: >-
+      match(k,p) means p is non-null, valid to inspect under the approved pointer
+      lifetime, and p->key_ equals k. This predicate permits a Probe miss policy
+      that returns either null or a nonmatching slot until D-TT-003 chooses one.
+    algebra_after_unblocking:
+      - A successful single store into an empty positive-capacity table creates one matching association.
+      - Repeating the identical store is idempotent at the abstract-map level.
+      - Clear removes every matching association and repeating Clear is idempotent.
+      - Store and Clear do not change capacity unless the approved contract says otherwise.
+    caution: >-
+      Collision keys, replacement winners, field overwrite rules, and pointer
+      survival are deliberately not derived from a presumed modulo index.
+
+  uci-process-transcript-v1:
+    input_events:
+      - START starts one fresh child with redirected binary stdin/stdout/stderr.
+      - >-
+        SEND records exact bytes and writes them asynchronously. The write must
+        complete before its absolute write deadline; a blocked pipe cannot block
+        the watchdog thread.
+      - CLOSE_STDIN closes the write end exactly once.
+      - WAIT_LINE reads stdout and stderr concurrently without imposing cross-channel ordering.
+      - WAIT_EXIT waits without abandoning pipe drains.
+    output_record: >-
+      Record event ordinal, channel, exact escaped bytes and hex, line-ending
+      kind, parsed leading UCI token when any, child exit code/status, watchdog
+      phase, and monotonic elapsed milliseconds. Assertions use event order and
+      tokens; timestamps are diagnostic except for the harness ceiling.
+    line_handling: >-
+      Accept LF, CRLF, and lone CR as line framing while retaining raw bytes.
+      Do not trim bytes other than protocol-permitted surrounding ASCII
+      whitespace when tokenizing a command or response.
+    launch_record:
+      - exact executable path and SHA-256
+      - complete argument vector
+      - working directory
+      - inherited environment allowlist and locale
+      - operating system, architecture, build mode, and instrumentation
+      - exact child process identity and Windows Job Object or equivalent process-group identity
+    isolation: >-
+      Start every child in a kill-on-close Windows Job Object or equivalent
+      process group before delivering input. Hard cleanup targets only that
+      recorded group, waits for its members to exit, and then drains/closes all
+      three pipes without relying on parent/child PID enumeration after launch.
+    watchdogs:
+      stdin_write_ceiling_ms: 10000
+      response_ceiling_ms: 10000
+      graceful_exit_ceiling_ms: 10000
+      total_case_ceiling_ms: 60000
+      hard_cleanup_ceiling_ms: 30000
+      interpretation: >-
+        Every ceiling is an absolute monotonic deadline anchored to the event
+        that starts its named phase and is never extended by partial output.
+        Write, response, exit, and total-case expiry report distinct liveness
+        failures. At hard cleanup the harness terminates only the recorded child
+        process group and reports cleanup separately; no watchdog result is a
+        TimeManager correctness result.
+    resource_limits:
+      max_stdin_event_bytes: 1048576
+      max_stdout_retained_bytes: 8388608
+      max_stderr_retained_bytes: 8388608
+      max_line_bytes: 1048576
+      max_output_events: 100000
+      overflow_handling: >-
+        Crossing a limit is a harness resource failure. Async drains continue to
+        count and discard excess bytes until exit or the absolute phase deadline,
+        so a full pipe cannot deadlock cleanup. Retain the prefix, final bounded
+        suffix, total byte/event counts, and the first overflow ordinal.
+    protocol_line_classes:
+      handshake: [id, option, uciok]
+      readiness: [readyok]
+      search: [info, bestmove]
+
+  malformed-application-bytes-v1:
+    isolation: one fresh subprocess per case
+    case_count: 9
+    scope_note: >-
+      The long-unknown-token row is standard-ignored input semantically and is
+      retained here only as an adversarial resource-safety case; T-APP-017 fixes
+      ordinary unknown-token liveness and T-APP-018 fixes state preservation.
+    cases:
+      - {id: position-empty, bytes_text: "position LF", bytes_hex: "70 6f 73 69 74 69 6f 6e 0a"}
+      - {id: position-startpos-bad-move, bytes_text: "position startpos moves e2e9 LF", bytes_hex: "70 6f 73 69 74 69 6f 6e 20 73 74 61 72 74 70 6f 73 20 6d 6f 76 65 73 20 65 32 65 39 0a"}
+      - {id: position-short-fen, bytes_text: "position fen 8/8/8/8/8/8/8/8 w LF", bytes_hex: "70 6f 73 69 74 69 6f 6e 20 66 65 6e 20 38 2f 38 2f 38 2f 38 2f 38 2f 38 2f 38 2f 38 20 77 0a"}
+      - {id: setoption-empty, bytes_text: "setoption LF", bytes_hex: "73 65 74 6f 70 74 69 6f 6e 0a"}
+      - {id: setoption-hash-nonnumeric, bytes_text: "setoption name Hash value NaN LF", bytes_hex: "73 65 74 6f 70 74 69 6f 6e 20 6e 61 6d 65 20 48 61 73 68 20 76 61 6c 75 65 20 4e 61 4e 0a"}
+      - {id: go-depth-empty, bytes_text: "go depth LF", bytes_hex: "67 6f 20 64 65 70 74 68 0a"}
+      - {id: embedded-nul, bytes_text: "isready NUL suffix LF", bytes_hex: "69 73 72 65 61 64 79 20 00 20 73 75 66 66 69 78 0a"}
+      - {id: invalid-utf8, bytes_text: "FF FE LF", bytes_hex: "ff fe 0a"}
+      - {id: long-unknown-token, bytes_text: "65536 ASCII x bytes then LF", generator: "repeat byte 0x78 exactly 65536 times, append 0x0a"}
+
+  uci-standard-input-variants-v1:
+    authority: UCI arbitrary-whitespace, line-framing, and unknown-token rules
+    case_count: 8
+    cases:
+      - {id: blank-lf, bytes_text: "LF", bytes_hex: "0a", expected_class: ignored-empty-line}
+      - {id: spaces-lf, bytes_text: "SP HT SP LF", bytes_hex: "20 09 20 0a", expected_class: ignored-empty-line}
+      - {id: unknown-lf, bytes_text: "x-unknown LF", bytes_hex: "78 2d 75 6e 6b 6e 6f 77 6e 0a", expected_class: ignored-unknown-command}
+      - {id: uci-extra-lf, bytes_text: "uci SP extra LF", bytes_hex: "75 63 69 20 65 78 74 72 61 0a", expected_class: uci-with-ignored-token}
+      - {id: uci-padded-lf, bytes_text: "HT SP uci SP HT LF", bytes_hex: "09 20 75 63 69 20 09 0a", expected_class: uci}
+      - {id: uci-cr, bytes_text: "uci CR", bytes_hex: "75 63 69 0d", expected_class: uci}
+      - {id: uci-crlf, bytes_text: "uci CR LF", bytes_hex: "75 63 69 0d 0a", expected_class: uci}
+      - {id: isready-padded, bytes_text: "SP HT isready HT SP LF", bytes_hex: "20 09 69 73 72 65 61 64 79 09 20 0a", expected_class: isready}
+
+  distinguishable-position-fixture-v1:
+    state: BLOCKED_UNTIL_FROZEN
+    required_fields:
+      - case_id
+      - exact position command bytes
+      - independently decoded final FEN and complete history
+      - sorted complete legal UCI set
+      - every stale or partial candidate state and its sorted complete legal set
+      - proof that one observable transcript distinguishes the intended state from every candidate
+      - fixture SHA-256
+    acceptance_rule: >-
+      A single unconstrained bestmove is not a state oracle when legal sets
+      overlap. Freeze either a singleton intended legal set disjoint from every
+      candidate, or an approved searchmoves/other protocol observation with an
+      independent proof of distinction. Until such rows exist, application
+      position-commit assertions remain BLOCKED.
+
+cross_catalogue_dependencies:
+  - id: primitives-valid-uci-roundtrip
+    catalogue: tests/spec/catalogue/primitives-position.yaml
+    catalogue_sha256: 3eb65363f3ba15bb448d583b98c6c399a68fa10eca5a58dc42fb56055eb35193
+    checksum_scope: exact file bytes
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    tests: [T-MOV-004]
+    reason: >-
+      The primitives-position catalogue already specifies valid corpus parsing
+      and rendering. T-APP-015 below adds an explicit trace for the utility
+      bridge and may share one eventual C++ test body; expectations must not
+      diverge.
+  - id: primitives-invalid-uci-policy
+    catalogue: tests/spec/catalogue/primitives-position.yaml
+    catalogue_sha256: 3eb65363f3ba15bb448d583b98c6c399a68fa10eca5a58dc42fb56055eb35193
+    checksum_scope: exact file bytes
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    tests: [T-MOV-008, T-LEX-003, T-FEN-004]
+    reason: >-
+      Internal invalid notation and lexical failure mechanisms remain blocked.
+      Process-level malformed-input safety does not choose those mechanisms.
+  - id: position-restoration
+    catalogue: tests/spec/catalogue/primitives-position.yaml
+    catalogue_sha256: 3eb65363f3ba15bb448d583b98c6c399a68fa10eca5a58dc42fb56055eb35193
+    checksum_scope: exact file bytes
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    tests: [T-STA-001, T-STA-004, T-HSH-002]
+    reason: >-
+      Search root-restoration checks reuse the independently defined semantic
+      snapshot and legal transition model, not TDFA make/unmake as an oracle.
+cross_catalogue_validation_rule: >-
+  Before implementing or running a dependent test, recompute the exact catalogue
+  SHA-256, require the snapshot and every named test id to match, and hard-stop
+  on any difference until this dependency record is reviewed.
+
+tests:
+  - id: T-EVAL-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Evaluation components await an approved independent arithmetic model
+    status: BLOCKED
+    contracts: [C-EVAL-001]
+    symbols: [Eval::CountMaterial<Colour>, Eval::Mobility<Colour>, Eval::PawnProgress<Colour>]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Planned roots are every curated row in oracle_cases.tsv plus paired FENs
+      that swap colours, mirror files, and vary one named piece or pawn rank at
+      a time. Freeze all pairs and expected component values only after
+      D-EVAL-001 defines perspective, component formulas, and coefficient use.
+    action: >-
+      For both template colours, compare every component with
+      reference-evaluation-v1; enumerate the independent move set used by any
+      approved mobility definition.
+    expected: >-
+      BLOCKED: material sign, own-versus-opponent scope, legal-versus-pseudo
+      mobility, pawn direction/rank bonuses, phase dependence, and score range
+      are not frozen.
+    oracle:
+      type: reference-model
+      id: oracle/reference-evaluation-v1/components
+      provenance: D-EVAL-001, oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77, and an offline FEN/arithmetic fixture to be frozen after that decision
+      independence_argument: No TDFA evaluator, generator, constant initializer, or observed score supplies an expected value.
+    diagnostics: >-
+      Report case/pair id, FEN, template colour, decoded piece counts and pawn
+      labels, independent mobility set, every formula term, expected/actual
+      score in decimal and hex, and first differing term.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - colour-count-swapped
+      - missing-piece-class
+      - material-sign-inverted
+      - pseudo-versus-legal-mobility
+      - pawn-rank-off-by-one
+      - black-pawn-direction-reversed
+      - phase-threshold-shift
+      - score-overflow
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-EVAL-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Aggregate evaluation perspective, symmetry, sentinels, and range await policy
+    status: BLOCKED
+    contracts: [C-EVAL-002]
+    symbols: [Eval::Evaluate, Eval::POS_INF, Eval::NEG_INF, Eval::OUT_OF_TIME]
+    categories: [positive, negative, boundary, metamorphic, differential]
+    setup: >-
+      Planned cases include all legal corpus positions; colour-swapped board and
+      side-to-move pairs; file mirrors; equal-material asymmetric-mobility pairs;
+      and positions near each approved score bound. Terminal positions are kept
+      separate from ordinary leaf evaluation.
+    action: >-
+      Evaluate independent constructions of each semantic state twice and apply
+      only the symmetry transforms selected by D-EVAL-001.
+    expected: >-
+      BLOCKED: side-to-move versus fixed-colour perspective, which transforms
+      negate or preserve a score, whether terminal positions are accepted, the
+      valid numeric interval, and whether OUT_OF_TIME can be an evaluation value
+      are undecided.
+    oracle:
+      type: reference-model
+      id: oracle/reference-evaluation-v1/aggregate
+      provenance: D-EVAL-001 and frozen transformed-position pairs
+      independence_argument: Symmetries are activated only when their mathematical preconditions and score transform are owner-approved.
+    diagnostics: >-
+      Report transform id, both FENs and semantic snapshots, side to move,
+      expected transform equation, every component term, actual scores and
+      named sentinel values, and repeat ordinal.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - wrong-score-perspective
+      - side-to-move-omitted
+      - mirror-asymmetry
+      - accidental-terminal-evaluation
+      - out-of-time-aliases-valid-score
+      - narrow-score-wraparound
+      - address-dependent-evaluation
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-EVAL-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: UpdateData, global phase state, determinism, and position preservation await policy
+    status: BLOCKED
+    contracts: [C-EVAL-003]
+    symbols: [Eval::UpdateData, Eval::Evaluate, Eval::is_middle_game]
+    categories: [state-transition, metamorphic, regression]
+    setup: >-
+      Planned A/B/A sequences use independently constructed opening, sparse
+      middlegame, and endgame FENs. Capture semantic-root-snapshot-v1 before and
+      after every UpdateData and Evaluate call.
+    action: >-
+      Interleave UpdateData(A), Evaluate(A), UpdateData(B), Evaluate(B), then
+      reconstruct and evaluate A; repeat in the opposite order and in separate
+      test processes.
+    expected: >-
+      BLOCKED: whether callers must invoke UpdateData, whether Evaluate invokes
+      it, whether is_middle_game is contractual global state, and what
+      cross-position/order determinism is promised are unresolved. Position
+      mutation is likewise not frozen from a purpose line alone.
+    oracle:
+      type: metamorphic
+      id: oracle/evaluation-state-lifecycle-pending-v1
+      provenance: D-EVAL-001
+      independence_argument: The test does not assume that exposed global state is intentional state, an implementation detail, or thread-safe.
+    diagnostics: >-
+      Report process id, A/B order, FEN, phase flag before/after each call,
+      semantic snapshot diff, score sequence, and reconstruction path.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - stale-global-phase
+      - evaluate-requires-unadvertised-update
+      - order-dependent-score
+      - evaluate-mutates-position
+      - update-writes-wrong-phase
+      - cross-test-state-leak
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Complete shallow search matches a frozen reference-negamax tree
+    status: BLOCKED
+    contracts: [C-EVAL-001, C-EVAL-002, C-SRCH-001]
+    symbols: [Search::GoSearch]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Planned roots are start, kiwipete, perft_endgame,
+      perft_promotions, perft_castling, and perft_tactics at approved depths
+      0 through 3. For each root/depth, freeze the complete independent legal
+      tree, leaf and terminal scores, expected root score, and unordered argmax
+      set according to reference-negamax-v1. After the exact score is frozen,
+      add full-window and narrow windows immediately below, at, and above it;
+      record the approved fail-hard or fail-soft result for each window.
+    action: >-
+      Invoke GoSearch with an owner-approved non-expiring time control, TT mode,
+      each frozen window, and depth; compare its return with the independently
+      frozen exact score or approved bound result.
+    expected: >-
+      BLOCKED: depth zero, leaf evaluation, terminal/mate scores, score
+      perspective, window return convention, and usable TT/time setup are open.
+      The recurrence and fixtures are ready but contain no guessed score.
+    oracle:
+      type: reference-model
+      id: oracle/reference-negamax-v1
+      provenance: independent chess tree, oracle_perft.tsv data_sha256 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789, D-EVAL-001, D-SRCH-001, and D-RULE-001
+      independence_argument: The complete model uses no TDFA move generation, position transition, evaluation, search, or transposition-table result.
+    diagnostics: >-
+      Report fixture checksum, root FEN/depth/window/control mode, expected and
+      actual score, complete principal counterexample path, each leaf formula,
+      legal-child set differences, and first recurrence node that disagrees.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - negation-omitted
+      - alpha-beta-window-not-negated
+      - maximizes-opponent-score
+      - depth-off-by-one
+      - skips-first-child
+      - skips-last-child
+      - returns-last-child
+      - fail-high-wrong-value
+      - fail-low-wrong-value
+      - terminal-treated-as-leaf
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Terminal roots distinguish checkmate, stalemate, and history-sensitive draws
+    status: BLOCKED
+    contracts: [C-SRCH-001, C-SRCH-004]
+    symbols: [Search::GoSearch, Search::FindBestMove]
+    categories: [boundary, state-transition, differential]
+    setup: >-
+      Exact oracle_cases.tsv rows checkmate, stalemate,
+      insufficient_material, seventyfive_move_rule, fivefold_repetition,
+      fifty_move_clock_100, threefold_current, and threefold_prospective. Preserve
+      root_fen and history_uci for history rows; do not infer history from FEN.
+    action: >-
+      At each approved search depth and control mode, call GoSearch and
+      FindBestMove, independently confirm the legal root set, and capture the
+      full root snapshot before and after.
+    expected: >-
+      BLOCKED: mate-distance values, stalemate/draw values, claimable versus
+      automatic draw handling, insufficient-material scope, and the internal
+      no-move sentinel are undecided. FindBestMove also exposes no deterministic
+      depth control, so its per-depth portion remains blocked by D-SRCH-004.
+      Checkmate and stalemate both have an empty legal root set but must not be
+      conflated once terminal scores are approved.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/terminal-roots
+      provenance: "tests/data/oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 plus D-SRCH-001 and D-RULE-001"
+      independence_argument: Terminal classifications and histories are frozen independently; no TDFA return fixes a missing score convention.
+    diagnostics: >-
+      Report case_id, root/history/FEN, all draw and terminal flags, independent
+      legal set, depth/control, returned score and move bits, named sentinels,
+      and before/after snapshot.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - stalemate-scored-as-mate
+      - mate-scored-as-draw
+      - ignores-root-terminal
+      - returns-uninitialized-root-move
+      - treats-claimable-as-automatic
+      - ignores-history-draw
+      - halfmove-boundary-off-by-one
+      - mate-distance-wrong-ply
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Best root move belongs to the independent reference argmax set
+    status: BLOCKED
+    contracts: [C-SRCH-001, C-SRCH-004]
+    symbols: [Search::FindBestMove]
+    categories: [positive, boundary, differential, metamorphic]
+    setup: >-
+      Use the nonterminal reference-negamax-v1 fixtures from T-SRCH-001 and add
+      at least one frozen unique-best root and one frozen multiway-tie root for
+      each approved depth. Every candidate move is stored in canonical UCI text.
+    action: >-
+      Call FindBestMove under approved deterministic controls, render the result,
+      require it to be legal, and compare it with the complete unordered argmax
+      set.
+    expected: >-
+      BLOCKED until score and control semantics are approved. Once unblocked, a
+      unique optimum must be selected exactly; on a tie any argmax member is
+      accepted unless D-SRCH-001 explicitly fixes tie ordering. The declaration
+      exposes no per-depth FindBestMove control, so depth-specific comparison is
+      additionally blocked by D-SRCH-004 or an approved release-neutral seam.
+    oracle:
+      type: reference-model
+      id: oracle/reference-negamax-v1/argmax
+      provenance: independently frozen complete shallow tree
+      independence_argument: Expected candidates are obtained by complete independent enumeration and are compared as a set, never by TDFA ordering.
+    diagnostics: >-
+      Report root/depth/control, complete legal set, each move score, sorted
+      argmax set, returned move bits/text, and whether the failure is illegality
+      or suboptimality.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - first-legal-always
+      - last-legal-always
+      - chooses-minimum
+      - stale-best-from-child
+      - illegal-root-move
+      - tie-order-overconstraint-in-test
+      - promotion-suffix-lost
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Completed and terminal searches restore the complete root state
+    status: BLOCKED
+    contracts: [C-SRCH-003]
+    symbols: [Search::GoSearch, Search::FindBestMove, Position]
+    categories: [positive, boundary, state-transition, metamorphic, regression]
+    setup: >-
+      Roots start, kiwipete, perft_promotions, en_passant_legal, checkmate, and
+      stalemate from oracle_cases.tsv. Capture semantic-root-snapshot-v1 and an
+      explicitly recomputed root key. Select legal post-search probe moves from
+      each nonterminal row.
+    action: >-
+      Run each search operation to ordinary completion under approved controls;
+      compare root snapshots and recomputed keys; then execute the hidden-history
+      probe against fresh reference children and restore again.
+    expected: >-
+      BLOCKED: D-SRCH-003 has not yet promised the exact restoration set.
+      Planned expectation is byte-independent semantic equality of every public
+      root field plus equivalent subsequent make/unmake behavior, not equality
+      of object addresses or unused storage.
+    oracle:
+      type: metamorphic
+      id: oracle/semantic-root-snapshot-v1/search-restoration
+      provenance: reversible-position algebra plus D-SRCH-003
+      independence_argument: Expected state is captured before search and cross-checked with independently constructed child states, not produced by search.
+    diagnostics: >-
+      Report operation, root case/FEN, depth/control/TT mode, before/after field
+      diff, explicit keys, returned score/move, post-search probe move and child
+      diff, and restoration ordinal.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - root-left-at-last-child
+      - turn-not-restored
+      - castling-not-restored
+      - en-passant-not-restored
+      - counters-not-restored
+      - captured-piece-history-leak
+      - hash-not-restored
+      - terminal-path-mutates-root
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Timeout polling, result convention, and root restoration require a deterministic seam
+    status: BLOCKED
+    contracts: [C-SRCH-003, C-SRCH-004, C-TIME-001]
+    symbols: [Search::GoSearch, Search::FindBestMove, TimeManager::OutOfTime]
+    categories: [boundary, state-transition, regression]
+    setup: >-
+      Planned deterministic schedules return false for exactly k approved poll
+      calls and true thereafter, for k in 0, 1, 2, every root-child boundary,
+      and one deep interior node. Roots are start, kiwipete, and
+      perft_promotions. No wall-clock sleep is permitted.
+    action: >-
+      With an approved fake-clock or poll seam, trigger cancellation at each
+      schedule, capture return and best-move state, and perform the complete
+      T-SRCH-004 restoration probe.
+    expected: >-
+      BLOCKED: polling points, equality-at-deadline, OUT_OF_TIME propagation,
+      completed-iteration guarantees, best-move fallback, and restoration on
+      each exit are undecided; the current declaration exposes no deterministic
+      seam.
+    oracle:
+      type: reference-model
+      id: oracle/deterministic-search-cancellation-pending-v1
+      provenance: D-SRCH-003, D-SRCH-004, and D-TIME-001
+      independence_argument: Call-count schedules replace nondeterministic elapsed time and do not emulate production polling placement.
+    diagnostics: >-
+      Report schedule id/k, actual poll trace with node/path labels, cancellation
+      event, returned score/move, completed iteration if any, before/after root
+      diff, and seam provenance.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - timeout-never-polled
+      - timeout-polled-only-at-root
+      - timeout-one-node-late
+      - timeout-sentinel-negated
+      - partial-iteration-move-published
+      - timeout-exit-skips-unmake
+      - timeout-return-uninitialized
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-SRCH-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: TT use is semantically transparent to deterministic complete search
+    status: BLOCKED
+    contracts: [C-SRCH-002, C-SRCH-004, C-TT-006]
+    symbols: [Search::GoSearch, Search::FindBestMove, TransposTable]
+    categories: [positive, state-transition, metamorphic, differential]
+    setup: >-
+      For every frozen reference-negamax root/depth, plan cold TT, prewarmed TT,
+      cleared TT, and approved disabled-TT modes. Add the history-distinct equal-
+      board pairs threefold_current versus start and fifty-move clock variants.
+    action: >-
+      Search each semantic/history state in every approved TT mode and compare
+      score and argmax membership with the independent reference; never compare
+      node count or move ordering unless separately contracted.
+    expected: >-
+      BLOCKED: null/disabled behavior, permitted TT effects, replacement,
+      draw-context identity, and whether histories may share entries are open.
+      A cache must not be assumed semantically transparent until those decisions
+      define its key context and admissible bounds. FindBestMove comparisons at
+      a named depth also require the deterministic control selected by D-SRCH-004.
+    oracle:
+      type: metamorphic
+      id: oracle/reference-negamax-v1/tt-transparency-pending
+      provenance: D-SRCH-002, D-TT-006, and independent history-aware roots
+      independence_argument: The expected search result comes from the cache-free reference model, not a TDFA run with another TT mode.
+    diagnostics: >-
+      Report root/history/depth, TT lifecycle trace and capacity, every injected
+      entry by symbolic fields, returned score/move, reference argmax, and
+      semantic root diff.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - tt-null-dereference
+      - stale-entry-changes-score
+      - wrong-bound-cutoff
+      - ignores-entry-depth
+      - history-insensitive-draw-reuse
+      - uncleared-table-leak
+      - tt-best-move-illegal-at-root
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TIME-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Time allowance arithmetic and initial state await owner policy
+    status: BLOCKED
+    contracts: [C-TIME-001]
+    symbols: [TimeManager::SetOptions, TimeManager::StartTiming, TimeManager::OutOfTime]
+    categories: [positive, negative, boundary, metamorphic]
+    setup: >-
+      Planned exact unsigned pairs are (0,0), (0,1), (1,0), (1,1),
+      (999,0), (1000,0), (1001,0), (60000,0), (60000,1000),
+      (U64_MAX,0), (U64_MAX,U64_MAX), and scale-related nonoverflowing pairs.
+      Include fresh state, SetOptions-only, StartTiming-only, and repeated starts.
+    action: >-
+      Once D-TIME-001 defines units and allowance formula, compute the deadline
+      using checked integer arithmetic and an approved fake steady clock; observe
+      every lifecycle point.
+    expected: >-
+      BLOCKED: initial state, units, allowance policy, increment treatment,
+      zero-time behavior, overflow handling, and repeated-call semantics are not
+      approved.
+    oracle:
+      type: reference-model
+      id: oracle/time-allowance-arithmetic-pending-v1
+      provenance: D-TIME-001 and checked arbitrary-precision arithmetic after formula approval
+      independence_argument: No deadline or allowance is inferred from elapsed TDFA behavior.
+    diagnostics: >-
+      Report lifecycle trace, exact input integers/units, arbitrary-precision
+      formula terms, overflow branch, fake-clock now/deadline, and every
+      OutOfTime result.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - time-increment-swapped
+      - integer-overflow-wrap
+      - zero-treated-as-infinite
+      - increment-ignored
+      - stale-options
+      - repeated-start-adds-old-deadline
+      - wrong-time-unit
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TIME-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Deadline boundary is tested with a controllable monotonic clock, never sleeps
+    status: BLOCKED
+    contracts: [C-TIME-001, C-SRCH-004]
+    symbols: [TimeManager::StartTiming, TimeManager::OutOfTime]
+    categories: [boundary, state-transition, exhaustive]
+    setup: >-
+      For each approved nonoverflowing allowance A, freeze fake-clock readings
+      start-1, start, deadline-1 tick, deadline, deadline+1 tick, and a backwards
+      wall-clock jump while the monotonic clock is unchanged.
+    action: >-
+      Inject the approved clock seam, start once at the exact start tick, set
+      each reading without sleeping, and call OutOfTime repeatedly at that tick.
+    expected: >-
+      BLOCKED: clock type/tick units and whether equality at the deadline is out
+      of time are D-TIME-001 decisions, and no injectable clock exists in the
+      frozen declaration.
+    oracle:
+      type: exhaustive-model
+      id: oracle/deadline-ordering-pending-v1
+      provenance: total ordering around an owner-approved deadline predicate
+      independence_argument: Boundary readings are exact injected integers, independent of scheduler speed and host clock resolution.
+    diagnostics: >-
+      Report clock seam/version, start/deadline/current ticks, comparison
+      relation, call ordinal, expected predicate after approval, actual result,
+      and any wall/monotonic divergence.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - deadline-equality-off-by-one
+      - system-clock-used
+      - deadline-before-start
+      - nondeterministic-repeat-read
+      - signed-tick-wrap
+      - elapsed-versus-absolute-confusion
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TIME-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Timer duration units, pointer publication, and output channel await policy
+    status: BLOCKED
+    contracts: [C-TIME-002]
+    symbols: ["Timer<T>::Timer", "Timer<T>::~Timer"]
+    categories: [positive, negative, boundary, state-transition]
+    setup: >-
+      Planned cases instantiate each supported chrono duration T with default
+      construction and with a valid U64 destination initially holding a canary;
+      use an injected clock if timing is contractual. Candidate null pointer,
+      nested scope, copy/move, exception-unwind, and maximal duration cases are
+      not executed without preconditions.
+    action: >-
+      Enter and leave exact lexical scopes, capture destination and both output
+      channels, and exercise only lifecycle operations approved by D-TIME-002.
+    expected: >-
+      BLOCKED: whether Timer publishes through the pointer, prints, its units and
+      rounding, null/copy/move preconditions, diagnostic formatting, and whether
+      any output is contractual are unresolved.
+    oracle:
+      type: standard
+      id: oracle/timer-policy-pending-v1
+      provenance: D-TIME-002
+      independence_argument: Chrono arithmetic can verify a selected unit after approval; current formatting or duration is never sampled as an oracle.
+    diagnostics: >-
+      Report T, construction mode, injected start/end ticks, pointer address
+      class and before/after value, stdout/stderr raw bytes, unwind path, and
+      sanitizer status.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - wrong-duration-cast
+      - publishes-at-construction
+      - pointer-not-written
+      - writes-null
+      - prints-wrong-channel
+      - double-publication-after-copy
+      - negative-duration-wrap
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Fresh table capacity observation is stable over a valid object lifetime
+    status: BLOCKED
+    contracts: [C-TT-001]
+    symbols: [TransposTable::TransposTable, TransposTable::GetNumElems, TransposTable::~TransposTable]
+    categories: [positive, boundary, metamorphic]
+    setup: >-
+      After C-TT-001 is approved, construct 64 fresh tables one at a time in
+      isolated lexical scopes under a frozen uninitialized-read detector plus
+      address/leak instrumentation named in the implementation record. For each
+      object, call GetNumElems four times without any intervening operation. Do
+      not assume that the fresh capacity is zero or positive and do not copy or
+      move the object.
+    action: >-
+      Require all four observations for one object to be equal, destroy the
+      object exactly once, and continue to the next scope under the ordinary
+      memory-safety instrumentation selected by integration.
+    expected: >-
+      BLOCKED pending an approved C-TT-001 card and an exact supported
+      uninitialized-read instrumentation configuration. Once unblocked, repeated
+      observation without mutation returns one stable size_t value and the valid
+      constructed object can be destroyed once without a memory-safety failure.
+      No exact capacity, allocation, copyability, or cross-object equality is asserted.
+    oracle:
+      type: metamorphic
+      id: oracle/fresh-capacity-observer-v1
+      provenance: deterministic observer algebra and ordinary C++ lifetime for a successfully constructed object
+      independence_argument: The first value is used only for within-object equality; no implementation-specific size becomes a fixed expected literal.
+    diagnostics: >-
+      Report object ordinal, all four capacities, construction/destruction
+      completion events, exception if any, allocator/sanitizer record, process
+      exit status, and build configuration.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - uninitialized-capacity
+      - capacity-observer-mutates
+      - destructor-invalid-free
+      - destructor-double-free
+      - constructor-leaves-invalid-lifetime
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Resize units, rounding, bounds, zero, and allocation failure await policy
+    status: BLOCKED
+    contracts: [C-TT-002]
+    symbols: [TransposTable::Resize, TransposTable::GetNumElems]
+    categories: [positive, negative, boundary, metamorphic]
+    setup: >-
+      Planned requested sizes are 0, 1, 2, 3, 7, 8, 15, 16, 17, 63, 64, 65,
+      1024, SIZE_MAX divided by sizeof(HashEntry), and SIZE_MAX. Each case runs
+      in a fresh resource-limited subprocess. Requests above a frozen safe host
+      allocation cap are arithmetic-only cases and must trigger an approved
+      allocator failure before any reservation or commit; no genuinely huge host
+      allocation is attempted.
+    action: >-
+      Once D-TT-001 fixes units and checked formula, compare GetNumElems with an
+      arbitrary-precision reference and repeat each Resize; probe object validity
+      after success and approved injected failure. Record the OS job memory cap,
+      safe allocation cap, and proof that oversized cases reached no allocator.
+    expected: >-
+      BLOCKED: size unit, rounding direction, minimum, maximum, zero behavior,
+      overflow, exception/return/failure policy, and strong/basic failure
+      guarantee are not defined.
+    oracle:
+      type: reference-model
+      id: oracle/tt-capacity-arithmetic-pending-v1
+      provenance: D-TT-001 and sizeof(HashEntry)==16 from the frozen declaration
+      independence_argument: Capacity arithmetic will be frozen from approved units and checked integers, not observed allocations.
+    diagnostics: >-
+      Report requested value/unit, reference numerator/divisor/remainder,
+      expected rounding after approval, actual capacity, allocation-injection
+      event, exception/exit status, and pre/post object-validity trace.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - bytes-versus-mebibytes
+      - decimal-versus-binary-megabyte
+      - rounding-up-overbudget
+      - zero-modulo
+      - multiplication-overflow
+      - stale-capacity-after-failure
+      - leaked-old-allocation
+      - same-size-resize-corrupts
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Single-entry Store Probe Clear algebra awaits capacity and miss policy
+    status: BLOCKED
+    contracts: [C-TT-002, C-TT-003, C-TT-004]
+    symbols: [TransposTable::Resize, TransposTable::Store, TransposTable::Probe, TransposTable::Clear, TransposTable::GetNumElems, HashEntry]
+    categories: [positive, boundary, state-transition, metamorphic]
+    setup: >-
+      After an approved Resize yielding positive capacity, use keys
+      0x0000000000000000, 0x0000000000000001, and
+      0xffffffffffffffff separately in fresh cleared tables. For each key,
+      cross-product scores {-32768,-1,0,1,32767}, moves {0,1,65535}, depths
+      {0,1,255}, and all named BoundType enumerators, subject to approved valid
+      field ranges.
+    action: >-
+      Probe before store, store one tuple, probe the same key repeatedly, repeat
+      the identical store, Clear twice, and probe again. Compare associations
+      with tt-abstract-match-v1 and check capacity around every operation.
+    expected: >-
+      BLOCKED: valid score/move/depth domains, positive sizing, precise miss
+      representation, field preservation, and whether Store may decline an
+      association are unresolved. The abstract algebra is frozen but not yet
+      executable.
+    oracle:
+      type: exhaustive-model
+      id: oracle/tt-abstract-match-v1/single-entry
+      provenance: finite partial-map algebra plus D-TT-001, D-TT-002, and D-TT-003
+      independence_argument: Expected fields come from the test input tuple; no table slot or indexing formula generates them.
+    diagnostics: >-
+      Report operation ordinal, capacity, key and all tuple fields by name/raw
+      value, pointer nullness/address class, inspected entry fields while valid,
+      abstract match result, and first algebra violation.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - store-drops-key
+      - store-field-permutation
+      - bound-not-stored
+      - depth-truncated
+      - probe-mutates-entry
+      - clear-skips-entry
+      - clear-changes-capacity
+      - clear-not-idempotent
+      - key-zero-treated-as-empty
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Same-key overwrite and collision replacement matrices await policy
+    status: BLOCKED
+    contracts: [C-TT-003, C-TT-004]
+    symbols: [TransposTable::Store, TransposTable::Probe, HashEntry]
+    categories: [boundary, state-transition, exhaustive, metamorphic]
+    setup: >-
+      Planned same-key pairs vary old/new depth less/equal/greater, all old/new
+      bounds, score, and best move. Planned collision sets are generated only
+      after the approved table-index algebra or a test-visible collision
+      construction is specified; no modulo indexing is presumed.
+    action: >-
+      Store old then new tuples, probe both logical keys, reverse insertion
+      order, repeat with interleaved probes and Clear, and compare only with the
+      owner-approved replacement matrix.
+    expected: >-
+      BLOCKED: replacement priority, same-key refresh, collision winner,
+      associativity, key-mismatch guarantee, and miss representation are exactly
+      D-TT-002/D-TT-003 decisions.
+    oracle:
+      type: exhaustive-model
+      id: oracle/tt-replacement-matrix-pending-v1
+      provenance: D-TT-002 and D-TT-003
+      independence_argument: No observed winner, presumed direct mapping, or common engine depth-preference is treated as authority.
+    diagnostics: >-
+      Report capacity, independently justified collision proof, complete
+      old/new tuples, insertion/probe trace, pointer/match results, approved
+      matrix cell, and final abstract associations.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - always-replace
+      - never-replace
+      - shallower-replaces-deeper
+      - wrong-bound-priority
+      - same-key-fields-partially-stale
+      - collision-key-not-checked
+      - insertion-order-dependent-outside-policy
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Probe pointer lifetime ownership copy move and threading await policy
+    status: BLOCKED
+    contracts: [C-TT-005]
+    symbols: [TransposTable, TransposTable::Probe, TransposTable::Store, TransposTable::Clear, TransposTable::Resize]
+    categories: [negative, boundary, state-transition]
+    setup: >-
+      Candidate lifetime points are before and after unrelated Store, same-slot
+      Store, Clear, same-size Resize, different-size Resize, table move, table
+      copy, and destruction. Candidate two-thread schedules cover disjoint and
+      colliding keys with barriers around each operation.
+    action: >-
+      Do not dereference a retained pointer, instantiate copy/move, or call any
+      operation concurrently until D-TT-004/D-TT-005 define validity and
+      supported operations.
+    expected: >-
+      BLOCKED: pointer invalidation, copyability, movability, ownership transfer,
+      moved-from state, and thread-safety are unstated. Compile-time traits are
+      not treated as intentional policy until approved.
+    oracle:
+      type: standard
+      id: oracle/tt-lifetime-ownership-pending-v1
+      provenance: D-TT-004 and D-TT-005
+      independence_argument: C++ only diagnoses behavior after the class contract establishes which operations and pointer uses are valid.
+    diagnostics: >-
+      When unblocked, report exact lifecycle/schedule event trace, pointer
+      acquisition/invalidation point, type traits, object identities, capacity,
+      sanitizer/race detector output, and process exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - dangling-pointer-survives-resize
+      - shallow-copy-double-free
+      - move-leaves-two-owners
+      - clear-invalidates-undocumented
+      - store-invalidates-undocumented
+      - data-race-on-entry
+      - data-race-on-resize
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-TT-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Draw-sensitive histories cannot be reused unsafely through the TT
+    status: BLOCKED
+    contracts: [C-TT-006, C-SRCH-002]
+    symbols: [TransposTable::Store, TransposTable::Probe, Search::GoSearch]
+    categories: [boundary, state-transition, metamorphic, differential]
+    setup: >-
+      Reconstruct start, threefold_current, threefold_prospective, and
+      fivefold_repetition from root_fen plus history_uci. Add identical placement,
+      side, castling, and en-passant states with halfmove 0, 99, 100, 149, and
+      150 where independently legal.
+    action: >-
+      Prewarm a table by searching one history/clock state, then search the
+      semantically similar paired state; reverse order and compare both with the
+      independent history-aware reference-negamax result.
+    expected: >-
+      BLOCKED: the required draw context, hash component set, permitted TT reuse,
+      and draw adjudication scope await D-TT-006 and D-RULE-001. No universal
+      requirement that distinct histories have distinct Zobrist keys is made.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/history-sensitive-tt-pending
+      provenance: "tests/data/oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 and D-TT-006"
+      independence_argument: Full histories and rule flags are fixture data; safe cache behavior is compared to an independent history-aware search model.
+    diagnostics: >-
+      Report both complete histories/FENs/rule flags, explicit keys without
+      assuming inequality, warm/cold order, TT operations, reference and actual
+      result, and first unsafe reuse path.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - repetition-history-ignored
+      - halfmove-clock-ignored
+      - automatic-and-claimable-draw-conflated
+      - stale-draw-score-reused
+      - prewarm-order-changes-result
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Canonical UCI handshake identifies the engine and terminates with uciok
+    status: EXPECTATION_FROZEN
+    contracts: [C-APP-001, C-APP-002]
+    symbols: [uci]
+    categories: [positive, protocol, state-transition]
+    setup: >-
+      Fresh child process under uci-process-transcript-v1. Exact input transcript
+      is START, SEND bytes 75 63 69 0a, then no further command until a complete
+      stdout line whose exact token is uciok is observed.
+    action: >-
+      Parse stdout lines from receipt of uci through the first uciok; retain but
+      do not semantically classify extra diagnostic lines because C-APP-012 is
+      unresolved. Then SEND quit LF and wait for exit.
+    expected: >-
+      Before exactly one terminating uciok, observe an id name line with a
+      nonempty value and an id author line with a nonempty value. Every option
+      line in that interval obeys UCI option framing. The final canonical idle
+      quit reaches ordinary process termination without a harness hard kill.
+      Exact identity text, option set/order/values, numeric exit code, exit
+      latency, and diagnostic-channel cleanliness are not asserted here.
+    oracle:
+      type: standard
+      id: oracle/uci-handshake-v1
+      provenance: "UCI protocol authority cited by tests/spec/contracts/application-standard.yaml"
+      independence_argument: Required tokens and ordering are protocol grammar, not copied from TDFA output.
+    diagnostics: >-
+      Emit the complete deterministic process record, parsed line class and
+      token fields, counts/ordinals of id/option/uciok, watchdog phase, exit
+      status, and exact offending bytes.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - missing-uciok
+      - uciok-before-identification
+      - duplicate-uciok
+      - empty-engine-name
+      - empty-author
+      - malformed-option-framing
+      - handshake-hangs
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b, blind-app-contract-review-d]
+    findings: []
+
+  - id: T-APP-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: isready produces one ordered readyok for every canonical request
+    status: EXPECTATION_FROZEN
+    contracts: [C-APP-001, C-APP-002, C-APP-003]
+    symbols: [uci, isready]
+    categories: [positive, protocol, state-transition, metamorphic]
+    setup: >-
+      Fresh child; complete T-APP-001 handshake. Then repeat exactly four times:
+      SEND bytes for isready LF and wait for the next stdout line whose complete
+      token is readyok. Finish with quit LF.
+    action: >-
+      Associate each readyok with the earliest unmatched isready by event order;
+      do not require silence between required lines and do not accept a readyok
+      emitted before its request.
+    expected: >-
+      Exactly one readyok follows each of the four requests before the response
+      watchdog. No request is merged or answered by a stale unsolicited token.
+      Repetition does not require or imply a position change. The final
+      canonical idle quit reaches ordinary process termination without a
+      harness hard kill; numeric exit code and exit latency are unspecified.
+    oracle:
+      type: standard
+      id: oracle/uci-isready-bijection-v1
+      provenance: "UCI protocol authority cited by tests/spec/contracts/application-standard.yaml"
+      independence_argument: The one-request/one-response event relation is protocol-defined and independent of engine state.
+    diagnostics: >-
+      Report complete transcript, request/response ordinals and matching,
+      unmatched tokens, raw bytes, watchdog phase, and child exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - readyok-missing
+      - readyok-before-request
+      - repeated-isready-coalesced
+      - duplicate-readyok
+      - readiness-mutates-session
+      - readiness-hangs
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b, blind-app-contract-review-d]
+    findings: []
+
+  - id: T-APP-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Idle quit is standard; idle stdin EOF termination awaits lifecycle policy
+    status: BLOCKED
+    contracts: [C-APP-001]
+    symbols: [process start, quit, stdin EOF]
+    categories: [positive, boundary, protocol, state-transition, regression]
+    setup: >-
+      Planned families are eight sequential fresh children with START, SEND quit
+      LF, WAIT_EXIT; eight with START, CLOSE_STDIN, WAIT_EXIT; and eight with a
+      completed UCI handshake, CLOSE_STDIN, WAIT_EXIT. Drain both output pipes in
+      every case. The EOF families are not executed as semantic assertions until
+      D-UCI-005 is approved.
+    action: >-
+      Once the relevant contract is approved, require each exact child to exit
+      before graceful_exit_ceiling_ms without a hard kill. Close all harness
+      handles after recording exit and verify no recorded child remains alive
+      before starting the next ordinal.
+    expected: >-
+      BLOCKED pending approval of C-APP-001 and D-UCI-005. UCI fixes prompt
+      handling of canonical quit, but it does not define stdin EOF. Do not freeze
+      normal-exit, final-output, or recovery semantics for either EOF family.
+      Once approved, no child may survive its case or consume a later case's pipes.
+    oracle:
+      type: standard
+      id: oracle/uci-idle-process-lifecycle-v1
+      provenance: C-APP-001 purpose, UCI quit, and ordinary EOF/process lifecycle
+      independence_argument: OS process identity and pipe closure establish exit without consulting TDFA state or output content.
+    diagnostics: >-
+      Report case family/ordinal, child process identity, exact input events,
+      pipe EOF events, output bytes, exit classification/code, watchdog/hard-kill
+      status, and remaining recorded child identities.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - quit-ignored
+      - eof-busy-loop
+      - eof-reuses-last-command
+      - stdin-close-deadlock
+      - child-outlives-session
+      - output-pipe-not-closed
+      - cross-session-static-loop-state
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Canonical valid position commands leave the command session responsive
+    status: BLOCKED
+    contracts: [C-APP-003, C-APP-006, C-APP-007]
+    symbols: [position startpos moves, position fen moves, isready]
+    categories: [positive, boundary, protocol, state-transition]
+    setup: >-
+      One fresh handshaken process per command: position startpos; position
+      startpos moves g1f3 g8f6 f3g1 f6g8; position fen followed by the exact
+      checkmate FEN; position fen followed by the exact kiwipete FEN; and
+      position fen followed by random_000003 root_fen plus its complete
+      history_uci. Append LF to each command.
+    action: >-
+      SEND the position command, then SEND isready LF, require the next matching
+      readyok, then SEND quit LF. This test makes no claim that readiness alone
+      proves the resulting chess state; state verification belongs to T-APP-005.
+    expected: >-
+      BLOCKED pending approval of C-APP-006/C-APP-007. Once approved, every
+      canonical syntactically valid position command completes command
+      processing without an abnormal process failure and the session answers
+      the following isready exactly once. No position output, commit atomicity,
+      or best move is asserted here.
+    oracle:
+      type: corpus
+      id: oracle/uci-valid-position-command-liveness-v1
+      provenance: "UCI/FEN grammar and tests/data/oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77"
+      independence_argument: Commands are formed from independently legal roots/histories; readiness is only a protocol liveness observation.
+    diagnostics: >-
+      Report case_id, exact root/FEN/history and command bytes, complete
+      transcript, readyok matching, exit/watchdog status, and explicitly label
+      the chess-state assertion as not exercised.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - valid-startpos-parser-crash
+      - valid-fen-parser-crash
+      - history-token-loop
+      - final-history-token-skipped-causes-handler-fault
+      - position-command-blocks-loop
+      - dangling-command-view
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b]
+    findings: []
+
+  - id: T-APP-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Supported finite go commands emit exactly one legal protocol bestmove
+    status: BLOCKED
+    contracts: [C-APP-006, C-APP-007, C-APP-008, C-APP-010]
+    symbols: [position startpos moves, position fen moves, go, application emitted moves]
+    categories: [positive, boundary, protocol, differential]
+    setup: >-
+      For every nonterminal oracle_cases.tsv row, form the canonical position
+      command from root_fen/history_uci when present or from fen otherwise.
+      Candidate finite controls are go depth 1, go depth 2, and go movetime
+      with an owner-approved value; use only controls selected by D-UCI-001.
+      Before the first search in each child, SEND isready LF and wait for its
+      matching readyok. Exact state/history assertions additionally require a
+      frozen distinguishable-position-fixture-v1 row.
+    action: >-
+      Complete handshake, SEND isready LF and wait for readyok, SEND position,
+      SEND isready LF and wait for its matching readyok, then SEND one approved
+      finite go command. Read through the first bestmove, validate its grammar
+      and membership in that row's frozen legal_uci set, then verify isready and quit.
+    expected: >-
+      BLOCKED: supported go tokens, finite-control interpretation, timeout
+      fallback, draw scope, and the distinguishable-state fixture are unresolved.
+      Legal-set membership alone does not prove that position/history was
+      applied when stale and intended legal sets overlap. Once unblocked, exactly one
+      bestmove line terminates the search and its primary move is a legal
+      lowercase long-algebraic token from the independent root set; ponder
+      grammar is checked only if supported.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/application-bestmove
+      provenance: "tests/data/oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 plus D-UCI-001"
+      independence_argument: Legal move membership comes from the frozen corpus and does not require any particular evaluation or tie ordering.
+    diagnostics: >-
+      Report case/root/history/FEN, control tokens, complete stdout/stderr event
+      record, all info and bestmove lines, parsed move/ponder tokens, sorted
+      legal set, watchdogs, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - missing-bestmove
+      - duplicate-bestmove
+      - illegal-bestmove
+      - stale-position-bestmove
+      - history-not-applied
+      - promotion-suffix-omitted
+      - malformed-ponder
+      - search-never-terminates
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Terminal checkmate and stalemate roots emit the UCI no-move token
+    status: BLOCKED
+    contracts: [C-APP-008, C-APP-010]
+    symbols: [position fen, go, application emitted moves]
+    categories: [boundary, protocol, differential]
+    setup: >-
+      Separate handshaken children for the exact checkmate and stalemate FENs
+      from oracle_cases.tsv. SEND position fen with the FEN, then an owner-
+      approved finite go command, and retain all output through bestmove. Before
+      the first go in each child, SEND isready LF and wait for readyok.
+    action: >-
+      Complete an initial isready/readyok barrier, SEND position, complete a
+      second isready/readyok barrier, then SEND the approved go. Independently
+      confirm each frozen legal_uci field is empty, parse the terminating
+      bestmove line, then send isready and quit.
+    expected: >-
+      BLOCKED pending approval of C-APP-008/C-APP-010 and a finite go token. UCI
+      independently fixes 0000 as the no-move application token; no internal
+      NULL_MOVE representation is assumed. Once unblocked, each empty-legal-set root emits exactly
+      bestmove 0000 as its one terminating search result. No mate/draw numeric
+      info score is asserted until D-SRCH-001/D-RULE-001 are decided. The test is
+      not executable until C-APP-008 has a supported finite control.
+    oracle:
+      type: standard
+      id: oracle/uci-terminal-no-move-v1
+      provenance: UCI no-move notation plus frozen checkmate/stalemate legal sets
+      independence_argument: Empty legal sets are independently frozen and 0000 is the application contract token, not an internal Move sentinel guess.
+    diagnostics: >-
+      Report terminal case/FEN/flags/legal set, chosen approved go command,
+      complete process record, every bestmove token, any info score text without
+      asserting it, readiness, watchdogs, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - terminal-search-hangs
+      - checkmate-returns-garbage-move
+      - stalemate-returns-garbage-move
+      - empty-bestmove-token
+      - internal-null-rendered-nonstandard
+      - duplicate-terminal-bestmove
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-007
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Malformed input corpus is memory-safe and cannot trap the subprocess at EOF
+    status: BLOCKED
+    contracts: [C-APP-001, C-APP-011]
+    symbols: [application command loop, malformed or unknown application input, stdin EOF]
+    categories: [negative, boundary, protocol, fuzz, regression]
+    setup: >-
+      For each malformed-application-bytes-v1 case, START a fresh child under an
+      exact approved memory-safety instrumentation configuration and the numeric
+      uci-process-transcript-v1 resource limits,
+      child, SEND exactly the listed bytes once, immediately CLOSE_STDIN, drain
+      both channels, and WAIT_EXIT. Do not combine cases or first establish chess
+      state.
+    action: >-
+      Classify memory-safety instrumentation, OS fault status, EOF liveness, and
+      resource bounds. Retain any rejection output but do not require text,
+      channel, continuation, state preservation, or a particular normal exit
+      code.
+    expected: >-
+      BLOCKED pending approval of C-APP-001/C-APP-011 and a named supported
+      instrumentation configuration. Once unblocked, no case causes an access violation, memory-safety sanitizer finding,
+      uncaught memory-corruption symptom, unbounded allocation, or post-EOF
+      infinite loop. The child reaches an exit or approved explicit rejection
+      before the graceful ceiling without hard cleanup. Semantic recovery and
+      atomicity remain T-APP-008, not this safety oracle.
+    oracle:
+      type: standard
+      id: oracle/malformed-process-safety-v1
+      provenance: C-APP-011 memory-safety requirement and C-APP-001 EOF lifecycle
+      independence_argument: The oracle recognizes external process/sanitizer outcomes and deliberately does not predict parser return values or messages.
+    diagnostics: >-
+      Report malformed case id/generator, exact sent bytes length/escaped/hex
+      with a bounded full attachment for the long case, peak observed resource
+      counters, complete output bytes, sanitizer/fault classification, pipe EOF,
+      watchdog/hard-kill status, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - empty-argument-index
+      - short-fen-field-index
+      - invalid-square-index
+      - numeric-parse-uncaught
+      - string-view-outlives-line
+      - embedded-nul-truncation-overread
+      - invalid-utf8-overread
+      - long-token-stack-overflow
+      - eof-loop-after-rejection
+      - unbounded-malformed-allocation
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-008
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Malformed-command recovery response and position atomicity await policy
+    status: BLOCKED
+    contracts: [C-APP-006, C-APP-007, C-APP-011]
+    symbols: [position, setoption, go, application command loop]
+    categories: [negative, boundary, protocol, state-transition, fuzz]
+    setup: >-
+      For every malformed-application-bytes-v1 state-affecting case, first
+      establish a distinct valid sentinel position. Planned transcript then
+      sends the malformed line, isready, and an approved finite go command whose
+      observation satisfies distinguishable-position-fixture-v1. No semantic
+      recovery assertion is implemented until that fixture row is frozen.
+    action: >-
+      Observe whether the process continues or exits, any response, readiness,
+      and the post-error chess state only after D-UCI-003/D-UCI-004 select a
+      recovery and commit rule.
+    expected: >-
+      BLOCKED: ignore-versus-error-versus-session-exit, error channel/text,
+      command casing, partial versus atomic position commit, and preservation of
+      option/search state are owner decisions. The distinguishing fixture is also
+      absent. UCI-standard unknown-token tolerance is tested separately and is
+      not an owner-selected malformed-input outcome. Memory safety remains
+      required independently by T-APP-007.
+    oracle:
+      type: reference-model
+      id: oracle/uci-malformed-recovery-pending-v1
+      provenance: D-UCI-003 and D-UCI-004
+      independence_argument: Distinguishing legal sets can verify an approved state rule, but no current parser behavior chooses that rule.
+    diagnostics: >-
+      When unblocked, report sentinel and every partial candidate FEN/history,
+      exact malformed bytes, full event transcript, selected recovery rule,
+      error output, readiness/exit, bestmove/legal sets, and commit classification.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - partial-position-commit
+      - stale-old-position-on-approved-reset
+      - malformed-history-prefix-committed
+      - unknown-command-mutates-state
+      - option-partially-applied
+      - error-response-wrong-channel
+      - parser-continues-after-approved-exit
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-009
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Hash option advertisement bounds rounding and repeated configuration await policy
+    status: BLOCKED
+    contracts: [C-APP-002, C-APP-004]
+    symbols: [uci, setoption name Hash value N]
+    categories: [positive, negative, boundary, protocol, state-transition]
+    setup: >-
+      Parse any Hash option advertisement from the handshake. Planned values are
+      advertised min, min+1, default, max-1, max, 0, max+1, decimal overflow,
+      negative, missing, and repeated settings; invalid cases wait for the
+      recovery policy.
+    action: >-
+      Once D-UCI-006 fixes units/bounds/rounding, require a grammar-consistent
+      advertisement, send each canonical valid setoption in a fresh session,
+      verify readiness, and use an approved observation to confirm effective
+      capacity without relying on private Uci fields.
+    expected: >-
+      BLOCKED: whether Hash is advertised, exact min/max/default, units, rounding,
+      invalid-value recovery, allocation failure, and externally observable
+      effective capacity are unresolved.
+    oracle:
+      type: standard
+      id: oracle/uci-hash-option-pending-v1
+      provenance: UCI spin-option grammar plus D-UCI-006 and D-TT-001
+      independence_argument: Numeric expectations will come from approved bounds/capacity arithmetic, never the current option line.
+    diagnostics: >-
+      Report full handshake option lines and parsed fields, value/transcript,
+      readiness, effective-capacity observation method, allocation/fault status,
+      selected rounding rule, and exit/watchdogs.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - hash-option-not-advertised
+      - malformed-spin-line
+      - min-default-max-inconsistent
+      - option-name-tokenization
+      - unit-mismatch
+      - boundary-rejected
+      - repeated-setting-stale
+      - resize-failure-corrupts-session
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b]
+    findings: []
+
+  - id: T-APP-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: ucinewgame discards exactly the approved cross-game state
+    status: BLOCKED
+    contracts: [C-APP-005, C-APP-008]
+    symbols: [ucinewgame, position, go]
+    categories: [positive, state-transition, metamorphic, differential]
+    setup: >-
+      Planned paired sessions search game A to prewarm history and TT, send
+      ucinewgame then isready, establish game B, and compare B with a fresh
+      process running B alone. Reverse A/B and include equal-board distinct-
+      history roots from T-TT-006.
+      Every fresh session completes an isready/readyok barrier before its first go.
+    action: >-
+      Compare only owner-approved observable search results and state after
+      D-UCI-005/D-TT-006 define what ucinewgame clears and D-UCI-001 supplies a
+      deterministic finite go control.
+    expected: >-
+      BLOCKED: TT, history, time, options, and position retention/reset behavior
+      is not defined. UCI also requires isready synchronization, which the
+      eventual transcript must retain.
+    oracle:
+      type: metamorphic
+      id: oracle/uci-newgame-isolation-pending-v1
+      provenance: UCI ucinewgame synchronization plus D-UCI-005 and D-TT-006
+      independence_argument: Fresh-process B is an isolation comparator only after the retained/cleared state dimensions are approved.
+    diagnostics: >-
+      Report A/B roots/histories, full warm/newgame/isready transcript, approved
+      reset dimensions, fresh-process comparator transcript, bestmove/score data
+      if contractual, watchdogs, and exits.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - newgame-no-op
+      - newgame-clears-options
+      - newgame-keeps-history
+      - newgame-keeps-unsafe-tt
+      - newgame-resets-position-unexpectedly
+      - newgame-races-isready
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: stop during an active infinite search has a watchdog-safe protocol transcript
+    status: BLOCKED
+    contracts: [C-APP-008, C-APP-009, C-APP-010]
+    symbols: [go infinite, stop, bestmove]
+    categories: [boundary, protocol, state-transition, regression]
+    setup: >-
+      After handshake, complete an initial isready/readyok barrier and establish
+      position startpos. Reuse the exact non-timing active-search barrier from
+      T-APP-016, then SEND stop LF without a wall-clock sleep. Wait for bestmove,
+      send isready, wait for readyok, and quit.
+    action: >-
+      Use response_ceiling_ms only to prevent a hung child; record whether
+      bestmove precedes readyok and whether exactly one search result is emitted.
+      Never call the watchdog duration the engine's intended stop latency.
+    expected: >-
+      BLOCKED: support for infinite, promptness, and completed-iteration result
+      await D-UCI-001/D-UCI-005. If infinite is selected, UCI requires stop to
+      terminate that search with exactly one bestmove; this is not an owner
+      option. Hard cleanup remains mandatory if the child hangs.
+    oracle:
+      type: standard
+      id: oracle/uci-stop-transcript-pending-v1
+      provenance: UCI go/stop grammar plus D-UCI-001 and D-UCI-005
+      independence_argument: Event ordering is protocol-derived; no sleep or current polling behavior defines active search or promptness.
+    diagnostics: >-
+      Report every input/output event and raw bytes, selected start barrier,
+      info/bestmove/readyok ordinals, legal move validation, elapsed diagnostics,
+      response and hard-cleanup watchdogs, process/thread exit, and pipe closure.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - stop-not-read-during-search
+      - stop-sets-no-cancellation
+      - stop-emits-no-bestmove
+      - stop-emits-two-bestmoves
+      - readyok-before-search-termination
+      - stop-race-loses-command
+      - stop-leaves-worker-alive
+      - partial-iteration-illegal-move
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-012
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: quit and EOF while searching have separately frozen watchdog transcripts
+    status: BLOCKED
+    contracts: [C-APP-008, C-APP-010]
+    symbols: [go infinite, quit, stdin EOF, bestmove]
+    categories: [boundary, protocol, state-transition, regression]
+    setup: >-
+      Two fresh handshaken startpos children, each with an initial
+      isready/readyok barrier. Transcript Q uses T-APP-016's non-timing active-
+      search barrier then sends quit LF. Transcript E uses the same barrier then
+      CLOSE_STDIN. Neither uses a sleep.
+      Drain both channels and enforce graceful and hard cleanup ceilings.
+    action: >-
+      Record exit, worker/process liveness, pipe closure, and whether bestmove is
+      emitted in each transcript. Keep quit and EOF expectations independent.
+    expected: >-
+      BLOCKED: D-UCI-005 must decide cancellation, whether a final bestmove is
+      required or forbidden for quit and EOF, and promptness. Regardless of the
+      eventual choice, the harness never waits indefinitely and never leaves the
+      exact child process tree alive after hard cleanup.
+    oracle:
+      type: standard
+      id: oracle/uci-search-exit-transcripts-pending-v1
+      provenance: UCI search-control lifecycle plus D-UCI-005
+      independence_argument: The two external lifecycle events are recorded separately and current output cannot choose their intended protocol.
+    diagnostics: >-
+      Report Q/E label, complete raw event record, start barrier, bestmove count
+      and tokens, exit classification, pipe EOF order, elapsed diagnostics,
+      graceful/hard watchdog result, and surviving process identities.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - quit-waits-for-infinite-search
+      - eof-waits-for-more-input
+      - eof-busy-loop-during-search
+      - cancellation-does-not-join-worker
+      - double-bestmove-on-exit
+      - use-after-free-search-state
+      - child-descendant-survives
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-c]
+    findings: []
+
+  - id: T-APP-013
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Protocol-clean stdout and diagnostic stderr policy await approval
+    status: BLOCKED
+    contracts: [C-APP-012, C-TIME-002]
+    symbols: [stdout, stderr, Timer<T>, Debug::Print*, PerftHandler::PrintData]
+    categories: [positive, negative, protocol, regression]
+    setup: >-
+      Planned transcripts cover startup, uci/isready, valid position, finite go,
+      stop, malformed input, and retained diagnostic commands. Capture raw stdout
+      and stderr separately with no merged stream and no cross-channel ordering.
+      Every transcript that searches completes the initial isready/readyok barrier.
+    action: >-
+      Classify every complete stdout line against the approved UCI/extension
+      grammar and every stderr line against the approved diagnostic policy.
+    expected: >-
+      BLOCKED: stderr placement, exact diagnostic formatting stability, and
+      retained extension output are D-UCI-008, D-TIME-002, D-DBG-001, and
+      D-UCI-007 decisions. UCI protocol-clean stdout framing is specified
+      separately by T-APP-019 and is not an owner option.
+    oracle:
+      type: standard
+      id: oracle/uci-channel-policy-pending-v1
+      provenance: UCI stdout protocol plus D-UCI-008
+      independence_argument: A grammar can classify lines after policy approval; current stream placement and text are not authority.
+    diagnostics: >-
+      Report transcript id and full per-channel raw bytes, parsed line class,
+      first unclassified line with ordinal, interleaving events without assuming
+      cross-stream order, build mode, and all relevant policy versions.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - debug-text-on-stdout
+      - timer-text-on-stdout
+      - partial-protocol-line
+      - binary-byte-in-protocol
+      - extension-output-unframed
+      - stderr-policy-inverted
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b]
+    findings: []
+
+  - id: T-APP-014
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: bench and print extension support and diagnostic stability await policy
+    status: BLOCKED
+    contracts: [C-APP-013, C-APP-012]
+    symbols: [bench, print, PerftHandler, legacy diagnostic helpers]
+    categories: [positive, negative, boundary, protocol]
+    setup: >-
+      Candidate canonical and malformed bench/print commands run in isolated
+      subprocesses with output byte/line/resource caps. Planned position
+      preservation uses a pre/post sentinel only if the commands are retained.
+    action: >-
+      Do not assert recognition, arguments, output, exit/failure propagation, or
+      state mutation until D-UCI-007, D-DBG-001, and D-LEG-001/D-LEG-002 decide
+      whether these are supported application extensions.
+    expected: >-
+      BLOCKED: the commands may be supported, diagnostic-only, or retired; no
+      current output or legacy helper body can establish a contract.
+    oracle:
+      type: standard
+      id: oracle/uci-extension-policy-pending-v1
+      provenance: D-UCI-007, D-DBG-001, D-LEG-001, and D-LEG-002
+      independence_argument: Optional extensions require an explicit owner contract and are not inferred from declared handlers.
+    diagnostics: >-
+      When unblocked, report exact command bytes, extension version, position
+      sentinel, output bytes/caps, runtime/resource counters, failure
+      propagation, watchdog/exit, and policy decision ids.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - unsupported-extension-accidentally-active
+      - retained-extension-not-dispatched
+      - benchmark-failure-not-propagated
+      - print-mutates-position
+      - output-unbounded
+      - final-field-dropped
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-015
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Internal valid UCI utility bridge returns the exact semantic move tuple
+    status: BLOCKED
+    contracts: [C-UTL-001]
+    symbols: [UTIL::Square, UTIL::PromotionChar, UTIL::MoveToStr, UTIL::UciToMove, Moves::DecodeMove, Moves::PTypeOfProm]
+    categories: [positive, boundary, exhaustive, differential, protocol]
+    setup: >-
+      Every non-hyphen legal_uci token in oracle_cases.tsv at data SHA-256
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77.
+      Construct an independent fresh Position from that row's FEN for each token.
+      Treat this as the same semantic requirement as T-MOV-004 and permit one
+      eventual test body to carry both trace ids.
+    action: >-
+      Parse the legal token with UciToMove, render it with MoveToStr, render its
+      projected source and target with Square, and for five-character tokens
+      compare PromotionChar of the decoded promotion with the suffix. Independently
+      decode the row's FEN and classify the move as quiet, capture, en-passant,
+      castling, or the exact promotion kind; compare that semantic MoveType with
+      DecodeMove rather than deriving it from either UTIL function.
+    expected: >-
+      BLOCKED pending approval of the internal C-UTL-001 card. Once approved,
+      MoveToStr returns the exact lowercase input token; source and target render
+      as its first two square fields; all four q/r/b/n promotion suffixes round-
+      trip exactly; and DecodeMove returns the independently classified semantic
+      move kind. No null, malformed, pseudo-legal-only, illegal, casing, or
+      out-of-range policy is asserted.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/valid-uci-utility-bridge
+      provenance: "tests/data/oracle_cases.tsv data_sha256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 and UCI notation"
+      independence_argument: Expected tokens are frozen independently and the valid-domain round trip does not use application output as an oracle.
+    diagnostics: >-
+      Report trace ids T-APP-015 and T-MOV-004, case/FEN/token ordinal, token,
+      encoded move bits, source/target labels, promotion named value/character,
+      rendered bytes, and first field mismatch.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - rank-file-swapped
+      - uppercase-output
+      - source-target-swapped
+      - promotion-character-permuted
+      - promotion-suffix-dropped
+      - castling-rewritten
+      - en-passant-rewritten
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+  - id: T-APP-016
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: isready is answered during infinite search without ending that search
+    status: BLOCKED
+    contracts: [C-APP-003, C-APP-008, C-APP-009, C-APP-010]
+    symbols: [isready, position startpos, go infinite, stop, bestmove]
+    categories: [positive, boundary, protocol, state-transition, regression]
+    setup: >-
+      One fresh child under uci-process-transcript-v1. Complete uci/uciok, SEND
+      isready LF and wait for readyok, SEND position startpos LF, SEND isready LF
+      and wait for its matching readyok, SEND go infinite LF, immediately SEND
+      isready LF without sleeping, and wait for the matching readyok. Then SEND
+      stop LF, wait for exactly one bestmove, and SEND quit LF.
+    action: >-
+      Use the third readyok as a non-timing proof that the command loop processed
+      input after go. Reject any bestmove before stop, associate readyok only with
+      the post-go isready, validate the eventual bestmove against start's frozen
+      legal_uci set, and apply absolute response/cleanup deadlines.
+    expected: >-
+      BLOCKED until C-APP-003/C-APP-008/C-APP-009 and support for go infinite are
+      approved. Once unblocked, the post-go isready receives exactly one readyok
+      without ending the infinite search; no bestmove precedes stop; stop is
+      followed by exactly one legal bestmove. No wall-clock promptness value,
+      score, depth, or completed-iteration result is asserted.
+    oracle:
+      type: standard
+      id: oracle/uci-active-search-readiness-v1
+      provenance: UCI requirements that stdin and isready remain processable while thinking and that stop completes go with bestmove
+      independence_argument: Event order supplies the barrier; no sleep, info-line timing, TDFA polling point, or current output defines search activity.
+    diagnostics: >-
+      Report complete raw event record, all three isready/readyok matchings, go/stop
+      ordinals, any premature or duplicate bestmove, parsed move/legal set,
+      absolute deadlines, resource counters, process-group cleanup, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - isready-not-read-while-searching
+      - isready-stops-search
+      - infinite-search-exits-before-stop
+      - stale-readyok-accepted
+      - stop-emits-no-bestmove
+      - stop-emits-duplicate-bestmove
+      - worker-survives-stop
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b]
+    findings: []
+
+  - id: T-APP-017
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: UCI standard whitespace line framing and ignored tokens remain responsive
+    status: EXPECTATION_FROZEN
+    contracts: [C-APP-001, C-APP-002, C-APP-003, C-APP-014]
+    symbols: [uci, isready, unknown application input, stdin line framing]
+    categories: [positive, boundary, exhaustive, protocol, metamorphic]
+    setup: >-
+      Exhaust every row of uci-standard-input-variants-v1. For uci variants,
+      START a fresh child, SEND the exact variant, wait for uciok, then send
+      canonical isready LF and quit LF. For blank, whitespace-only, unknown, and
+      padded-isready variants, first complete a canonical handshake, SEND the
+      exact variant, then SEND canonical isready LF when the variant itself is
+      not isready, require the matching readyok, and quit.
+    action: >-
+      Tokenize using UCI-permitted ASCII whitespace while retaining raw bytes;
+      accept LF, CRLF, and lone CR framing exactly as enumerated. Require ignored
+      empty/unknown input not to terminate or wedge the session. This record does
+      not infer malformed-FEN or malformed-numeric recovery.
+    expected: >-
+      Padded commands and every enumerated line ending behave like their
+      canonical command, standalone empty/unknown input is ignored, uci with an
+      extra unknown token still completes one handshake, and the next isready is
+      answered exactly once. Each final canonical idle quit reaches ordinary
+      process termination without a harness hard kill. Chess-state preservation
+      is tested by T-APP-018; numeric exit codes and exit latency are unspecified.
+    oracle:
+      type: standard
+      id: oracle/uci-standard-input-variants-v1
+      provenance: UCI arbitrary-whitespace, operating-system line-ending, and unknown-token rules
+      independence_argument: Exact bytes and required response tokens come from the protocol, not TDFA parsing or output samples.
+    diagnostics: >-
+      Report variant id/text/hex, raw input and per-channel output, parsed tokens,
+      handshake/readiness matching, line-ending kind, absolute deadlines,
+      resource-limit events, process-group identity, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - rejects-leading-whitespace
+      - rejects-tabs-between-tokens
+      - rejects-lone-cr
+      - crlf-produces-blank-command
+      - blank-line-exits
+      - unknown-command-exits
+      - uci-extra-suppresses-handshake
+      - padded-isready-hangs
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b, blind-app-contract-review-d]
+    findings: []
+
+  - id: T-APP-018
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Ignored unknown commands preserve an established position
+    status: BLOCKED
+    contracts: [C-APP-006, C-APP-008, C-APP-014]
+    symbols: [position, unknown application input, isready, go, bestmove]
+    categories: [negative, protocol, state-transition, differential]
+    setup: >-
+      BLOCKED fixture: one frozen distinguishable-position-fixture-v1 row. In a
+      fresh ready child, establish its exact sentinel command, SEND x-unknown LF,
+      SEND isready LF and await readyok, then use the approved finite observation
+      that distinguishes the sentinel from all stale/partial candidates.
+    action: >-
+      Compare the post-unknown observation only with the independently frozen
+      sentinel outcome. Do not treat an overlapping arbitrary bestmove as proof
+      of preservation and do not assert diagnostic text or channel.
+    expected: >-
+      BLOCKED until the distinguishable fixture, finite observation, and cited
+      cards are approved. UCI fixes standalone unknown-command handling as ignore;
+      once executable, the session remains responsive and the established chess
+      state is unchanged.
+    oracle:
+      type: reference-model
+      id: oracle/uci-unknown-command-preservation-pending-v1
+      provenance: UCI unknown-token rule plus distinguishable-position-fixture-v1
+      independence_argument: The state oracle is a frozen disjoint observation, never a TDFA-selected move that might also be legal in a stale state.
+    diagnostics: >-
+      Report fixture checksum, sentinel and every candidate state/legal set,
+      exact unknown bytes, full transcript, readiness match, distinguishing
+      observation/proof, deadlines, resources, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - unknown-command-resets-position
+      - unknown-command-partially-mutates-position
+      - unknown-command-exits-session
+      - unknown-command-blocks-readiness
+      - stale-position-observation-accepted
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-b]
+    findings: []
+
+  - id: T-APP-019
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Required UCI transcripts keep stdout protocol-framed
+    status: BLOCKED
+    contracts: [C-APP-002, C-APP-003, C-APP-008, C-APP-015]
+    symbols: [stdout, uci, isready, info, bestmove]
+    categories: [positive, negative, protocol, regression]
+    setup: >-
+      Exact transcripts are canonical uci then quit; uci, isready, then quit; and,
+      once a finite go is approved, initial isready, position startpos, finite go,
+      final isready, then quit. Capture stdout/stderr independently under the
+      numeric transcript limits. No diagnostic extension command is sent.
+    action: >-
+      Classify every complete stdout line by UCI causal prerequisites. During
+      startup and handshake allow id, option, and uciok in legal order, permit
+      grammar-valid info without inventing a search-only phase restriction, and
+      permit the standard startup registration error case. During readiness
+      allow readyok; during search allow protocol-valid info and exactly one
+      bestmove. Allow other standard copyprotection/registration lines only in
+      their protocol-defined phases. Do not classify or constrain stderr.
+    expected: >-
+      BLOCKED pending approval of C-APP-015 and companion cards. Once approved,
+      every retained stdout line is valid UCI framing for its phase; raw banners,
+      Timer text, Debug text, partial lines at normal exit, and binary garbage are
+      rejected. Stderr routing and exact diagnostic formatting remain blocked.
+    oracle:
+      type: standard
+      id: oracle/uci-protocol-clean-stdout-v1
+      provenance: UCI engine-to-GUI line grammar
+      independence_argument: The accepted grammar and phase ordering are protocol-derived and contain no TDFA diagnostic strings.
+    diagnostics: >-
+      Report transcript/phase, full bounded per-channel bytes, every parsed line
+      class and ordinal, first unclassified bytes, line framing, truncation/resource
+      counters, absolute deadlines, build configuration, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - startup-banner-on-stdout
+      - startup-registration-error-rejected
+      - option-before-identification
+      - debug-text-on-stdout
+      - timer-text-on-stdout
+      - partial-protocol-line
+      - binary-byte-in-protocol
+      - duplicate-search-bestmove
+    author: blind-design-search-tt-uci
+    reviewers: [blind-app-contract-review-c]
+    findings: []
+
+  - id: T-APP-020
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Application search distinguishes automatic and claimable draw roots
+    status: BLOCKED
+    contracts: [C-APP-007, C-APP-008, C-APP-010]
+    symbols: [position fen moves, go, application emitted moves]
+    categories: [boundary, protocol, state-transition, differential]
+    setup: >-
+      Exact oracle_cases.tsv rows insufficient_material, seventyfive_move_rule,
+      fivefold_repetition, fifty_move_clock_100, threefold_current, and
+      threefold_prospective at data_sha256
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77.
+      Reconstruct every history row from root_fen plus complete history_uci. Each
+      child completes uci and initial isready before position, then a second
+      isready/readyok barrier between position and the approved finite go.
+    action: >-
+      Preserve every frozen automatic/claimable flag and legal_uci set, capture
+      output through bestmove, and compare only with the application draw policy
+      selected by D-RULE-001. Never infer repetition from FEN or conflate a
+      nonempty legal set with a nonterminal application-search result.
+    expected: >-
+      BLOCKED: D-RULE-001 and C-APP-008 must decide whether automatic draw roots
+      with legal board moves emit 0000 or a legal move and whether claimable draws
+      are adjudicated without a GUI claim. Checkmate/stalemate behavior remains
+      separate in T-APP-006; no outcome is guessed here.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/application-draw-roots-pending
+      provenance: FIDE automatic/claimable draw distinctions and the frozen history-aware oracle corpus
+      independence_argument: Rule flags and histories are frozen outside TDFA; the missing application adjudication choice remains explicit.
+    diagnostics: >-
+      Report case/root/history/FEN, every draw and game-over flag, complete legal
+      set, selected policy/control, complete bounded transcript, parsed bestmove,
+      deadlines/resource counters, and exit.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants:
+      - automatic-draw-searched-contrary-to-policy
+      - claimable-draw-treated-as-automatic
+      - repetition-history-ignored
+      - seventyfive-boundary-off-by-one
+      - fivefold-treated-as-threefold
+      - draw-root-emits-malformed-bestmove
+    author: blind-design-search-tt-uci
+    reviewers: []
+    findings: []
+
+coverage:
+  - contract: C-EVAL-001
+    required_categories: [positive, boundary, differential]
+    tests: [T-EVAL-001, T-SRCH-001]
+    gaps: [D-EVAL-001 blocks every numeric expectation]
+  - contract: C-EVAL-002
+    required_categories: [positive, boundary, metamorphic]
+    tests: [T-EVAL-002, T-SRCH-001]
+    gaps: [D-EVAL-001 blocks perspective range and sentinel expectations]
+  - contract: C-EVAL-003
+    required_categories: [state-transition, metamorphic]
+    tests: [T-EVAL-003]
+    gaps: [D-EVAL-001 blocks UpdateData and global-state semantics]
+  - contract: C-SRCH-001
+    required_categories: [positive, boundary, differential]
+    tests: [T-SRCH-001, T-SRCH-002, T-SRCH-003]
+    gaps: [D-EVAL-001 D-SRCH-001 and D-RULE-001 block reference scores and terminal values]
+  - contract: C-SRCH-002
+    required_categories: [positive, state-transition, metamorphic]
+    tests: [T-SRCH-006, T-TT-006]
+    gaps: [D-SRCH-002 and D-TT-006 block TT transparency expectations]
+  - contract: C-SRCH-003
+    required_categories: [positive, boundary, state-transition]
+    tests: [T-SRCH-004, T-SRCH-005]
+    gaps: [D-SRCH-003 blocks ordinary and cancellation restoration]
+  - contract: C-SRCH-004
+    required_categories: [boundary, state-transition]
+    tests: [T-SRCH-002, T-SRCH-003, T-SRCH-005, T-SRCH-006, T-TIME-002]
+    gaps: [D-SRCH-004 and absence of an approved deterministic depth clock or polling seam]
+  - contract: C-TIME-001
+    required_categories: [positive, negative, boundary]
+    tests: [T-TIME-001, T-TIME-002, T-SRCH-005]
+    gaps: [D-TIME-001 blocks all deadline arithmetic and predicates]
+  - contract: C-TIME-002
+    required_categories: [positive, negative, boundary]
+    tests: [T-TIME-003, T-APP-013]
+    gaps: [D-TIME-002 blocks output publication units and failure semantics]
+  - contract: C-TT-001
+    required_categories: [positive, boundary, metamorphic]
+    tests: [T-TT-001]
+    gaps: [Card approval and a named uninitialized-read detector block the fresh-object assertion; exact capacity copy move and allocation policy remain unasserted]
+  - contract: C-TT-002
+    required_categories: [positive, negative, boundary]
+    tests: [T-TT-002, T-TT-003]
+    gaps: [D-TT-001 blocks capacity arithmetic and oversized requests require an approved pre-allocation failure seam]
+  - contract: C-TT-003
+    required_categories: [positive, boundary, state-transition]
+    tests: [T-TT-003, T-TT-004]
+    gaps: [D-TT-002 and D-TT-003 block mapping miss and replacement semantics]
+  - contract: C-TT-004
+    required_categories: [positive, boundary, state-transition]
+    tests: [T-TT-003, T-TT-004]
+    gaps: [Clear can be fully asserted only after a successful-association and miss contract]
+  - contract: C-TT-005
+    required_categories: [negative, boundary, state-transition]
+    tests: [T-TT-005]
+    gaps: [D-TT-004 and D-TT-005 block pointer ownership and concurrency]
+  - contract: C-TT-006
+    required_categories: [boundary, state-transition, differential]
+    tests: [T-TT-006, T-SRCH-006]
+    gaps: [D-TT-006 and D-RULE-001 block draw-context reuse]
+  - contract: C-APP-001
+    required_categories: [positive, boundary, protocol]
+    tests: [T-APP-001, T-APP-002, T-APP-003, T-APP-007, T-APP-017]
+    gaps: [The approved handshaken idle-quit slice is frozen where isolated; pre-UCI quit and stdin-EOF semantics remain blocked by D-UCI-005]
+  - contract: C-APP-002
+    required_categories: [positive, protocol]
+    tests: [T-APP-001, T-APP-002, T-APP-009, T-APP-017, T-APP-019]
+    gaps: [Noncanonical command casing and exact advertised option policy remain outside the approved canonical handshake card]
+  - contract: C-APP-003
+    required_categories: [positive, protocol, state-transition]
+    tests: [T-APP-002, T-APP-004, T-APP-016, T-APP-017, T-APP-019]
+    gaps: [Active-search readiness additionally waits for approved go infinite support]
+  - contract: C-APP-004
+    required_categories: [positive, negative, boundary]
+    tests: [T-APP-009]
+    gaps: [D-UCI-006 blocks all Hash bounds and effective-capacity expectations]
+  - contract: C-APP-005
+    required_categories: [positive, state-transition, metamorphic]
+    tests: [T-APP-010]
+    gaps: [D-UCI-005 and D-TT-006 block reset scope]
+  - contract: C-APP-006
+    required_categories: [positive, boundary, state-transition]
+    tests: [T-APP-004, T-APP-005, T-APP-008, T-APP-018]
+    gaps: [Exact chess-state observation requires an approved finite control and a frozen distinguishable-position fixture]
+  - contract: C-APP-007
+    required_categories: [positive, negative, state-transition]
+    tests: [T-APP-004, T-APP-005, T-APP-008, T-APP-020]
+    gaps: [D-UCI-003 and D-UCI-004 block invalid recovery and atomicity; exact state observation lacks a distinguishable fixture]
+  - contract: C-APP-008
+    required_categories: [positive, boundary, protocol]
+    tests: [T-APP-005, T-APP-006, T-APP-010, T-APP-011, T-APP-012, T-APP-016, T-APP-018, T-APP-019, T-APP-020]
+    gaps: [D-UCI-001 and D-RULE-001 block supported controls and draw scope; exact state checks lack a distinguishable fixture]
+  - contract: C-APP-009
+    required_categories: [boundary, protocol, state-transition]
+    tests: [T-APP-011, T-APP-016]
+    gaps: [D-UCI-005 blocks promptness and completed-result policy; UCI fixes one bestmove after stop once infinite is supported]
+  - contract: C-APP-010
+    required_categories: [positive, boundary, protocol]
+    tests: [T-APP-005, T-APP-006, T-APP-011, T-APP-012, T-APP-016, T-APP-020]
+    gaps: [Application move framing is approved; finite-go and draw-result policy remain blocked, and internal utility conversion is classified separately under C-UTL-001]
+  - contract: C-APP-011
+    required_categories: [negative, boundary, fuzz]
+    tests: [T-APP-007, T-APP-008]
+    gaps: [Card and exact instrumentation approval block safety execution; D-UCI-003 and D-UCI-004 block malformed recovery while UCI-standard input tolerance is classified under C-APP-014]
+  - contract: C-APP-012
+    required_categories: [positive, negative, protocol]
+    tests: [T-APP-013, T-APP-014]
+    gaps: [D-UCI-008 blocks stderr routing and diagnostic formatting; protocol-clean stdout is classified under C-APP-015]
+  - contract: C-APP-013
+    required_categories: [positive, negative, protocol]
+    tests: [T-APP-014]
+    gaps: [D-UCI-007 D-DBG-001 D-LEG-001 and D-LEG-002 block extension behavior]
+  - contract: C-APP-014
+    required_categories: [positive, boundary, protocol]
+    tests: [T-APP-017, T-APP-018]
+    gaps: [Exact unknown-command chess-state preservation still lacks a frozen distinguishable-position fixture and finite observation]
+  - contract: C-APP-015
+    required_categories: [positive, negative, protocol]
+    tests: [T-APP-019]
+    gaps: [Card approval is pending; search-phase stdout classification additionally waits for an approved finite go control]
+  - contract: C-UTL-001
+    required_categories: [positive, boundary, differential]
+    tests: [T-APP-015]
+    gaps: [Internal card approval and D-MOV-001/D-MOV-003 block utility expectations; invalid-domain policy remains with T-MOV-008 in the checksummed dependency catalogue]

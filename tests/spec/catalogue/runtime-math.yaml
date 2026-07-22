@@ -1,0 +1,715 @@
+schema_version: 1
+packet_version: 3
+catalogue_version: 3
+contracts_version: 3
+snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+catalogue: runtime-math
+status: CANDIDATE_WITH_EXPLICIT_BLOCKERS
+authoring_stage: implementation-blind-test-design
+author: blind-design-runtime-math-v3
+
+information_firewall:
+  permitted_inputs:
+    - tests/spec/api-dossier.md
+    - tests/spec/intended-purpose-v1.md
+    - tests/spec/contracts/runtime-math.yaml
+    - candidate semantic cards C-MOV-010, C-BRD-010, and C-FEN-010 from tests/spec/contracts/external-math.yaml, usable only at their required approval status
+    - tests/data/oracle_cases.tsv
+    - tests/data/oracle_perft.tsv
+    - the v2 runtime-math packet and consolidated findings from both independent REJECT reviews
+    - dependency hashes and previously named blocker ids only; no production behavior imported
+  implementation_bodies_inspected: false
+  source_tree_inspected: false
+  cpp_tests_inspected: false
+  product_executed: false
+  external_material_fetched: false
+
+independent_reject_reviews:
+  - reviewer: /root/app_review_d
+    disposition: REJECT
+    persisted_document: false
+  - reviewer: /root/runtime_review_b
+    disposition: REJECT
+    persisted_document: false
+
+approval_state:
+  contract_cards: CANDIDATE_UNAPPROVED
+  tests: CANDIDATE
+  semantic_dependencies: SATISFIED_AT_PINNED_EXTERNAL_HASH
+  note: >-
+    DESIGNED means design-complete only. Every local card is TENTATIVE or
+    UNRESOLVED and has no author approval. All required external semantic cards
+    are independently APPROVED at the pinned external-math hash; local card and
+    test review requirements still govern any advance to EXPECTATION_FROZEN.
+
+status_policy:
+  DESIGNED: >-
+    Setup, action, expectation, oracle, diagnostics, representability, and only
+    directly killed mutants are specified without selecting an excluded policy.
+  BLOCKED: >-
+    A future responsibility is retained, but this record executes nothing,
+    asserts no result, and claims no mutant kill until every listed decision or
+    observation precondition is independently approved.
+
+contract_context:
+  - {id: C-RTM-TT-001, status: TENTATIVE, version: 3, kind: internal, open_decisions: []}
+  - {id: C-RTM-TT-002, status: UNRESOLVED, version: 1, kind: internal, open_decisions: [D-TT-001]}
+  - {id: C-RTM-EVAL-001, status: TENTATIVE, version: 3, kind: internal, open_decisions: []}
+  - {id: C-RTM-EVAL-002, status: TENTATIVE, version: 3, kind: internal, open_decisions: []}
+  - {id: C-RTM-EVAL-003, status: UNRESOLVED, version: 1, kind: internal, open_decisions: [D-EVAL-001]}
+  - {id: C-RTM-EVAL-004, status: UNRESOLVED, version: 1, kind: internal, open_decisions: [D-POS-002]}
+  - {id: C-RTM-SRCH-001, status: UNRESOLVED, version: 3, kind: internal, open_decisions: [D-TIME-001, D-SRCH-004]}
+  - {id: C-RTM-TIME-001, status: UNRESOLVED, version: 3, kind: internal, open_decisions: [D-TIME-001]}
+  - {id: C-RTM-PERFT-001, status: TENTATIVE, version: 3, kind: internal, open_decisions: []}
+  - {id: C-RTM-PERFT-002, status: TENTATIVE, version: 1, kind: internal, open_decisions: []}
+  - {id: C-RTM-PERFT-003, status: UNRESOLVED, version: 1, kind: internal, open_decisions: [D-POS-002]}
+
+observation_profiles:
+  public_fen_semantics: tests/spec/contracts/runtime-math.yaml#full_public_fen_semantic_snapshot_v3
+  semantic_fixture_validation: tests/spec/contracts/runtime-math.yaml#semantic_fixture_validation_v3
+  material_arithmetic: tests/spec/contracts/runtime-math.yaml#widened_material_arithmetic_v3
+  default_tt_sanitizer: tests/spec/contracts/runtime-math.yaml#default_tt_sanitizer_isolation_v3
+  diagnostic_capture: tests/spec/contracts/runtime-math.yaml#diagnostic_capture_v3
+  positive_tt_precondition: tests/spec/contracts/runtime-math.yaml#unavailable_positive_tt_precondition_v3
+
+representability_proofs:
+  default_tt_zero: >-
+    The literal zero is exactly representable as size_t; this proof neither
+    selects a Resize request nor implies that any positive capacity is reachable.
+  material_equations: >-
+    Use W=std::intmax_t and the numeric_limits proof in
+    widened_material_arithmetic_v3. Convert every Score result and named constant
+    to W before subtraction or addition, evaluate no expected sum in Score, and
+    narrow no result back to Score.
+  perft_rows: >-
+    Depths 1, 2, and 3 are exactly representable as int. Every frozen count is
+    nonnegative and at most 97862, hence exactly representable as U64 without
+    relying on a production accumulator intermediate.
+
+oracle_definitions:
+  semantic_fixture_validation_v3:
+    contracts: [C-BRD-010, C-FEN-010]
+    method: >-
+      Decode each exact FEN independently. Before the runtime operation, compare
+      all labelled-square PieceOn observations, every colour/type Pieces
+      projection, active side, named castling rights, semantic en-passant target
+      or absence, HalfMoves, and FullMoves with that decoded meaning; also require
+      the approved positive-domain IsOk result. A mismatch is a setup/dependency
+      failure and the runtime operation is not called.
+    forbidden_shortcuts:
+      - numeric square orientation or piece encoding
+      - numeric castling-bit layout
+      - raw ZKey or HashCurrentPostion
+      - private history or cache inspection
+
+  default_tt_lifecycle_v3:
+    resize_requests: []
+    expected_fresh_capacity: 0
+    observations: [first GetNumElems, repeated GetNumElems, isolated default destruction]
+    sanitizer: linux-clang-address
+    diagnostic_capture:
+      per_stream_byte_limit: 65536
+      required_fields: [stream, captured_bytes, truncated, omitted_bytes_when_known]
+      required_truncated_value_for_pass: false
+      exact_limit_rule: truncated may be false only when end-of-stream proves that no byte was omitted
+    exclusions: >-
+      No Resize, Store, Probe, Clear, positive-capacity, allocated destructor,
+      leak, or replacement-storage observation belongs to this oracle.
+
+  allocated_tt_candidate_v3:
+    resize_requests: []
+    positive_capacity_setup: unavailable
+    execution: forbidden
+    blocking_decisions: [D-TT-001]
+    rule: >-
+      Do not observe GetNumElems and skip when zero; that branch is vacuous and
+      cannot establish an allocated lifecycle responsibility.
+
+  material_fixtures_v3:
+    source_scope:
+      canonical_serialization: "Colour<TAB>role<TAB>fen<LF>, White rows then Black rows, roles base/pawn/knight/bishop/rook/queen/combined/isolation_base/isolation_opponent_added"
+      row_count: 18
+      sha256: 6da29a8150856eaddbb188e0abad1d0603264856e316653a522eae63b83bd14b
+    White:
+      base: "7k/8/8/8/8/8/8/K7 w - - 0 1"
+      singles:
+        pawn: "7k/8/8/8/8/8/1P6/K7 w - - 0 1"
+        knight: "7k/8/8/8/8/2N5/8/K7 w - - 0 1"
+        bishop: "7k/8/8/8/2B5/8/8/K7 w - - 0 1"
+        rook: "7k/8/8/8/4R3/8/8/K7 w - - 0 1"
+        queen: "7k/8/8/8/8/8/6Q1/K7 w - - 0 1"
+      combined: "7k/8/8/8/2B1R3/2N5/1P4Q1/K7 w - - 0 1"
+      isolation_base: "7k/8/8/8/8/8/Q7/K7 w - - 0 1"
+      isolation_opponent_added: "7k/2qrbn1p/8/8/8/8/Q7/K7 w - - 0 1"
+    Black:
+      base: "k7/8/8/8/8/8/8/7K b - - 0 1"
+      singles:
+        pawn: "k7/1p6/8/8/8/8/8/7K b - - 0 1"
+        knight: "k7/8/2n5/8/8/8/8/7K b - - 0 1"
+        bishop: "k7/8/8/2b5/8/8/8/7K b - - 0 1"
+        rook: "k7/8/8/4r3/8/8/8/7K b - - 0 1"
+        queen: "k7/6q1/8/8/8/8/8/7K b - - 0 1"
+      combined: "k7/1p4q1/2n5/2b1r3/8/8/8/7K b - - 0 1"
+      isolation_base: "k7/q7/8/8/8/8/8/7K b - - 0 1"
+      isolation_opponent_added: "k7/q7/8/8/8/8/2QRBN1P/7K b - - 0 1"
+    named_constants:
+      pawn: Eval::PAWN_VAL
+      knight: Eval::KNIGHT_VAL
+      bishop: Eval::BISHOP_VAL
+      rook: Eval::ROOK_VAL
+      queen: Eval::QUEEN_VAL
+    equations: >-
+      For selected colour c, W(single[p])-W(base)=W(named[p]);
+      W(combined)-W(base)=the W-sum of all five named constants; and both
+      isolation results are equal. No base value is compared with zero and no
+      White result is compared with a Black result.
+
+  evaluate_identical_fen_fixtures_v3:
+    source:
+      path: tests/data/oracle_cases.tsv
+      file_sha256: d4a6bfd2b0fc73de89ee95552d1be7fd313c38e25fe45197b277ba6a34df4c69
+      data_sha256: 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      selected_scope_serialization: "case_id<TAB>fen<LF> in listed order"
+      selected_scope_bytes: 199
+      selected_scope_sha256: b4ee87db66f0fa8934d4489a4fb5b67b608df0fd14cd1fc7f84bbb8265ad7448
+    fixtures:
+      - id: start
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      - id: en_passant_legal
+        fen: "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2"
+      - id: random_000003
+        fen: "rnbqkb1r/1p2pp2/2p2np1/1P1p3p/p3P2P/N4PPN/P1PP1K2/R1BQ1B1R b kq - 1 10"
+    responsibility: >-
+      For each listed byte-identical canonical FEN, compare results only across
+      the same object and an independently constructed identical-FEN object, and
+      preserve the complete public six-field FEN semantics.
+    deliberate_survivor: >-
+      A constant-zero evaluator satisfies this oracle. Perspective and score
+      adequacy are not misreported as covered here.
+
+  evaluate_perspective_candidate_v3:
+    white_to_move: "7k/8/8/8/8/8/Q7/K7 w - - 0 1"
+    black_to_move: "7k/8/8/8/8/8/Q7/K7 b - - 0 1"
+    only_difference: active side
+    execution: forbidden
+    relation: unspecified
+    forbidden_expectations: [equality, inequality, sign, negation, nonzero, zero]
+    blocking_decisions: [D-EVAL-001]
+
+  perft_depth_1_3_v3:
+    path: tests/data/oracle_perft.tsv
+    file_sha256: 96a933a8203be5095a7e8592cf09b56a27f1602df4ec8795dd7aa6f3ca38c849
+    data_sha256: 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+    row_count: 18
+    cases:
+      start:
+        fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        nodes: {1: 20, 2: 400, 3: 8902}
+      kiwipete:
+        fen: "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+        nodes: {1: 48, 2: 2039, 3: 97862}
+      perft_endgame:
+        fen: "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1"
+        nodes: {1: 14, 2: 191, 3: 2812}
+      perft_promotions:
+        fen: "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
+        nodes: {1: 6, 2: 264, 3: 9467}
+      perft_castling:
+        fen: "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
+        nodes: {1: 44, 2: 1486, 3: 62379}
+      perft_tactics:
+        fen: "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"
+        nodes: {1: 46, 2: 2079, 3: 89890}
+
+  blocked_search_fixtures_v3:
+    depth_controlled_root: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    sole_legal_root: "7k/6Q1/8/5K2/8/8/8/8 b - - 0 1"
+    sole_legal_move: h8g7
+    rule: retain only; do not execute before D-TIME-001 and D-SRCH-004
+
+cross_catalogue_dependencies:
+  - id: required-position-semantics
+    path: tests/spec/contracts/external-math.yaml
+    sha256: 3d79d6cb6df38d232ffdb21652e5df85cb7c9cb7dd582a1cc2711005de577422
+    cards: [C-MOV-010, C-BRD-010, C-FEN-010]
+    versions: [1, 5, 5]
+    required_statuses: [APPROVED, APPROVED, APPROVED]
+    observed_statuses_at_pin: [APPROVED, APPROVED, APPROVED]
+    approval_pin_state: all required statuses satisfied at the pinned external-math hash
+    reason: >-
+      C-MOV-010 retains a future opaque Move setup; C-BRD-010 and C-FEN-010
+      provide the semantic placement and six-field FEN construction/observation
+      vocabulary for every executable Position fixture.
+  - id: position-hash-history-blocker
+    path: tests/spec/catalogue/primitives-position.yaml
+    sha256: 3eb65363f3ba15bb448d583b98c6c399a68fa10eca5a58dc42fb56055eb35193
+    decisions: [D-POS-002]
+    reason: preserve the existing hash/history authority gap without importing an executable expectation
+  - id: frozen-perft-provenance
+    path: tests/spec/catalogue/movegen-rules.yaml
+    sha256: 7fcd4cff2ec2df3b3ecc85855cc2cc534e6c40fd484ad8deebe79174e548f27d
+    tests: [T-PERFT-001]
+    reason: provenance cross-link only; exact runtime expectations come from frozen oracle_perft.tsv
+  - id: prior-runtime-blockers
+    path: tests/spec/catalogue/search-tt-uci.yaml
+    sha256: ab86eebccde12f2bdd028d008b959e20de827d597f3d8cc14e12471376bf1ed9
+    decisions: [D-TIME-001, D-SRCH-004]
+    reason: preserve the deterministic clock/completion blockers without importing an executable expectation
+
+tests:
+  - id: T-RTM-TT-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Fresh zero-capacity TT observation and unallocated destruction
+    status: DESIGNED
+    contracts: [C-RTM-TT-001]
+    symbols: [TransposTable::TransposTable, TransposTable::GetNumElems, TransposTable::~TransposTable]
+    categories: [positive, boundary, state-transition, metamorphic, regression]
+    setup: >-
+      In the one-child linux-clang-address profile, construct one fresh table and
+      never call Resize, Store, Probe, or Clear. Configure each diagnostic stream
+      with the 65536-byte capture limit and required truncation metadata.
+    action: >-
+      Observe GetNumElems twice without intervening mutation, let the table leave
+      scope exactly once, and collect child exit status and AddressSanitizer output.
+    expected: >-
+      Both observations equal zero, the child exits normally, AddressSanitizer
+      reports no invalid lifetime operation, and every captured stream reports
+      truncated=false. This makes no allocated-storage or leak claim.
+    oracle:
+      type: reference-model
+      id: oracle/empty-owner-lifecycle-v3
+      provenance: C-RTM-TT-001 and default_tt_lifecycle_v3
+      independence_argument: The mathematical empty-owner state and sanitizer ownership instrumentation supply the checks; no production output is sampled.
+    diagnostics: >-
+      Report test id, operation ordinal, both size_t values, child exit/signal or
+      exception, compiler/sanitizer profile, stream, captured byte count,
+      truncated true or false, omitted byte count when known, and symbolization
+      status. Any truncated sanitizer stream is an infrastructure failure.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [default-capacity-nonzero, default-destructor-invalid-free]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-TT-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Allocated TT lifecycle awaits a non-vacuous positive-capacity setup
+    status: BLOCKED
+    contracts: [C-RTM-TT-002, C-MOV-010]
+    symbols: [TransposTable::Resize, TransposTable::Store, TransposTable::Probe, TransposTable::Clear, TransposTable::~TransposTable, HashEntry]
+    categories: [positive, boundary, state-transition, metamorphic, regression]
+    setup: >-
+      Retain no numeric Resize request. Do not add an allocator seam and do not
+      treat an observed zero-capacity table followed by a skip as coverage.
+    action: >-
+      Do not call Resize, Store, Probe, or Clear and do not run an allocated
+      destructor/leak/replacement case until D-TT-001 establishes positive
+      capacity non-vacuously.
+    expected: >-
+      BLOCKED. There is no executable capacity, roundtrip, invalidation,
+      allocated-destruction, leak, or replaced-storage result in version 3.
+    oracle:
+      type: reference-model
+      id: oracle/allocated-single-association-pending-v3
+      provenance: D-TT-001 and unavailable_positive_tt_precondition_v3
+      independence_argument: A future approved non-vacuous setup may enable the responsibility; an observe-and-skip branch cannot.
+    diagnostics: >-
+      When unblocked, report the approved setup/seam version and authority,
+      request units and bounds, observed capacity, operation ordinal, logical
+      fields, sanitizer capture metadata, and any setup failure.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-TT-001]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-EVAL-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Selected-colour named material additivity and opponent isolation
+    status: DESIGNED
+    contracts: [C-RTM-EVAL-001, C-BRD-010, C-FEN-010]
+    symbols: [Eval::CountMaterial, Eval::PAWN_VAL, Eval::KNIGHT_VAL, Eval::BISHOP_VAL, Eval::ROOK_VAL, Eval::QUEEN_VAL, Board::PieceOn, Board::Pieces, Position::IsOk]
+    categories: [positive, boundary, metamorphic, differential]
+    setup: >-
+      Exhaust both colour branches of material_fixtures_v3 with a fresh Position
+      per call. Before CountMaterial, apply semantic_fixture_validation_v3 to the
+      exact FEN and establish the widened W proof.
+    action: >-
+      Instantiate CountMaterial with the branch's selected colour. Widen every
+      returned Score and named constant before arithmetic; compare each
+      single-minus-base difference with its named constant, combined-minus-base
+      with the five-constant W sum, and the two opponent-isolation results.
+    expected: >-
+      Every selected-colour named-constant difference and additivity equation
+      holds for White and Black, and changing only opponent non-king material has
+      no effect. Baseline zero, king value, literal weights, colour/square
+      symmetry, and Position mutation are not asserted.
+    oracle:
+      type: metamorphic
+      id: oracle/selected-colour-named-material-differences-v3
+      provenance: semantically validated fixture multisets, declaration-named constants, and widened equations
+      independence_argument: No coefficient or baseline is sampled from TDFA; each public named constant is bound only to its selected piece contribution.
+    diagnostics: >-
+      Report selected colour, fixture id and exact FEN, fixture-validation field
+      or setup failure, semantic piece delta, raw Scores, every W operand/result,
+      named constant, proof bit widths and bounds, equation id, and the widened
+      expected/actual difference.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [selected-colour-filter-ignored, opponent-material-counted, pawn-constant-misbinding, knight-constant-misbinding, bishop-constant-misbinding, rook-constant-misbinding, queen-constant-misbinding, disjoint-material-not-additive, black-template-reads-white]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-EVAL-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Evaluate repeats on identical semantic FEN and preserves all public FEN fields
+    status: DESIGNED
+    contracts: [C-RTM-EVAL-002, C-BRD-010, C-FEN-010]
+    symbols: [Eval::Evaluate, Board::PieceOn, Board::Pieces, Position::ColourToMove, Position::CastlingRights, Position::EnPasBB, Position::EnPasSq, Position::HalfMoves, Position::FullMoves, Position::IsOk]
+    categories: [positive, state-transition, metamorphic, regression]
+    setup: >-
+      For each evaluate_identical_fen_fixtures_v3 entry, construct A and B from
+      exactly the same canonical FEN bytes. Validate both semantically and capture
+      full_public_fen_semantic_snapshot_v3 for each before Evaluate.
+    action: >-
+      Evaluate A, recapture its full snapshot, evaluate A again without caller
+      mutation, recapture it, then evaluate B once and recapture B. Compare every
+      post-call snapshot with its own pre-call snapshot and compare all three Scores.
+    expected: >-
+      Every call preserves all labelled placement observations, active side,
+      named castling rights, semantic en-passant state, HalfMoves, and FullMoves;
+      the two A results and one B result are exactly equal. A constant-zero
+      evaluator survives deliberately: no score magnitude, nonzero, sign,
+      perspective transform, hash, or history responsibility is claimed.
+    oracle:
+      type: metamorphic
+      id: oracle/identical-fen-observer-purity-v3
+      provenance: exact selected corpus scope, semantic validation, same-object repetition, and independently constructed byte-identical FEN
+      independence_argument: The first Score seeds equality comparisons only; no numeric evaluator result becomes an expected oracle.
+    diagnostics: >-
+      Report case id, exact FEN and selected-scope hash, object/call ordinal,
+      returned Score for diagnosis only, semantic validation outcome, and a
+      field-by-field diff covering PieceOn, Pieces, side, named rights, semantic
+      en-passant state, and both clocks.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [evaluate-same-object-score-drifts, evaluate-identical-fen-object-score-drifts, evaluate-address-dependent-score, evaluate-mutates-piece-map, evaluate-mutates-colour-or-type-occupancy, evaluate-mutates-active-side, evaluate-mutates-castling-rights, evaluate-mutates-en-passant, evaluate-mutates-halfmove-clock, evaluate-mutates-fullmove-number]
+    deliberate_surviving_mutants: [constant-zero-evaluator, side-to-move-ignored-with-stable-score]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-EVAL-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Evaluate side-to-move perspective awaits an approved score relation
+    status: BLOCKED
+    contracts: [C-RTM-EVAL-003, C-BRD-010, C-FEN-010]
+    symbols: [Eval::Evaluate, Position::ColourToMove]
+    categories: [metamorphic, differential]
+    setup: >-
+      Retain evaluate_perspective_candidate_v3 only. Its canonical pair has the
+      same placement, rights, en-passant field, and clocks and differs only in
+      active side; do not execute the pair before D-EVAL-001.
+    action: >-
+      Do not compare Evaluate results for the paired sides until the owner
+      approves whether and how active-side change transforms a score.
+    expected: >-
+      BLOCKED. No equality, inequality, sign, negation, nonzero, zero, or
+      constant-zero-mutant expectation is authorized.
+    oracle:
+      type: reference-model
+      id: oracle/evaluate-perspective-pending-v3
+      provenance: D-EVAL-001 and the retained semantic pair
+      independence_argument: The pair isolates active side, but cannot itself choose the score relation.
+    diagnostics: >-
+      When unblocked, report decision version, both exact FENs, semantic pair
+      validation, approved transform, both Scores, and widened comparison if any.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-EVAL-001]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-EVAL-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Evaluate hash and private-history purity await observation authority
+    status: BLOCKED
+    contracts: [C-RTM-EVAL-004]
+    symbols: [Eval::Evaluate, Position::ZKey, Position::HashCurrentPostion]
+    categories: [state-transition, metamorphic, regression]
+    setup: >-
+      Retain the candidate only. Do not infer raw hash/cache/history equality from
+      the public FEN-semantic preservation in T-RTM-EVAL-002 and do not use private access.
+    action: >-
+      Do not assert cached identity, refreshed hash, or private-history purity
+      until D-POS-002 and any required observation seam are approved.
+    expected: >-
+      BLOCKED. No raw hash, cache, repetition-history, or private-state result is executable.
+    oracle:
+      type: metamorphic
+      id: oracle/evaluate-hash-history-pending-v3
+      provenance: D-POS-002
+      independence_argument: Public semantic equality does not define cached or historical identity.
+    diagnostics: >-
+      When unblocked, report decision and seam versions, exact approved observer
+      fields, pre/post values, call ordinal, and public semantic snapshot diff.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-POS-002]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-PERFT-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Sequential bulk-perft runs replace the latest total and restore public FEN semantics
+    status: DESIGNED
+    contracts: [C-RTM-PERFT-001, C-BRD-010, C-FEN-010]
+    symbols: [PerftHandler::PerftHandler, PerftHandler::RunBulkPerft, PerftHandler::GetNodes, Board::PieceOn, Board::Pieces, Position::ColourToMove, Position::CastlingRights, Position::EnPasBB, Position::EnPasSq, Position::HalfMoves, Position::FullMoves, Position::IsOk]
+    categories: [positive, boundary, exhaustive, state-transition, differential]
+    setup: >-
+      For each of the six perft_depth_1_3_v3 cases, construct one fresh Position
+      and one fresh handler, semantically validate the exact FEN, capture the full
+      public FEN snapshot, instantiate RunBulkPerft<false>, and call no print helper.
+      Do not call ResetData before or between runs.
+    action: >-
+      On that same handler and Position run depth 1, observe nodes and the full
+      root snapshot; then run depth 2 without ResetData and observe both; then
+      run depth 3 without ResetData and observe both. Do not read GetNodes before
+      the first run.
+    expected: >-
+      For every case, the three observations equal the frozen depth-1, depth-2,
+      and depth-3 totals respectively. In particular, the second total is exactly
+      the depth-2 oracle rather than depth-1 plus depth-2, and the third is exactly
+      depth 3 rather than an accumulated session total. Every call restores
+      placement, active side, named rights, semantic en-passant state, and both clocks.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/perft-depth-1-3
+      provenance: oracle_perft.tsv data SHA-256 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+      independence_argument: All 18 counts were frozen offline; no TDFA execution or recursive production helper supplies an expected value.
+    diagnostics: >-
+      Report case/FEN, corpus file and data hashes, run ordinal/depth,
+      expected/actual U64 nodes, prior covered run total when one exists,
+      ResetData-called=false,
+      semantic validation outcome, and a field-by-field diff of the complete
+      public FEN-semantic snapshot after each run.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [sequential-depth1-count-wrong, sequential-depth2-accumulates-prior-total, sequential-depth2-count-wrong, sequential-depth3-accumulates-prior-total, sequential-depth3-count-wrong, bulk-leaves-piece-map-changed, bulk-leaves-occupancy-changed, bulk-leaves-active-side-changed, bulk-leaves-castling-rights-changed, bulk-leaves-en-passant-changed, bulk-leaves-halfmove-clock-changed, bulk-leaves-fullmove-number-changed]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-PERFT-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: ResetData clears an existing nonzero perft session only
+    status: DESIGNED
+    contracts: [C-RTM-PERFT-002, C-BRD-010, C-FEN-010]
+    symbols: [PerftHandler::RunBulkPerft, PerftHandler::GetNodes, PerftHandler::ResetData, Board::PieceOn, Board::Pieces, Position::ColourToMove, Position::CastlingRights, Position::EnPasBB, Position::EnPasSq, Position::HalfMoves, Position::FullMoves, Position::IsOk]
+    categories: [positive, boundary, state-transition, metamorphic, regression]
+    setup: >-
+      For each of the six perft cases, create a fresh semantically validated
+      Position and fresh handler, capture the full snapshot, and run depth 1 once
+      without any preceding ResetData.
+    action: >-
+      Confirm the frozen nonzero depth-1 total and restored root, call ResetData
+      exactly once, then observe GetNodes and the separately held Position snapshot.
+    expected: >-
+      ResetData changes the handler's observed total from the frozen nonzero
+      depth-1 count to zero and leaves placement, active side, named rights,
+      semantic en-passant state, and both clocks of the outside Position unchanged.
+      ResetData before any run and repeated ResetData are not covered.
+    oracle:
+      type: metamorphic
+      id: oracle/perft-session-reset-v3
+      provenance: C-RTM-PERFT-002, frozen depth-1 counts, and outside-object semantic snapshots
+      independence_argument: The frozen nonzero corpus row establishes the pre-state; mathematical reset-to-zero and outside-object identity supply the post-state.
+    diagnostics: >-
+      Report case/FEN, depth-1 expected/actual total, pre/post-reset totals,
+      ResetData ordinal, semantic validation outcome, and the complete outside
+      Position public FEN-semantic diff.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [reset-after-nonzero-leaves-count, reset-after-nonzero-keeps-partial-count, reset-mutates-outside-piece-map, reset-mutates-outside-occupancy, reset-mutates-outside-active-side, reset-mutates-outside-castling-rights, reset-mutates-outside-en-passant, reset-mutates-outside-halfmove-clock, reset-mutates-outside-fullmove-number]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-PERFT-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Bulk-perft hash and private-history restoration await observation authority
+    status: BLOCKED
+    contracts: [C-RTM-PERFT-003]
+    symbols: [PerftHandler::RunBulkPerft, Position::ZKey, Position::HashCurrentPostion]
+    categories: [state-transition, metamorphic, regression]
+    setup: >-
+      Retain the candidate only. Do not infer raw hash/cache/history restoration
+      from T-RTM-PERFT-001's public FEN-semantic restoration and do not use private access.
+    action: >-
+      Do not assert cached identity, refreshed hash, or private-history restoration
+      until D-POS-002 and any required observation seam are approved.
+    expected: >-
+      BLOCKED. No raw hash, cache, repetition-history, or private-state result is executable.
+    oracle:
+      type: metamorphic
+      id: oracle/perft-hash-history-pending-v3
+      provenance: D-POS-002
+      independence_argument: A restored public semantic position does not define cache or history equality.
+    diagnostics: >-
+      When unblocked, report decision and seam versions, exact approved observer
+      fields, pre/post values, run ordinal, and public semantic snapshot diff.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-POS-002]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-SRCH-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Search restoration and sole-legal selection await deterministic control
+    status: BLOCKED
+    contracts: [C-RTM-SRCH-001, C-RTM-TIME-001]
+    symbols: [Search::GoSearch, Search::FindBestMove, TimeManager, TransposTable, Position]
+    categories: [positive, boundary, state-transition, metamorphic]
+    setup: >-
+      Retain blocked_search_fixtures_v3 and a future exact fake-clock/poll
+      schedule. Do not substitute wall-clock sleep, a large allowance, an
+      immediate call, a watchdog pass condition, or scheduler assumptions.
+    action: >-
+      Do not call Search until D-TIME-001 provides deterministic clock control
+      and D-SRCH-004 provides finite FindBestMove completion.
+    expected: >-
+      BLOCKED. No score, move, timeout, cache, completion, restoration, or
+      mutant-kill result is executable in version 3.
+    oracle:
+      type: reference-model
+      id: oracle/clock-controlled-search-pending-v3
+      provenance: D-TIME-001, D-SRCH-004, and the retained exact roots
+      independence_argument: A future injected schedule can supply deterministic control; elapsed host time cannot.
+    diagnostics: >-
+      When unblocked, report seam/version, exact root, depth/window or completion
+      limit, injected ticks and poll ordinal, TT lifecycle, return/completion
+      reason, and the approved Position-state diff.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-TIME-001, D-SRCH-004]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+  - id: T-RTM-TIME-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: TimeManager deadline lifecycle awaits deterministic clock control
+    status: BLOCKED
+    contracts: [C-RTM-TIME-001]
+    symbols: [TimeManager::SetOptions, TimeManager::StartTiming, TimeManager::OutOfTime]
+    categories: [positive, negative, boundary, state-transition]
+    setup: >-
+      Retain future exact option pairs and fake ticks only. D-TIME-001 must fix
+      units, arithmetic, overflow, boundary comparison, and a controllable
+      monotonic clock before any predicate can become executable.
+    action: >-
+      Do not call the timing lifecycle as a pass/fail test; never use sleep,
+      immediate-call timing, elapsed tolerances, or scheduler load as an oracle.
+    expected: >-
+      BLOCKED. No TimeManager predicate or mutant-kill expectation is frozen.
+    oracle:
+      type: reference-model
+      id: oracle/clock-controlled-deadline-pending-v3
+      provenance: D-TIME-001
+      independence_argument: Exact injected ticks can test a future approved formula; the host clock cannot choose that formula or boundary.
+    diagnostics: >-
+      When unblocked, report seam/version, exact integer inputs and approved units,
+      checked allowance arithmetic and overflow branch, fake start/deadline/now
+      ticks, lifecycle/observation ordinal, and actual predicate.
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: []
+    blocking_decisions: [D-TIME-001]
+    author: blind-design-runtime-math-v3
+    reviewers: []
+    findings: []
+
+coverage:
+  - contract: C-RTM-TT-001
+    required_categories: [positive, boundary, state-transition, metamorphic, regression]
+    tests: [T-RTM-TT-001]
+    gaps: [all allocated capacity Resize Store Probe Clear destructor leak and replaced-storage behavior]
+  - contract: C-RTM-TT-002
+    required_categories: [positive, boundary, state-transition, metamorphic, regression]
+    tests: [T-RTM-TT-002]
+    gaps: [entire allocated lifecycle blocked by D-TT-001]
+  - contract: C-RTM-EVAL-001
+    required_categories: [positive, boundary, metamorphic, differential]
+    tests: [T-RTM-EVAL-001]
+    gaps: [baseline zero king numeric weights symmetry mutation mobility pawn-progress and phase-global behavior]
+  - contract: C-RTM-EVAL-002
+    required_categories: [positive, state-transition, metamorphic, regression]
+    tests: [T-RTM-EVAL-002]
+    gaps: [absolute zero nonzero sign perspective components terminal sentinels raw hash private history cache and global behavior]
+  - contract: C-RTM-EVAL-003
+    required_categories: [metamorphic, differential]
+    tests: [T-RTM-EVAL-003]
+    gaps: [entire active-side score relation blocked by D-EVAL-001]
+  - contract: C-RTM-EVAL-004
+    required_categories: [state-transition, metamorphic, regression]
+    tests: [T-RTM-EVAL-004]
+    gaps: [entire hash and private-history responsibility blocked by D-POS-002 and observation authority]
+  - contract: C-RTM-PERFT-001
+    required_categories: [positive, boundary, exhaustive, state-transition, differential]
+    tests: [T-RTM-PERFT-001]
+    gaps: [fresh pre-run GetNodes raw hash private history output ordinary perft suite benchmark parser channel and resources]
+  - contract: C-RTM-PERFT-002
+    required_categories: [positive, boundary, state-transition, metamorphic, regression]
+    tests: [T-RTM-PERFT-002]
+    gaps: [reset-before-run repeated-reset private optional-path contents and output]
+  - contract: C-RTM-PERFT-003
+    required_categories: [state-transition, metamorphic, regression]
+    tests: [T-RTM-PERFT-003]
+    gaps: [entire hash and private-history responsibility blocked by D-POS-002 and observation authority]
+  - contract: C-RTM-SRCH-001
+    required_categories: [positive, boundary, state-transition, metamorphic]
+    tests: [T-RTM-SRCH-001]
+    gaps: [entire executable surface blocked by D-TIME-001 and D-SRCH-004]
+  - contract: C-RTM-TIME-001
+    required_categories: [positive, negative, boundary, state-transition]
+    tests: [T-RTM-TIME-001]
+    gaps: [entire executable surface blocked by D-TIME-001]
+
+packet_audit:
+  runtime_contract_path: tests/spec/contracts/runtime-math.yaml
+  runtime_contract_sha256: 09ce6c0027bc9553c871633fdd73bd6af323f0562f8c6f2b9eb4a1f5e2c45f15
+  api_dossier_sha256: ed3f7091a0c352e621648a43381f7e2998947f6b6ad4f7162068b2f8a74c4b0d
+  intended_purpose_v1_sha256: 3ffa47e69e135cfda90190a3a515086b787c9056f12e403ed30f12de3a6374bb
+  external_math_contract_sha256: 3d79d6cb6df38d232ffdb21652e5df85cb7c9cb7dd582a1cc2711005de577422
+  primitives_position_catalogue_sha256: 3eb65363f3ba15bb448d583b98c6c399a68fa10eca5a58dc42fb56055eb35193
+  movegen_rules_catalogue_sha256: 7fcd4cff2ec2df3b3ecc85855cc2cc534e6c40fd484ad8deebe79174e548f27d
+  search_tt_uci_catalogue_sha256: ab86eebccde12f2bdd028d008b959e20de827d597f3d8cc14e12471376bf1ed9
+  oracle_cases_file_sha256: d4a6bfd2b0fc73de89ee95552d1be7fd313c38e25fe45197b277ba6a34df4c69
+  oracle_cases_data_sha256: 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+  evaluate_fixture_scope_sha256: b4ee87db66f0fa8934d4489a4fb5b67b608df0fd14cd1fc7f84bbb8265ad7448
+  material_fixture_scope_sha256: 6da29a8150856eaddbb188e0abad1d0603264856e316653a522eae63b83bd14b
+  oracle_perft_file_sha256: 96a933a8203be5095a7e8592cf09b56a27f1602df4ec8795dd7aa6f3ca38c849
+  oracle_perft_data_sha256: 8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789
+  designed_ids: [T-RTM-TT-001, T-RTM-EVAL-001, T-RTM-EVAL-002, T-RTM-PERFT-001, T-RTM-PERFT-002]
+  blocked_ids: [T-RTM-TT-002, T-RTM-EVAL-003, T-RTM-EVAL-004, T-RTM-PERFT-003, T-RTM-SRCH-001, T-RTM-TIME-001]
+  designed_count: 5
+  blocked_count: 6
+  blocked_mutant_claims: none
+  sleeps: forbidden
+  private_access: forbidden
+  implementation_files: none
+  author_approvals: none
+  dependency_hash_state: final stable design hashes for this revision
+  dependency_pin_state: all required semantic dependency statuses are APPROVED at the pinned external-math hash

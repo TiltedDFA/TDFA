@@ -1,0 +1,1860 @@
+schema_version: 1
+snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+contracts_version: 0
+catalogue: primitives-position
+status: PROPOSED_CANDIDATE_CATALOGUE
+authoring_stage: blind-test-design
+approval_state:
+  contract_cards: PROPOSED
+  tests: CANDIDATE
+  note: >-
+    DESIGNED below means design-complete under the cited proposed card; no test
+    expectation is formally frozen until the card and test receive the reviews
+    required by tests/README.md.
+information_firewall:
+  permitted_inputs:
+    - tests/README.md
+    - tests/spec/**
+    - tests/data/**
+  implementation_inspected: false
+  product_executed: false
+status_policy:
+  DESIGNED: >-
+    The expectation is fixed by a cited mathematical, FEN, UCI, or FIDE
+    authority and does not select among the contract's open decisions.
+  BLOCKED: >-
+    The test shape and mutant target are recorded, but no pass/fail expectation
+    is frozen until the listed owner decision is made.
+
+contract_context:
+  - id: C-TYP-001
+    status: TENTATIVE
+    symbols: ["Colour operator!(Colour)"]
+    authority: mathematical two-element involution
+    decisions: []
+  - id: C-TYP-002
+    status: TENTATIVE
+    symbols: ["template<typename T> float FloatDiv(T, T)", "primitive aliases"]
+    authority: C++ arithmetic plus owner decision D-TYP-001
+    decisions: [D-TYP-001]
+  - id: C-MOV-001
+    status: TENTATIVE
+    symbols: ["Moves::EncodeMove", "Moves::DecodeMove", "Moves::StartSq", "Moves::TargetSq"]
+    authority: mathematical product encoding
+    decisions: [D-MOV-001]
+  - id: C-MOV-002
+    status: TENTATIVE
+    symbols: ["Moves::IsPromotionMove", "Moves::PTypeOfProm"]
+    authority: UCI promotion semantics plus owner decision D-MOV-001
+    decisions: [D-MOV-001]
+  - id: C-MOV-003
+    status: TENTATIVE
+    symbols: ["MoveList::*"]
+    authority: bounded-container model plus owner decision D-MOV-002
+    decisions: [D-MOV-002]
+  - id: C-MOV-004
+    status: UNRESOLVED
+    symbols: ["move_info::*", "MoveList::merge"]
+    authority: bounded-container model plus owner decision D-MOV-002
+    decisions: [D-MOV-002]
+  - id: C-UTL-001
+    status: TENTATIVE
+    symbols: ["UTIL::Square", "UTIL::PromotionChar", "UTIL::MoveToStr", "UTIL::UciToMove"]
+    authority: UCI long-algebraic move notation
+    decisions: [D-MOV-001, D-MOV-003]
+  - id: C-BB-001
+    status: TENTATIVE
+    symbols: ["Magics::SqToBB", "Magics::ValidSq"]
+    authority: mathematical 64-element bit-vector model
+    decisions: [D-TYP-001, D-TYP-002]
+  - id: C-BB-002
+    status: TENTATIVE
+    symbols: ["Magics::GetLS1B", "Magics::FindLS1B", "Magics::FindMS1B", "Magics::PopLS1B", "Magics::PopMS1B", "Magics::PopNRetLS1B", "Magics::PopCnt", "Magics::pow"]
+    authority: mathematical unsigned-bit-vector model
+    decisions: [D-TYP-002]
+  - id: C-BB-003
+    status: TENTATIVE
+    symbols: ["Magics::Shift<MD>", "Magics::FileOf", "Magics::RankOf", "Magics::BBFileOf", "Magics::BBRankOf"]
+    authority: mathematical 8-by-8 grid model
+    decisions: [D-TYP-001]
+  - id: C-BB-004
+    status: UNRESOLVED
+    symbols: ["Magics::KnightAttackingMask", "Magics::KingAttackingMask", "Magics::KNIGHT_ATTACK_MASKS", "Magics::KING_ATTACK_MASKS"]
+    authority: FIDE labelled piece geometry plus owner-defined numeric square orientation
+    decisions: [D-TYP-001]
+  - id: C-BB-005
+    status: UNRESOLVED
+    symbols: ["Magics::PrecomputeMask", "Magics::CollapsedFilesIndex", "Magics::CollapsedRanksIndex", "Magics::compute_base_2_to_3", "Magics::GetBaseThreeUsThem"]
+    authority: owner-defined lookup representation
+    decisions: [D-TYP-001]
+  - id: C-BB-006
+    status: UNRESOLVED
+    symbols: ["numeric Sq orientation", "UTIL::Square", "Magics::Shift<MD>"]
+    authority: owner-defined internal coordinate orientation
+    decisions: [D-TYP-001]
+  - id: C-LEX-001
+    status: UNRESOLVED
+    symbols: ["IsDigit", "RemoveWhiteSpace", "SplitFen"]
+    authority: ASCII and FEN plus owner decision D-UTIL-001
+    decisions: [D-UTIL-001]
+  - id: C-BRD-001
+    status: TENTATIVE
+    symbols: ["Board::Board", "Board::ResetBoard"]
+    authority: finite piece-placement state model
+    decisions: []
+  - id: C-BRD-002
+    status: TENTATIVE
+    symbols: ["Board::Pieces", "Board::PieceOn", "Board::MakePiece", "Magics::TypeOf", "Magics::ColourOf"]
+    authority: finite piece-placement state model
+    decisions: [D-TYP-002]
+  - id: C-BRD-003
+    status: TENTATIVE
+    symbols: ["Board::AddPiece", "Board::RemovePiece", "Board::PopPiece", "Board::MovePiece", "Board::pedantic_check"]
+    authority: finite piece-placement transition model
+    decisions: [D-TYP-002]
+  - id: C-FEN-001
+    status: TENTATIVE
+    symbols: ["Position::Position(std::string_view)", "Position::ImportFen"]
+    authority: C-FEN-010 canonical independently legal six-field FEN domain
+    decisions: []
+  - id: C-FEN-002
+    status: UNRESOLVED
+    symbols: ["Position::Position(std::string_view)", "Position::ImportFen"]
+    authority: owner-defined rejection and atomicity policy
+    decisions: [D-POS-001]
+  - id: C-POS-001
+    status: TENTATIVE
+    symbols: ["Position::Position", "Position::Reset", "StateInfo::StateInfo"]
+    authority: owner-defined default-state convention
+    decisions: [D-POS-003, D-POS-005]
+  - id: C-POS-002
+    status: TENTATIVE
+    symbols: ["Position::EmptySqs", "Position::EnPasBB", "Position::EnPasSq", "Position::CastlingRights", "Position::ColourToMove", "Position::HalfMoves", "Position::FullMoves"]
+    authority: C-FEN-010 direct-import or approved-transition FEN-semantic projection
+    decisions: []
+  - id: C-POS-003
+    status: TENTATIVE
+    symbols: ["Position::IsOk"]
+    authority: C-FEN-010 independently legal/searchable positive domain
+    decisions: [D-POS-006]
+  - id: C-POS-004
+    status: UNRESOLVED
+    symbols: ["Position copy/move operations"]
+    authority: owner decision D-POS-007
+    decisions: [D-POS-007]
+  - id: C-HSH-001
+    status: UNRESOLVED
+    symbols: ["Position::HashCurrentPostion", "Position::ZKey"]
+    authority: Zobrist identity algebra plus owner decision D-POS-002
+    decisions: [D-POS-002, D-TT-006]
+  - id: C-STA-001
+    status: TENTATIVE
+    symbols: ["Position::MakeMove", "Position::UnmakeMove", "Position::UpdateCastlingRights"]
+    authority: FIDE move effects, FEN counters, and reversible-state model
+    decisions: [D-POS-003, D-POS-004, D-POS-005]
+  - id: C-STA-002
+    status: UNRESOLVED
+    symbols: ["Position::MakeMove", "Position::UnmakeMove"]
+    authority: owner-defined invalid-input and history-discipline policy
+    decisions: [D-POS-004, D-POS-005]
+
+oracle_definitions:
+  semantic-position-snapshot-v1:
+    fields:
+      - >-
+        expected labelled_piece_map: a test-owned FEN decoder uses integer
+        (file,rank) coordinates and literal labels from {a..h}x{1..8}; it never
+        calls a production helper. Actual observations are normalized separately
+        by enumerating Sq 0..63 and labelling PieceOn(Sq) with UTIL::Square(Sq).
+        That product conversion is an observation under C-UTL-001, never an
+        input to expected-value construction, and numeric label association is
+        not asserted while C-BB-006 is unresolved
+      - "white_occupancy and black_occupancy as labelled square sets"
+      - "six per-type occupancies as labelled square sets"
+      - "active colour"
+      - >-
+        expected castling_rights as a test-owned set decoded only from the FEN
+        names {K,Q,k,q}. Actual CastlingRights is projected separately to those
+        names with CASTLE_K_W, CASTLE_Q_W, CASTLE_K_B, and CASTLE_Q_B, rejecting
+        unknown raw bits; production constants never construct the expected set
+      - >-
+        expected en-passant label is decoded directly from FEN by the test-owned
+        coordinate model. Actual present EnPasSq/EnPasBB observations are
+        normalized to a label after capture; '-' expects zero EnPasBB and does
+        not inspect the unresolved absent-target Sq sentinel
+      - "halfmove and fullmove counters"
+    exclusions:
+      - "No absent-en-passant Sq sentinel is compared."
+      - "No hash correctness is assumed unless a test explicitly names it."
+      - "No move-list ordering is observed."
+      - >-
+        No a1/a8 numeric origin is assumed: orientation-specific assertions
+        remain blocked in T-BB-007/T-BB-011/T-UTL-002.
+  chess-transition-model-v1:
+    input: "A legal semantic-position-snapshot-v1 and a legal long-algebraic UCI move."
+    rules:
+      - "Move the named source piece to the named target; remove an ordinary captured target piece."
+      - "For en-passant, remove the opposing pawn behind the target square."
+      - "For castling, also move the same-colour rook from its conventional corner to f-file or d-file."
+      - "For promotion, replace the pawn at target with exactly the q/r/b/n suffix piece."
+      - "Remove both rights when a king moves; remove the relevant right when its rook moves or is captured on its home square."
+      - "Set en-passant to the crossed square only after a two-square pawn move; otherwise set '-'."
+      - "Reset halfmove after a pawn move or capture; otherwise increment it by one."
+      - "Flip active colour; increment fullmove exactly after a Black move."
+    provenance: "FIDE move effects and standard six-field FEN semantics; no TDFA helper participates in the transition."
+
+tests:
+  - id: T-TYP-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Colour negation is the exhaustive two-colour involution
+    status: DESIGNED
+    contracts: [C-TYP-001]
+    symbols: ["Colour operator!(Colour)"]
+    categories: [positive, exhaustive, metamorphic]
+    setup: "The complete valid domain {White, Black}."
+    action: "For each c, evaluate !c and !(!c)."
+    expected: >-
+      !White is Black, !Black is White, the result differs from the input, and
+      applying the operation twice returns the original enumerator.
+    oracle:
+      type: exhaustive-model
+      id: oracle/colour-involution-v1
+      provenance: "Truth table for the complement permutation on a two-element set."
+      independence_argument: "The two rows are literal mathematical expectations and use no TDFA encoding values."
+    diagnostics: "Report input/result enumerator names and underlying integer values for both applications."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [identity-negation, constant-colour-result, one-sided-swap]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-TYP-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: FloatDiv returns exact representable quotients for ordinary nonzero divisors
+    status: DESIGNED
+    contracts: [C-TYP-002]
+    symbols: ["template<typename T> float FloatDiv(T, T)"]
+    categories: [positive, boundary, metamorphic]
+    setup: >-
+      Instantiate T exactly as U8, U16, U32, U64, I16, int, and float. For every
+      T use (0,1), (1,1), (1,2), (3,2), and (8,8); for I16, int, and float also
+      use (-1,1), (1,-2), and (-3,-2). All operands and expected results are
+      exactly representable as float.
+    action: "Evaluate FloatDiv for every listed tuple and for tuples scaled by 2 when the input type cannot overflow."
+    expected: >-
+      Results are respectively 0.0f, 1.0f, 0.5f, 1.5f, and 1.0f; signed
+      cases preserve the quotient sign. Scaling both operands by 2 leaves the
+      result unchanged.
+    oracle:
+      type: reference-model
+      id: oracle/exact-binary-rational-v1
+      provenance: "Exact integer/rational arithmetic restricted to values representable in binary32."
+      independence_argument: "Expected literals are derived before execution and do not call FloatDiv or native integer division as the oracle."
+    diagnostics: "Report T, decimal and hexadecimal operands, scaled flag, expected float bits, and actual float bits."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [integer-division-before-cast, reversed-operands, forced-absolute-value, truncating-return]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-TYP-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Primitive width guarantees and FloatDiv exceptional inputs await policy
+    status: BLOCKED
+    contracts: [C-TYP-002]
+    symbols: ["primitive aliases", "template<typename T> float FloatDiv(T, T)"]
+    categories: [negative, boundary]
+    setup: >-
+      Candidate cases are sizeof/numeric_limits checks for every width-named
+      alias, zero divisors for integral and floating T, infinities, NaNs,
+      values not exactly representable as float, and large operands whose
+      intermediate arithmetic could overflow.
+    action: "Do not execute semantic assertions until D-TYP-001 defines portability and exceptional arithmetic behavior."
+    expected: >-
+      BLOCKED: the dossier's aliases are declarations, but no approved contract
+      promises exact bit widths, IEEE-754 behavior, rounding, or a zero-divisor
+      policy.
+    oracle:
+      type: standard
+      id: oracle/cpp-platform-contract-pending-v1
+      provenance: "D-TYP-001 in tests/spec/decision-ledger.md."
+      independence_argument: "No current compiler ABI or observed TDFA result is treated as the intended contract."
+    diagnostics: "When unblocked, report compiler, CHAR_BIT, all sizeof values, numeric_limits traits, operands, result bits, and floating exceptions."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [wrong-alias-width, signedness-change, divide-by-zero-trap, premature-rounding]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Move component encoding round-trips the complete valid component product
+    status: DESIGNED
+    contracts: [C-MOV-001]
+    symbols: ["Moves::EncodeMove", "Moves::DecodeMove", "Moves::StartSq", "Moves::TargetSq"]
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: >-
+      Cartesian product of all start squares 0..63, all different target
+      squares 0..63, and the semantic move kinds mt_Quiet, mt_EnPassant,
+      mt_Castling, mt_Capture, mt_QueenPromotion, mt_BishopPromotion,
+      mt_KnightPromotion, and mt_RookPromotion (32,256 tuples). The marker
+      mt_Promotion is deliberately excluded pending D-MOV-001.
+    action: >-
+      Encode every tuple; decode it through DecodeMove and independently through
+      StartSq and TargetSq; then re-encode the decoded components.
+    expected: >-
+      Both decoding paths return the exact input start and target and DecodeMove
+      returns the exact semantic MoveType. Re-encoding yields the original Move.
+      Encodings of two tuples that differ in exactly one component are distinct.
+    oracle:
+      type: exhaustive-model
+      id: oracle/move-component-product-v1
+      provenance: "Finite-product encode/decode inverse law; domain enumerated literally from the declarations."
+      independence_argument: "The oracle stores the input tuple and compares projections; it knows no masks, shifts, or TDFA representation constants."
+    diagnostics: "Report tuple ordinal, named and underlying move type, input/decoded squares, encoded Move in hex/binary, and which projection failed."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [start-mask-too-small, target-shift-off-by-one, swapped-squares, move-type-truncation, field-overlap, decode-only-mask-error]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Promotion predicate classifies every valid semantic move kind
+    status: DESIGNED
+    contracts: [C-MOV-002]
+    symbols: ["Moves::EncodeMove", "Moves::IsPromotionMove"]
+    categories: [positive, negative, exhaustive]
+    setup: >-
+      Every distinct-square pair from 0..63 and the eight semantic move kinds
+      used by T-MOV-001.
+    action: "Encode each tuple and call IsPromotionMove."
+    expected: >-
+      The predicate is true exactly for queen, bishop, knight, and rook
+      promotion move kinds and false for quiet, en-passant, castling, and
+      capture kinds, independent of either square.
+    oracle:
+      type: exhaustive-model
+      id: oracle/chess-promotion-kind-set-v1
+      provenance: "The four UCI/FIDE promotion choices and the declared semantic MoveType names."
+      independence_argument: "Expected membership is a literal set of enumerator names, not a numeric threshold or mask."
+    diagnostics: "Report named move kind, start/target, encoded hex value, and predicate result."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [numeric-threshold-off-by-one, capture-as-promotion, omitted-underpromotion, square-dependent-classification]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Promotion piece decoder representation awaits an owner decision
+    status: BLOCKED
+    contracts: [C-MOV-002]
+    symbols: ["Moves::PTypeOfProm"]
+    categories: [positive, negative, boundary]
+    setup: >-
+      Candidate inputs cover all four promotion move kinds, non-promotion kinds,
+      mt_Promotion itself, NULL_MOVE, equal-square encodings, and arbitrary U16
+      bit patterns.
+    action: "Do not assert PTypeOfProm results until D-MOV-001 fixes valid inputs and the returned PieceType representation."
+    expected: >-
+      BLOCKED: the purpose requires a semantic queen/rook/bishop/knight result,
+      but the dossier exposes both ordinary pt_Queen/... values and
+      pt_prom_queen/... marker values and does not select between them or define
+      non-promotion behavior.
+    oracle:
+      type: standard
+      id: oracle/promotion-decoder-contract-pending-v1
+      provenance: "D-MOV-001 and the MoveType/PieceType declarations in the frozen dossier."
+      independence_argument: "The expected enum family is not inferred from current numeric values or implementation behavior."
+    diagnostics: "When unblocked, report encoded bits, decoded move kind, expected semantic/representation PieceType, and actual named/underlying value."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [promotion-map-permutation, normal-versus-marker-confusion, nonpromotion-fallthrough, numeric-range-assumption]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Valid corpus UCI moves parse and render canonically
+    status: DESIGNED
+    contracts: [C-MOV-001, C-MOV-002, C-UTL-001, C-FEN-001]
+    symbols: ["UTIL::UciToMove", "UTIL::MoveToStr", "Moves::DecodeMove", "Moves::StartSq", "Moves::TargetSq", "Moves::IsPromotionMove"]
+    categories: [positive, boundary, exhaustive, differential, protocol]
+    setup: >-
+      Every non-hyphen token in legal_uci from every row of
+      tests/data/oracle_cases.tsv at scoped data SHA-256
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      (column header through final LF; metadata/comment lines excluded).
+      Construct a fresh Position from that row's FEN for each token. Freeze the
+      exact type sentinels: start/g1f3=mt_Quiet,
+      kiwipete/e2a6=mt_Capture,
+      en_passant_legal/e5d6=mt_EnPassant,
+      castling_minimal/e1c1 and e1g1=mt_Castling,
+      promotion_choices/a7a8q=mt_QueenPromotion, a7a8r=mt_RookPromotion,
+      a7a8b=mt_BishopPromotion, a7a8n=mt_KnightPromotion, and
+      perft_castling/d7c8q,r,b,n equal the corresponding promotion MoveType.
+    action: "Parse the token with UciToMove, render it with MoveToStr, and inspect its component/promotion projections."
+    expected: >-
+      Rendering returns the exact lowercase corpus token. For the frozen
+      sentinels DecodeMove returns the exact named MoveType above, not merely a
+      numeric range or promotion predicate. Each five-character corpus token is
+      classified as promotion and preserves its suffix; each four-character
+      token is non-promotion. Start/target numeric expectations are excluded here
+      pending C-BB-006 and are covered by T-UTL-002.
+    oracle:
+      type: corpus
+      id: oracle/tdfa-chess-oracle-v1/legal-uci
+      provenance: "tests/data/oracle_cases.tsv; python-chess 1.11.2 committed profile; scoped data SHA-256 7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 covers the column header through final LF and excludes metadata/comment lines."
+      independence_argument: "Expected strings are frozen outside TDFA and comparison never asks TDFA to generate the expected move."
+    diagnostics: "Report case_id, FEN, token ordinal, token, encoded bits, rendered text, expected/actual named and underlying MoveType, and promotion predicate."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [case-error, missing-promotion-suffix, castling-as-quiet, capture-as-quiet, en-passant-as-capture, underpromotion-type-swap, position-insensitive-parse]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006]
+
+  - id: T-MOV-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Manual MoveList add contains and full-capacity behavior await container policy
+    status: BLOCKED
+    contracts: [C-MOV-003]
+    symbols: ["MoveList::add", "MoveList::operator[]", "MoveList::all", "MoveList::len", "MoveList::contains"]
+    categories: [positive, negative, boundary, exhaustive, state-transition]
+    setup: >-
+      Deterministically enumerate distinct valid encodings from T-MOV-001 and
+      take the first MAX_MOVES. The test has a design precondition that
+      MAX_MOVES does not exceed that 32,256-element valid set; violation is a
+      contract finding, not permission to use invalid encodings.
+    action: >-
+      Retain the exact distinct-move/MAX_MOVES fixture, but do not execute its
+      manual-add, contains, multiplicity, or final-capacity assertions until
+      D-MOV-002 defines those behaviors.
+    expected: >-
+      BLOCKED: manual add/contains semantics, duplicate policy, populated-prefix
+      effects of add, and whether an addition reaching MAX_MOVES is permitted
+      are owner decisions under D-MOV-002. Constructor len is not part of this
+      record; ordering and unpopulated storage remain outside it.
+    oracle:
+      type: exhaustive-model
+      id: oracle/bounded-distinct-multiset-v1
+      provenance: "A test-owned mathematical set and prefix counter."
+      independence_argument: "The model uses standard-library set membership and never reads MoveList storage to form expectations."
+    diagnostics: "Report MAX_MOVES, prefix n, inserted sequence, expected/actual sorted populated multisets, missing/extra values, and guard/canary status."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [preincrement-index, dropped-last-capacity-slot, contains-searches-tail, length-not-updated, data-overwrite]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: move_info and merge into an empty MoveList preserve a bounded move group
+    status: BLOCKED
+    contracts: [C-MOV-003, C-MOV-004]
+    symbols: ["move_info::move_info", "move_info::add_move", "MoveList::merge", "MoveList::len", "MoveList::contains"]
+    categories: [positive, boundary, state-transition, metamorphic]
+    setup: >-
+      For n=0..7, create n distinct valid moves whose target squares are also
+      distinct. Construct a fresh move_info and a fresh empty MoveList for each n.
+    action: >-
+      Retain the exact n=0..7 fixture but do not assert constructor, add_move,
+      attacks_, or merge effects until D-MOV-002 approves those semantics.
+    expected: >-
+      BLOCKED: count initialization, populated prefix/order, whether attacks_ is
+      maintained by add_move, and even merge-into-empty behavior are not frozen.
+      If approved, construct the expected attack mask directly as the OR of
+      test-owned U64(1)<<literal_target_index terms, never with TargetSq or
+      SqToBB.
+    oracle:
+      type: reference-model
+      id: oracle/move-info-group-v1
+      provenance: "Bounded seven-element multiset plus independent OR-fold of one-hot target squares."
+      independence_argument: "The future oracle folds literal tuple inputs and integer bits, not move_info, MoveList, TargetSq, or SqToBB output."
+    diagnostics: "Report n, input and stored sorted moves, count_, expected/actual attacks in hex and square lists, and merged-list multiset."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [count-off-by-one, target-omitted-from-attacks, start-used-as-attack, merge-skips-first, merge-skips-last, merge-uses-unused-tail]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-007
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Move and bounded-list invalid and policy-sensitive cases await decisions
+    status: BLOCKED
+    contracts: [C-MOV-001, C-MOV-003, C-MOV-004]
+    symbols: ["Moves::NULL_MOVE", "Moves::BAD_MOVE", "Moves::EncodeMove", "MoveList::add", "MoveList::merge", "MoveList::all", "move_info::add_move"]
+    categories: [negative, boundary, state-transition]
+    setup: >-
+      Candidate cases cover equal start/target, Sq values 64..255, mt_Promotion,
+      arbitrary U16 values, NULL_MOVE/BAD_MOVE, duplicate additions, the
+      MAX_MOVES+1 and eighth move_info additions, merge into nonempty lists,
+      out-of-range operator[], and mutation through all().
+    action: "Do not execute assertions for these cases until D-MOV-001 and D-MOV-002 are decided."
+    expected: >-
+      BLOCKED: null/invalid representation, duplicate policy, append-versus-
+      replace merge behavior, ordering, overflow preconditions, bounds behavior,
+      and the semantic effect of mutating all() are not approved.
+    oracle:
+      type: standard
+      id: oracle/move-list-policy-pending-v1
+      provenance: "D-MOV-001 and D-MOV-002 in tests/spec/decision-ledger.md."
+      independence_argument: "No container behavior is inferred from current storage layout or common engine conventions."
+    diagnostics: "When unblocked, report operation trace, capacity/count before and after, complete populated multiset, canaries, exception/assert/return behavior, and build mode."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [silent-overflow, duplicate-elision, duplicate-retention, merge-replacement, stale-length, unchecked-index]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-MOV-008
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Malformed UCI notation and null rendering await conversion policy
+    status: BLOCKED
+    contracts: [C-MOV-001, C-MOV-002, C-UTL-001]
+    symbols: ["UTIL::UciToMove", "UTIL::MoveToStr", "UTIL::PromotionChar", "Moves::NULL_MOVE"]
+    categories: [negative, boundary, protocol]
+    setup: >-
+      Candidate strings include empty, lengths 1..6, 0000, invalid files/ranks,
+      equal squares, uppercase, embedded NUL/space, invalid promotion suffixes,
+      syntactically valid illegal moves, and valid pseudo-legal moves exposing
+      one's king. Candidate rendering inputs include NULL_MOVE, BAD_MOVE, and
+      malformed bit patterns.
+    action: "Do not assert parse failure class or rendering until D-MOV-001 and D-MOV-003 define them."
+    expected: >-
+      BLOCKED: syntax versus pseudo-legality versus legality validation, failure
+      representation, casing, and the tentative 0000 null rendering are not
+      approved internal contracts.
+    oracle:
+      type: standard
+      id: oracle/uci-invalid-conversion-policy-pending-v1
+      provenance: "UCI notation authority plus D-MOV-001 and D-MOV-003."
+      independence_argument: "The UCI grammar identifies malformed inputs but does not choose this internal API's recovery mechanism."
+    diagnostics: "When unblocked, report exact byte string/length, FEN, parser result bits or failure, rendered bytes, and whether state changed."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [accept-invalid-file, accept-invalid-rank, wrong-null-string, legality-level-confusion, uppercase-normalization]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-UTL-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: UCI square vocabulary and ordinary promotion characters are exact
+    status: DESIGNED
+    contracts: [C-UTL-001]
+    symbols: ["UTIL::Square", "UTIL::PromotionChar"]
+    categories: [positive, boundary, exhaustive, protocol]
+    setup: >-
+      Every Sq integer 0..63, compared as an unordered output set with the 64
+      literal strings a1..h8; and the four ordinary PieceType inputs pt_Queen,
+      pt_Rook, pt_Bishop, and pt_Knight.
+    action: "Call Square for each Sq and PromotionChar for each listed ordinary type."
+    expected: >-
+      Square outputs each canonical lowercase UCI square exactly once, with no
+      duplicate or noncanonical string; this intentionally does not bind a
+      particular integer to a label. PromotionChar returns q, r, b, and n for
+      Queen, Rook, Bishop, and Knight respectively.
+    oracle:
+      type: exhaustive-model
+      id: oracle/uci-square-and-promotion-alphabet-v1
+      provenance: "Literal UCI alphabets {a..h}x{1..8} and {q,r,b,n}."
+      independence_argument: "Expected strings/chars are generated by test-owned nested integer loops and literal tables, never by a TDFA coordinate or move helper."
+    diagnostics: "Report input enumerator/integer, output bytes, sorted expected/actual square sets, duplicates/missing labels, and expected/actual promotion char."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [uppercase-file, zero-based-rank-text, duplicate-square-label, queen-rook-char-swap, knight-as-k]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-UTL-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Numeric square orientation and marker PromotionChar inputs await contracts
+    status: BLOCKED
+    contracts: [C-UTL-001, C-BB-006]
+    symbols: ["UTIL::Square", "UTIL::PromotionChar", "UTIL::MoveToStr"]
+    categories: [boundary, exhaustive, protocol]
+    setup: >-
+      Planned orientation table is all 64 pairs from the proposed test-owned
+      a1=0, index=8*(rank-1)+(file-'a') model. Planned exceptional PieceTypes are
+      pt_prom_queen/bishop/knight/rook and every non-promotion/sentinel type.
+    action: "Do not freeze per-index labels or exceptional PromotionChar results until C-BB-006 and D-MOV-001 are decided."
+    expected: >-
+      BLOCKED: T-UTL-001 fixes the complete output vocabulary and ordinary
+      promotion chars only; it does not choose numeric board orientation or
+      define marker/invalid PieceType behavior.
+    oracle:
+      type: standard
+      id: oracle/uci-internal-orientation-pending-v1
+      provenance: "UCI fixes external labels, while C-BB-006 and D-MOV-001 own internal representation."
+      independence_argument: "No common a1-LSB convention or current product mapping is silently promoted to contract."
+    diagnostics: "When unblocked, report all 64 input/output pairs, proposed coordinate calculation, PieceType name/value, and returned byte."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [a1-versus-a8-origin, file-major-index, rank-file-swap, marker-type-offset, invalid-type-fallthrough]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: One-hot square conversion exhausts the approved 64-index domain
+    status: DESIGNED
+    contracts: [C-BB-001]
+    symbols: ["Magics::SqToBB(Sq)", "Magics::SqToBB<Sq>()"]
+    categories: [positive, boundary, exhaustive]
+    setup: >-
+      Every approved index 0..63. Instantiate the consteval SqToBB<N> form once
+      for each N=0..63 and call the runtime form for the same index. ValidSq and
+      every invalid index are excluded pending D-TYP-002.
+    action: "Call both SqToBB forms for every approved index and combine their results as a 64-coefficient set."
+    expected: >-
+      For each i, both SqToBB forms equal test-owned U64(1) shifted left by i,
+      are equal to each other, have population count one, and are pairwise
+      disjoint across different i. The OR of all 64 results is all 64 bits set.
+    oracle:
+      type: exhaustive-model
+      id: oracle/bit-index-one-hot-v1
+      provenance: "Definition of indexing a 64-element bit vector by integers 0 through 63."
+      independence_argument: "Expected U64 values are generated by a test-owned arbitrary-precision one-hot model before narrowing, not by any Magics helper."
+    diagnostics: "Report input index/Sq, expected/actual hex bitboard, popcount, union-so-far, and consteval/runtime disagreement."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [shift-by-index-minus-one, 32-bit-literal-shift, template-runtime-disagreement, duplicate-one-hot, missing-top-bit]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Population count matches an independent model across exhaustive 16-bit slices
+    status: DESIGNED
+    contracts: [C-BB-002]
+    symbols: ["Magics::PopCnt"]
+    categories: [positive, boundary, exhaustive, fuzz, metamorphic]
+    setup: >-
+      All x=0..65535 placed independently at bit offsets 0, 16, 32, and 48;
+      all-zero and all-one U64; every singleton; every two-bit combination; and
+      4,096 U64 values from SplitMix64 seed 0x0000000054444641.
+    action: "Call PopCnt for every board and also for complements and disjoint OR pairs from the fixed corpus."
+    expected: >-
+      The result equals the sum of the 64 independently extracted mathematical
+      bits floor(b/2^i) mod 2 for i=0..63. It lies in 0..64; PopCnt(0)=0,
+      PopCnt(~0)=64, PopCnt(~b)=64-PopCnt(b), and for disjoint a,b,
+      PopCnt(a|b)=PopCnt(a)+PopCnt(b).
+    oracle:
+      type: exhaustive-model
+      id: oracle/popcount-64-coefficient-sum-v2
+      provenance: "Cardinality of the 64 binary coefficients; fixed SplitMix64 seed for cross-slice patterns."
+      independence_argument: "The oracle performs 64 fixed unsigned division/modulo coefficient reads; it neither clears low bits nor uses compiler popcount/bit-scan intrinsics or TDFA helpers."
+    diagnostics: "Report corpus class/index, seed and draw index, input hex/binary, expected/actual count, complement count, and disjoint operands."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [32-bit-truncation, misses-top-bit, zero-off-by-one, signed-shift-loop, byte-only-count, complement-width-error]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Nonzero bit scans and removals agree with an independent ordered-set model
+    status: DESIGNED
+    contracts: [C-BB-002]
+    symbols: ["Magics::GetLS1B", "Magics::FindLS1B", "Magics::FindMS1B", "Magics::PopLS1B", "Magics::PopMS1B", "Magics::PopNRetLS1B"]
+    categories: [positive, boundary, exhaustive, fuzz, metamorphic, state-transition]
+    setup: >-
+      Every singleton and every unordered two-bit board; every nonzero 16-bit
+      pattern shifted by offsets 0,16,32,48; and 4,096 nonzero SplitMix64 boards
+      with seed 0x0000000054444641. Zero is excluded by D-TYP-002.
+    action: >-
+      Derive the ascending set-bit index list using a test-owned 64-iteration
+      boolean scan. Call every query/removal. For PopNRetLS1B use a copy, then
+      repeatedly invoke it until the copy becomes zero.
+    expected: >-
+      GetLS1B is the singleton at the first index; FindLS1B and FindMS1B are the
+      first and last indices. PopLS1B removes exactly the first singleton and
+      PopMS1B exactly the last. PopNRetLS1B returns the first index and mutates
+      its operand to the PopLS1B result; repeated calls yield the complete index
+      list in strictly ascending order, with population count decreasing by one.
+    oracle:
+      type: exhaustive-model
+      id: oracle/ordered-set-bit-list-v1
+      provenance: "Literal scan of indices 0..63 into an ordered mathematical set."
+      independence_argument: "The reference does not use arithmetic isolation identities, count-leading/trailing-zero intrinsics, or any production helper."
+    diagnostics: "Report corpus class/index, input and post-state hex, expected index list, each returned index/bitboard, and first divergent removal step."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [lsb-msb-swap, index-one-based, 32-bit-scan, remove-with-xor-wrong-bit, nonmutating-pop-return, extra-bit-cleared, top-bit-signedness]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Zero-input bit scan and removal behavior awaits a sentinel contract
+    status: BLOCKED
+    contracts: [C-BB-002]
+    symbols: ["Magics::GetLS1B", "Magics::FindLS1B", "Magics::FindMS1B", "Magics::PopLS1B", "Magics::PopMS1B", "Magics::PopNRetLS1B"]
+    categories: [negative, boundary, state-transition]
+    setup: "A zero BitBoard, including a mutable zero operand for PopNRetLS1B."
+    action: "Do not call functions whose zero precondition is unresolved until D-TYP-002 is decided."
+    expected: >-
+      BLOCKED: a safe sentinel, unchanged-zero result, assertion, or explicit
+      nonzero precondition are all plausible and the draft does not choose one.
+    oracle:
+      type: standard
+      id: oracle/zero-bit-scan-policy-pending-v1
+      provenance: "D-TYP-002 in tests/spec/decision-ledger.md."
+      independence_argument: "Compiler intrinsic behavior and current TDFA behavior are explicitly excluded as authorities."
+    diagnostics: "When unblocked, report function, return value, mutable operand before/after, exception/signal/assertion, and checked/release build mode."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [undefined-zero-index, accidental-64-sentinel, zero-underflow, zero-mutates-to-all-ones]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Directional shifts satisfy exhaustive grid-graph invariants without choosing orientation
+    status: DESIGNED
+    contracts: [C-BB-003]
+    symbols: ["Magics::Shift<NORTH>", "Magics::Shift<NORTH_EAST>", "Magics::Shift<EAST>", "Magics::Shift<SOUTH_EAST>", "Magics::Shift<SOUTH>", "Magics::Shift<SOUTH_WEST>", "Magics::Shift<WEST>", "Magics::Shift<NORTH_WEST>", "Magics::Shift<NORTHNORTH>", "Magics::Shift<SOUTHSOUTH>"]
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: >-
+      Zero, every one-hot square, every two-bit board, and 4,096 pairs from
+      SplitMix64 seed 0x0000000054444641. Opposite pairs are N/S, E/W, NE/SW,
+      and NW/SE.
+    action: "Apply every direction to the corpus and compose opposite/cardinal shifts."
+    expected: >-
+      Zero maps to zero and Shift distributes over bitwise OR. A singleton maps
+      to zero or a singleton; nonzero singleton images are injective. Cardinal
+      directions each discard exactly 8 of 64 singleton inputs, diagonals each
+      discard 15, and NORTHNORTH/SOUTHSOUTH each discard 16. Every nonzero
+      singleton image is restored by the opposite shift. NORTHNORTH(b) equals
+      NORTH(NORTH(b)) and likewise south. Where both paths remain on-board,
+      cardinal compositions agree with the corresponding diagonal. These
+      expectations deliberately do not label which numeric edge is north/east.
+    oracle:
+      type: metamorphic
+      id: oracle/orientation-free-grid-shift-v1
+      provenance: "Partial bijections and edge cardinalities of an 8-by-8 grid."
+      independence_argument: "No shift distance, mask, a1 index, or TDFA direction implementation is copied into the oracle."
+    diagnostics: "Report direction, input/output hex and set-bit lists, composition path, edge-loss counts, and first injectivity collision."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [file-wraparound, wrong-opposite, missing-edge-mask, diagonal-as-cardinal, double-shift-is-single, non-distributive-mask]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: File and rank classifiers form orthogonal eight-by-eight partitions
+    status: DESIGNED
+    contracts: [C-BB-003]
+    symbols: ["Magics::FileOf", "Magics::RankOf", "Magics::BBFileOf", "Magics::BBRankOf"]
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: "All squares 0..63. Treat returned scalar labels as opaque; do not assign a1 or numeric orientation."
+    action: "Collect scalar and bit-form file/rank results for every square and group squares by equality."
+    expected: >-
+      FileOf yields exactly eight labels of multiplicity eight and RankOf does
+      likewise. Every (file-label,rank-label) pair occurs exactly once. BBFileOf
+      and BBRankOf are nonzero one-hot U8 values; equality of their values induces
+      exactly the same partitions as FileOf and RankOf respectively. Each of the
+      eight bit labels occurs eight times.
+    oracle:
+      type: exhaustive-model
+      id: oracle/orthogonal-grid-partitions-v1
+      provenance: "Incidence structure of 64 squares as the Cartesian product of two eight-element coordinate sets."
+      independence_argument: "The oracle compares partition structure and never assumes numeric label order or board orientation."
+    diagnostics: "Report all four values per square, file/rank group histograms, missing/duplicate coordinate pairs, and non-one-hot values."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [modulo-seven, rank-divisor-seven, rank-file-alias, scalar-bit-partition-disagreement, non-one-hot-bit-label, corner-duplicate]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-007
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Exact numeric-index king and knight masks await square orientation
+    status: BLOCKED
+    contracts: [C-BB-004, C-BB-006]
+    symbols: ["Magics::KnightAttackingMask", "Magics::KingAttackingMask", "Magics::KNIGHT_ATTACK_MASKS", "Magics::KING_ATTACK_MASKS"]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Candidate table: all 64 indices modeled as pairs
+      (file=i mod 8, rank=floor(i/8)), king deltas as the eight nonzero pairs in
+      {-1,0,1} squared, and knight deltas as all signed permutations of (1,2).
+      This candidate chooses the unresolved numeric origin and is not executable.
+    action: "Do not compare exact raw-index masks until D-TYP-001/C-BB-006 selects the numeric square orientation."
+    expected: >-
+      BLOCKED: FIDE fixes labelled leaper geometry, but it does not bind raw
+      index i to (file=i mod 8,rank=floor(i/8)). Exact raw masks and table rows
+      therefore await D-TYP-001/C-BB-006. Orientation-free degree, symmetry,
+      and labelled-incidence checks belong under the approved C-GRD-010 slice.
+    oracle:
+      type: reference-model
+      id: oracle/leaper-delta-geometry-pending-orientation-v1
+      provenance: "FIDE labelled geometry plus unresolved D-TYP-001/C-BB-006 numeric orientation."
+      independence_argument: "No common a1-LSB convention or current TDFA table is accepted as authority for a raw-index expectation."
+    diagnostics: "When unblocked, report orientation decision/version, piece kind, raw index and label, expected/actual masks and labelled square sets, degree, symmetry partner, and table/generator source."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [edge-wrap, missing-delta, extra-origin, asymmetric-mask, wrong-table-row, king-knight-table-swap, corner-mask-error]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-008
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Sliding lookup masks and compact occupancy encodings await representation contracts
+    status: BLOCKED
+    contracts: [C-BB-005]
+    symbols: ["Magics::PrecomputeMask", "Magics::SLIDING_ATTACKS_MASK", "Magics::CollapsedFilesIndex", "Magics::CollapsedRanksIndex", "Magics::compute_base_2_to_3", "Magics::GetBaseThreeUsThem", "Magics::base_2_to_3_us", "Magics::base_2_to_3_them"]
+    categories: [positive, negative, boundary, exhaustive, metamorphic]
+    setup: >-
+      Planned finite domains are every square/direction, all 256 U8 occupancy
+      patterns for each of eight line positions, all disjoint us/them U8 pairs
+      (3^8 states), and representative 64-bit boards for collapsed indices.
+    action: "Do not freeze exact masks, digit weights, edge inclusion, or compact bit order until a representation contract is approved."
+    expected: >-
+      BLOCKED: the purpose identifies geometry/lookup indexing but does not state
+      whether ray endpoints are excluded, how directions map to the four slots,
+      how files/ranks are packed, which ternary digit represents us/them, or how
+      piece_square alters the index.
+    oracle:
+      type: exhaustive-model
+      id: oracle/sliding-lookup-representation-pending-v1
+      provenance: "C-BB-005 local draft and unresolved internal representation choices."
+      independence_argument: "Common magic-bitboard layouts are not treated as authority and production tables are not self-oracles."
+    diagnostics: "When unblocked, report square/direction, occupancy sets, expected/actual masks or index, ternary digits, and table/direct-function disagreement."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [reversed-ternary-digits, include-ray-edge, omit-near-square, direction-slot-swap, file-rank-collapse-swap, piece-square-off-by-one]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-009
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Integer-exponent power helper matches exact small powers
+    status: DESIGNED
+    contracts: [C-BB-002]
+    symbols: ["Magics::pow"]
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: >-
+      Bases {-4,-2,-1,-0.5,0,0.5,1,2,4} and exponents 0..12, excluding
+      0^0. Retain only tuples whose exact rational result is finite and exactly
+      representable as double. Add exponent-split triples a+b<=12.
+    action: "Evaluate pow(x,n) for every tuple and compare exponent-split products."
+    expected: >-
+      Results equal a frozen table produced with arbitrary-precision rational
+      exponentiation by squaring and converted once to exact binary64. For
+      nonzero x, pow(x,0)=1; pow(x,1)=x; and
+      pow(x,a+b)=pow(x,a)*pow(x,b) for the retained exact cases. Odd/even powers
+      preserve/remove a negative base's sign respectively.
+    oracle:
+      type: exhaustive-model
+      id: oracle/small-integer-powers-v2
+      provenance: "Frozen finite table from arbitrary-precision rational exponentiation by squaring, with each retained binary64 value audited by numerator/denominator."
+      independence_argument: "The oracle uses a different algorithm and number domain, is frozen before TDFA execution, and calls neither std::pow nor Magics::pow."
+    diagnostics: "Report base bits/value, exponent, exact rational, expected/actual double bits, and exponent split."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [zero-exponent-returns-base, exponent-off-by-one, sign-loss, repeated-squaring-bit-error, float-intermediate]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Ambiguous power edge cases remain outside the frozen expectation
+    status: BLOCKED
+    contracts: [C-BB-002]
+    symbols: ["Magics::pow"]
+    categories: [negative, boundary]
+    setup: "0^0, signed zero, NaN, infinities, overflow, underflow, and exponents large enough to make runtime/resource behavior relevant."
+    action: "Do not assert these cases until exceptional floating behavior is contracted."
+    expected: "BLOCKED: neither the internal draft nor D-TYP-001 defines exceptional floating semantics or resource limits."
+    oracle:
+      type: standard
+      id: oracle/power-edge-policy-pending-v1
+      provenance: "No approved internal exceptional-arithmetic contract."
+      independence_argument: "Host libm behavior and current implementation choices are not treated as intended semantics."
+    diagnostics: "When unblocked, report input bit patterns, exponent, rounding mode, floating exceptions, result bits, and elapsed iteration count."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [zero-zero-special-case, signed-zero-loss, overflow-loop, nan-normalization]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BB-011
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Exact numeric board orientation is deliberately unfrozen
+    status: BLOCKED
+    contracts: [C-BB-003, C-BB-006]
+    symbols: ["Magics::FileOf", "Magics::RankOf", "Magics::BBFileOf", "Magics::BBRankOf", "Magics::Shift<MD>", "UTIL::Square"]
+    categories: [boundary, exhaustive, metamorphic]
+    setup: >-
+      Candidate table contains all 64 indices and the proposed independent
+      coordinate mapping index=8*(rank-1)+(file-'a'), plus exact NORTH/EAST/etc.
+      destination tables for every singleton.
+    action: "Retain only orientation-free T-BB-005/T-BB-006 assertions until the owner approves C-BB-006."
+    expected: >-
+      BLOCKED: a1-LSB versus a8-LSB, rank-major versus file-major, and the sign
+      assigned to NORTH/EAST are internal representation choices not fixed by
+      FIDE or UCI. Once decided, freeze the full 64-row table; do not infer it
+      from UTIL::Square or any Magics output.
+    oracle:
+      type: exhaustive-model
+      id: oracle/numeric-board-orientation-pending-v1
+      provenance: "C-BB-006 proposal and D-TYP-001."
+      independence_argument: "The future oracle is a literal test-owned coordinate table; production conversions are prohibited from expectation construction."
+    diagnostics: "When unblocked, report index, expected label/file/rank, every directional target, expected/actual scalar and bit values, and orientation proposal version."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [vertical-origin-flip, rank-file-major-swap, north-south-swap, east-west-swap, bit-label-reversal]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-LEX-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: IsDigit exhaustively recognizes the ASCII FEN digit alphabet
+    status: DESIGNED
+    contracts: [C-LEX-001]
+    symbols: ["IsDigit"]
+    categories: [positive, negative, boundary, exhaustive]
+    setup: "Every ASCII code point 0x00..0x7f passed as char, with explicit boundary labels '/', '0', '9', and ':'."
+    action: "Call IsDigit once for each value."
+    expected: "True exactly for the ten bytes '0' through '9'; false for all other ASCII bytes, including NUL and whitespace."
+    oracle:
+      type: exhaustive-model
+      id: oracle/ascii-decimal-digit-v1
+      provenance: "ASCII code chart and the FEN decimal field alphabet."
+      independence_argument: "The oracle is the literal closed interval 0x30..0x39 and does not use ctype, locale, or TDFA helpers."
+    diagnostics: "Report byte in hex, printable escape/name, expected boolean, actual boolean, and host char signedness."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [excludes-zero, excludes-nine, includes-slash, includes-colon, locale-dependent-classification]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-LEX-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: SplitFen returns the six exact fields of every canonical corpus FEN
+    status: DESIGNED
+    contracts: [C-LEX-001, C-FEN-001]
+    symbols: ["SplitFen"]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Every fen and root_fen value in tests/data/oracle_cases.tsv and every fen
+      in tests/data/oracle_perft.tsv, deduplicated by exact bytes. Retain the
+      source string for the full observation lifetime and prefill all six output
+      views with a nonmatching sentinel.
+    action: "Call SplitFen and independently split only on the five canonical ASCII spaces."
+    expected: >-
+      Exactly six output views appear in standard FEN order: placement, active
+      colour, castling, en-passant, halfmove, fullmove. Each equals the frozen
+      independent substring byte-for-byte, including '-' fields and multi-digit
+      counters; the source bytes are unchanged and the views remain valid while
+      that source remains alive.
+    oracle:
+      type: corpus
+      id: oracle/canonical-fen-six-fields-v1
+      provenance: "Scoped data SHA-256 values (column header through final LF; metadata/comment lines excluded): oracle_cases.tsv=7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77 and oracle_perft.tsv=8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789."
+      independence_argument: "Expected boundaries are found by a test-owned exact-five-space scan, not RemoveWhiteSpace, SplitFen, or Position parsing."
+    diagnostics: "Report corpus file/case_id, escaped source bytes, expected/actual six arrays with offsets/lengths, sentinel survivors, and source checksum before/after."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [field-order-swap, drops-final-field, off-by-one-view, collapses-hyphen, mutates-source, leaves-output-sentinel]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006]
+
+  - id: T-LEX-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Whitespace normalization and non-six-field splitting await lexical policy
+    status: BLOCKED
+    contracts: [C-LEX-001]
+    symbols: ["RemoveWhiteSpace", "SplitFen"]
+    categories: [negative, boundary, metamorphic]
+    setup: >-
+      Candidate inputs include empty/all-whitespace strings; leading, trailing,
+      repeated, tab, LF, CR, vertical-tab, form-feed, nonbreaking, and embedded
+      whitespace; five- and seven-field FENs; empty fields; and views containing
+      embedded NUL.
+    action: "Do not assert removal, trimming, collapsing, field-count handling, or output-array preservation until D-UTIL-001 is decided."
+    expected: >-
+      BLOCKED: even the meaning of RemoveWhiteSpace (remove all versus trim or
+      normalize) and SplitFen's failure behavior are explicitly unresolved.
+    oracle:
+      type: standard
+      id: oracle/fen-lexical-policy-pending-v1
+      provenance: "D-UTIL-001 in tests/spec/decision-ledger.md."
+      independence_argument: "No locale, common trim convention, or current helper output is elevated into a contract."
+    diagnostics: "When unblocked, report escaped input bytes, view offsets/lengths, initial/final output array, locale, and exception/assertion/return behavior."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [trim-versus-remove, ascii-space-only, locale-whitespace, stale-extra-fields, partial-write-on-short-input]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Board construction and reset produce the exhaustive empty placement
+    status: DESIGNED
+    contracts: [C-BRD-001, C-BRD-002]
+    symbols: ["Board::Board", "Board::ResetBoard", "Board::PieceOn", "Board::Pieces"]
+    categories: [positive, boundary, exhaustive, state-transition, metamorphic]
+    setup: >-
+      A freshly constructed Board and, separately, a Board populated exactly as
+      p_WhiteKing@0, p_WhiteQueen@1, p_WhiteBishop@2, p_WhiteKnight@3,
+      p_WhiteRook@4, p_WhitePawn@5, p_BlackKing@58, p_BlackQueen@59,
+      p_BlackBishop@60, p_BlackKnight@61, p_BlackRook@62, p_BlackPawn@63.
+    action: >-
+      Inspect every square and every valid colour/type query on the fresh board;
+      call ResetBoard on both fixtures twice and repeat the observations.
+    expected: >-
+      PieceOn(s)=p_None for every s=0..63; Pieces(White), Pieces(Black), and
+      Pieces(t) are zero for each of King, Queen, Bishop, Knight, Rook, Pawn;
+      Pieces(pt_All) is also zero. Reset removes all populated pieces, including
+      the aggregate pt_All occupancy, and a second reset is idempotent.
+    oracle:
+      type: exhaustive-model
+      id: oracle/empty-piece-map-v1
+      provenance: "The unique empty mapping from 64 squares to no piece."
+      independence_argument: "Expected occupancy is literal zero and all 64 point queries are checked; no Board query is used to derive another expectation."
+    diagnostics: "Report lifecycle phase, square, expected/actual Piece, every colour/type mask in hex, and residual occupied-square list."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [constructor-not-cleared, reset-leaves-piece-array, reset-leaves-colour-mask, reset-leaves-type-mask, reset-not-idempotent]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Piece construction and decoding are exhaustive inverses on twelve chess pieces
+    status: DESIGNED
+    contracts: [C-BRD-002]
+    symbols: ["Board::MakePiece", "Magics::TypeOf", "Magics::ColourOf"]
+    categories: [positive, exhaustive, metamorphic]
+    setup: "Cartesian product {White,Black} x {King,Queen,Bishop,Knight,Rook,Pawn}."
+    action: "Call MakePiece(c,t), then TypeOf and ColourOf; collect all returned Piece values."
+    expected: >-
+      TypeOf(MakePiece(c,t))=t and ColourOf(MakePiece(c,t))=c for all twelve
+      pairs. All twelve constructed Piece values are distinct. Reconstructing
+      from the decoded pair returns the identical Piece.
+    oracle:
+      type: exhaustive-model
+      id: oracle/colour-piece-product-v1
+      provenance: "Bijection between two colours times six FIDE piece types and the twelve declared Piece enumerators."
+      independence_argument: "The oracle retains semantic input enumerators and makes no assumption about numeric offsets or bit layout."
+    diagnostics: "Report colour/type names and underlying values, constructed Piece name/value, decoded names/values, and any collision pair."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [colour-offset-wrong, pawn-type-gap-missed, black-white-alias, piece-type-permutation, decoder-not-inverse]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Single-piece add and query exhaust all pieces and squares
+    status: DESIGNED
+    contracts: [C-BRD-002, C-BRD-003, C-BB-001]
+    symbols: ["Board::AddPiece", "Board::PieceOn", "Board::Pieces"]
+    categories: [positive, boundary, exhaustive, state-transition]
+    setup: "A fresh Board for each of the 12 Pieces x 64 squares (768 cases)."
+    action: >-
+      Add the selected piece at the selected square and inspect all 64 point
+      queries, both colour masks, all six ordinary type masks, Pieces(pt_All),
+      and every ordinary colour-plus-type query.
+    expected: >-
+      The selected square contains exactly the selected Piece and every other
+      square is p_None. Its colour mask and type mask are exactly test-owned U64(1)<<s;
+      all other colour/type masks are zero, and Pieces(pt_All) is exactly the
+      same singleton. The colour-plus-type variadic query is U64(1)<<s only for
+      the selected pair and zero for the other eleven pairs.
+    oracle:
+      type: exhaustive-model
+      id: oracle/singleton-piece-placement-v1
+      provenance: "Finite mapping with exactly one occupied key."
+      independence_argument: "Expected point map and masks are formed directly from the input tuple and independent one-hot oracle."
+    diagnostics: "Report piece/colour/type, square, all unexpected point values, expected/actual masks, and XOR differences as square lists."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [piece-array-only-update, colour-mask-only-update, type-mask-only-update, aggregate-all-mask-not-updated, wrong-colour-index, wrong-type-index, square-off-by-one]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Board aggregate queries match exhaustive set union and intersection
+    status: DESIGNED
+    contracts: [C-BRD-002]
+    symbols: ["Board::Pieces(PieceType)", "Board::Pieces(PieceType,...)", "Board::Pieces(Colour,...)", "Board::Pieces(Colour,Colour)"]
+    categories: [positive, exhaustive, metamorphic]
+    setup: >-
+      Exact 24-entry fixture (Piece@square integer): p_WhiteKing@0/@15,
+      p_WhiteQueen@1/@14, p_WhiteBishop@2/@13, p_WhiteKnight@3/@12,
+      p_WhiteRook@4/@11, p_WhitePawn@5/@10, p_BlackKing@63/@48,
+      p_BlackQueen@62/@49, p_BlackBishop@61/@50,
+      p_BlackKnight@60/@51, p_BlackRook@59/@52, and
+      p_BlackPawn@58/@53. Enumerate every
+      nonempty subset of the six ordinary PieceTypes (63 subsets), both colours,
+      and both orders of the two-colour overload. For every subset, instantiate
+      one distinct-type pack in declaration order and one in reverse order.
+    action: >-
+      Call Pieces(pt_All) once, then every applicable distinct-ordinary-type
+      aggregate query, and compare each to a test-owned fold over the fixture's
+      literal square-to-piece table.
+    expected: >-
+      Pieces(types...) is the union of squares whose type belongs to the set;
+      Pieces(colour,types...) is its intersection with that colour; and
+      Pieces(pt_All)=Pieces(White,Black)=Pieces(Black,White)=all occupied
+      squares. Reordering distinct queried ordinary types does not change a
+      result. Repeated types, pt_All inside a variadic pack, and sentinel type
+      arguments are outside this record.
+    oracle:
+      type: exhaustive-model
+      id: oracle/piece-filter-set-algebra-v1
+      provenance: "Literal fixture map filtered by semantic colour/type sets."
+      independence_argument: "The model never obtains occupancy from a Board mask and compares results as sets, not implementation order."
+    diagnostics: "Report fixture map, queried distinct semantic set/pack, expected/actual masks and square lists, and permutation."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [union-as-intersection, ignores-last-pack-argument, wrong-colour-filter, order-dependent-fold, omits-one-colour, pt-all-omits-piece]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Primitive board transitions exhaust valid source and destination domains
+    status: DESIGNED
+    contracts: [C-BRD-003, C-BRD-002]
+    symbols: ["Board::AddPiece", "Board::RemovePiece", "Board::PopPiece", "Board::MovePiece"]
+    categories: [positive, boundary, exhaustive, state-transition, metamorphic]
+    setup: >-
+      Fresh boards for every Piece/square pair for remove and pop, and every
+      Piece x ordered distinct (from,to) square pair for move (12 x 64 x 63).
+      Destinations are empty and sources occupied, satisfying the narrow common
+      precondition of all plausible contracts.
+    action: >-
+      Add then RemovePiece; separately add then PopPiece; separately add at from
+      then MovePiece(from,to). Inspect the complete point map and all masks after
+      each step; reset and replay once.
+    expected: >-
+      Remove leaves the empty-board state. Pop returns the exact removed Piece
+      and leaves the empty-board state. Move clears from, places the same Piece
+      at to, changes the corresponding colour/type masks from test-owned
+      U64(1)<<from to U64(1)<<to, and leaves every unrelated query unchanged. Reset/replay has
+      the same observations.
+    oracle:
+      type: exhaustive-model
+      id: oracle/primitive-piece-map-transitions-v1
+      provenance: "Remove, pop, and key-relocation operations on a finite partial map."
+      independence_argument: "A test-owned 64-entry semantic array is transitioned directly and masks are derived from it, without calling Board methods."
+    diagnostics: "Report operation, piece, from/to, returned Piece, complete expected/actual maps, each mask XOR, and replay phase."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [remove-leaves-mask, pop-wrong-return, move-does-not-clear-source, move-does-not-set-target, move-wrong-piece, updates-unrelated-mask]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-006
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Invalid primitive board operations and sentinel queries await preconditions
+    status: BLOCKED
+    contracts: [C-BRD-002, C-BRD-003]
+    symbols: ["Board::PieceOn", "Board::MakePiece", "Board::Pieces", "Board::AddPiece", "Board::RemovePiece", "Board::PopPiece", "Board::MovePiece", "Board::pedantic_check", "Magics::TypeOf", "Magics::ColourOf"]
+    categories: [negative, boundary, state-transition]
+    setup: >-
+      Candidate cases include Sq 64..255, p_None and raw invalid Piece values,
+      PieceType sentinels, add to occupied, remove/pop empty, move from empty,
+      move to occupied, from=to, aliased source/destination state, and direct
+      pedantic_check calls in checked and release builds.
+    action: "Do not execute potentially undefined cases or assert diagnostics until D-TYP-002 and primitive board preconditions are approved."
+    expected: >-
+      BLOCKED: safe sentinel versus assertion/precondition, capture-versus-error
+      for occupied destinations, and stable diagnostic behavior are unstated.
+    oracle:
+      type: standard
+      id: oracle/board-invalid-policy-pending-v1
+      provenance: "D-TYP-002 and the Board/Position draft contract batch."
+      independence_argument: "Array bounds, debug assertions, and current mutation order are not used to infer policy."
+    diagnostics: "When unblocked, report exact raw arguments, complete state before/after, return/failure mechanism, canaries, and checked/release configuration."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [overwrite-occupied, remove-empty-underflow, invalid-piece-index, invalid-square-write, partial-move-on-failure, debug-release-divergence]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-BRD-007
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Mixed multi-piece Board transition trace preserves unrelated state
+    status: DESIGNED
+    contracts: [C-BRD-001, C-BRD-002, C-BRD-003]
+    symbols: ["Board::AddPiece", "Board::MovePiece", "Board::PopPiece", "Board::RemovePiece", "Board::ResetBoard", "Board::PieceOn", "Board::Pieces"]
+    categories: [positive, boundary, state-transition, metamorphic]
+    setup: >-
+      Start empty and add exactly p_WhiteKing@0, p_WhiteQueen@9,
+      p_WhiteRook@18, p_WhitePawn@27, p_BlackKing@63, p_BlackQueen@54,
+      p_BlackRook@45, and p_BlackPawn@36, where integer square keys are oracle literals. Maintain a
+      separate 64-entry test-owned Piece array and derive masks by a direct
+      0..63 coefficient fold.
+    action: >-
+      Execute and observe after every step: MovePiece(9,10); PopPiece(36);
+      AddPiece(p_WhiteKnight,36); RemovePiece(45); MovePiece(54,45); ResetBoard(); then
+      replay the complete trace on the same object.
+    expected: >-
+      Each public point/mask observation equals the independently transitioned
+      literal map; PopPiece(36) returns p_BlackPawn. Every step changes only the named
+      entries and their associated colour/type coefficients. Reset yields the
+      exhaustive empty state and replay produces the identical sequence.
+    oracle:
+      type: reference-model
+      id: oracle/mixed-board-literal-trace-v1
+      provenance: "Frozen finite-map fixture and six exact map operations."
+      independence_argument: "Expected maps/masks are calculated solely from literal integer keys and Piece values; no Board, SqToBB, bit-scan, or UTIL helper constructs them."
+    diagnostics: "Report trace step/replay, operation arguments/return, complete expected/actual 64-entry maps, per-mask XOR, and unexpected changed indices."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [unrelated-piece-erasure, stale-old-mask-bit, wrong-pop-return, add-corrupts-other-colour, reset-history-dependent, replay-drift]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-FEN-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Canonical legal FEN corpus imports to exact semantic position snapshots
+    status: DESIGNED
+    contracts: [C-FEN-001, C-POS-002, C-BRD-002]
+    symbols: ["Position::Position(std::string_view)", "Position::ImportFen", "Board::PieceOn", "Board::Pieces", "Position::ColourToMove", "Position::CastlingRights", "Position::EnPasSq", "Position::EnPasBB", "Position::HalfMoves", "Position::FullMoves"]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: >-
+      Every distinct FEN in tests/data/oracle_cases.tsv and
+      tests/data/oracle_perft.tsv at their declared scoped data SHA-256 values
+      (column header through final LF; metadata/comment lines excluded), plus the
+      exact nonduplicate boundary FENs
+      '4k3/8/8/8/8/8/8/4K3 w - - 0 1',
+      '4k3/8/8/8/8/8/8/4K3 b - - 0 1',
+      'r3k2r/8/8/8/8/8/8/R3K2R w Kq - 0 1',
+      '7k/8/8/p7/8/8/8/K7 w - a6 0 2',
+      '7k/8/8/8/7P/8/8/K7 b - h3 0 1', and
+      '7k/8/8/8/8/8/R7/K7 w - - 255 65535'. For each, decode
+      all fields with a test-owned strict six-field parser into
+      semantic-position-snapshot-v1.
+    action: >-
+      Construct Position directly from each FEN and, separately, import it into
+      an existing Position holding the next distinct FEN in byte-sorted fixture
+      order, wrapping from the last to the first. Observe
+      the complete semantic snapshot through public APIs.
+    expected: >-
+      Both paths exactly equal the independently decoded snapshot on all 64
+      labelled squares, both colour masks, all six type masks, turn, castling
+      rights, en-passant bit/label, halfmove, and fullmove. Import does not retain
+      any placement or field from the previous position. No expectation is made
+      about ZKey before an explicit hash call.
+    oracle:
+      type: corpus
+      id: oracle/frozen-fen-semantic-snapshot-v1
+      provenance: "Scoped data SHA-256 values (column header through final LF; metadata/comment lines excluded): oracle_cases.tsv=7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77; oracle_perft.tsv=8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789."
+      independence_argument: "A strict test-owned parser expands rank digits and fields directly; SplitFen, Position, Board, and production masks are not used to derive expected placement."
+    diagnostics: "Report corpus/case_id/FEN, construction path, every expected/actual snapshot field, labelled placement diff, mask XOR square labels, and source checksums."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [rank-reversal, file-reversal, digit-run-off-by-one, colour-swap, piece-letter-swap, stale-import-piece, field-index-swap, ep-rank-error, counter-truncation]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006, F-007]
+
+  - id: T-FEN-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Constructor, replacement import, and repeated import are semantically equivalent
+    status: DESIGNED
+    contracts: [C-FEN-001]
+    symbols: ["Position::Position(std::string_view)", "Position::ImportFen"]
+    categories: [positive, state-transition, metamorphic, differential]
+    setup: >-
+      Every ordered pair (A,B) of the 27 oracle_cases.tsv FEN rows, including
+      A=B. Construct fresh(B), construct(A) then ImportFen(B), and construct(B)
+      then ImportFen(B) twice.
+    action: "Compare semantic-position-snapshot-v1 across the three paths."
+    expected: >-
+      All paths have exactly B's semantic snapshot; results are independent of
+      A and additional identical imports. This expectation excludes pre-call
+      hash/history internals whose lifecycle is unresolved.
+    oracle:
+      type: metamorphic
+      id: oracle/fen-replacement-idempotence-v1
+      provenance: "The documented purpose 'create or replace a complete chess position'."
+      independence_argument: "Equivalence is compared over independently decoded semantic fields; no one TDFA path supplies another's expected state."
+    diagnostics: "Report A/B case_ids and FENs, path name, complete snapshot diff, and import repetition count."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [import-merges-placement, import-keeps-old-turn, import-keeps-old-ep, import-nonidempotent, constructor-import-divergence]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006, F-007]
+
+  - id: T-FEN-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Invalid, noncanonical, and legality-sensitive FEN behavior awaits acceptance policy
+    status: BLOCKED
+    contracts: [C-FEN-002, C-LEX-001]
+    symbols: ["Position::Position(std::string_view)", "Position::ImportFen", "RemoveWhiteSpace", "SplitFen"]
+    categories: [negative, boundary, state-transition, fuzz]
+    setup: >-
+      Freeze labelled equivalence classes for empty input; 0..5 and 7+ fields;
+      leading/trailing/repeated/non-ASCII whitespace; 7/9 ranks; rank sums 7/9;
+      zero/invalid placement digits; invalid or duplicate piece characters;
+      invalid active colour/castling/en-passant/counters; halfmove 256 and
+      fullmove 0/65536/huge decimal; missing/multiple/adjacent kings; pawns on
+      back ranks; impossible castling or en-passant metadata; and 1,000 fixed
+      byte strings from seed 0x0000000054444641.
+    action: "Do not construct/import these cases until D-POS-001 and D-UTIL-001 define rejection, validation depth, and atomicity."
+    expected: >-
+      BLOCKED: lexical versus structural versus fully legal acceptance, error
+      signalling, numeric overflow, and whether a failed import preserves the
+      prior position are explicitly undecided.
+    oracle:
+      type: standard
+      id: oracle/fen-invalid-policy-pending-v1
+      provenance: "FEN grammar classifies syntax; D-POS-001 and D-UTIL-001 must define API response and legality depth."
+      independence_argument: "The invalid corpus is grammar-derived, but no exception/assert/return/current-output behavior is guessed."
+    diagnostics: "When unblocked, report class/id, exact escaped bytes, prior and post snapshots, error channel/type, source lifetime, canaries, and fixed fuzz seed/draw index."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [partial-import-before-error, accepts-rank-sum-error, numeric-wraparound, stale-field-on-failure, legality-level-too-weak, whitespace-policy-drift]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-POS-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Position and StateInfo default/reset values await an explicit convention
+    status: BLOCKED
+    contracts: [C-POS-001]
+    symbols: ["StateInfo::StateInfo", "Position::Position()", "Position::Reset"]
+    categories: [positive, boundary, state-transition]
+    setup: "Fresh StateInfo and Position objects; populated Positions followed by Reset; repeated Reset."
+    action: "Do not assert whether defaults are start position, empty placement, or another sentinel until D-POS-003/D-POS-005 define every field."
+    expected: >-
+      BLOCKED: placement, turn, rights, en-passant sentinel, counters, captured
+      piece sentinel, hash, and history state are not frozen for the default path.
+    oracle:
+      type: standard
+      id: oracle/position-default-policy-pending-v1
+      provenance: "D-POS-003 and D-POS-005 in tests/spec/decision-ledger.md."
+      independence_argument: "Neither common engine startpos conventions nor current constructor output are treated as authority."
+    diagnostics: "When unblocked, report lifecycle phase and the full public semantic snapshot plus raw StateInfo public fields."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [reset-to-empty-versus-start, stale-history, stale-counter, stale-hash, uninitialized-captured-piece]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-POS-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Position observer algebra is exhaustive over all frozen legal fixtures
+    status: DESIGNED
+    contracts: [C-POS-002, C-BRD-002, C-FEN-001]
+    symbols: ["Position::EmptySqs", "Position::EnPasBB", "Position::EnPasSq", "Position::CastlingRights", "Position::ColourToMove", "Position::HalfMoves", "Position::FullMoves", "Board::Pieces"]
+    categories: [positive, boundary, exhaustive, metamorphic]
+    setup: "All exact FEN fixtures used by T-FEN-001."
+    action: "Read every observer repeatedly without intervening mutation and check cross-observer identities."
+    expected: >-
+      EmptySqs is exactly the 64-bit complement of Pieces(White)|Pieces(Black);
+      colour occupancies are disjoint; the union of six type masks equals total
+      occupancy; distinct type masks are disjoint. EnPasBB is zero or singleton;
+      when singleton it equals test-owned U64(1)<<EnPasSq(). All repeated observations are
+      identical and do not change any semantic snapshot field.
+    oracle:
+      type: metamorphic
+      id: oracle/position-observer-set-algebra-v1
+      provenance: "Partition/complement identities of a chess piece placement and optional singleton en-passant target."
+      independence_argument: "Identities compare independent projections and exact decoded fixtures; no observer's value alone is accepted as ground truth."
+    diagnostics: "Report case/FEN, repeated-read ordinal, every mask and XOR/intersection violation, ep bit count/square, and before/after snapshot."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [empty-not-masked-to-64, overlapping-colours, missing-type-in-union, observer-mutates-state, ep-bit-square-disagreement]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006, F-007]
+
+  - id: T-POS-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: IsOk accepts every independently legal frozen position
+    status: DESIGNED
+    contracts: [C-POS-003, C-FEN-001]
+    symbols: ["Position::IsOk"]
+    categories: [positive, boundary, exhaustive, differential]
+    setup: "Every legal position in oracle_cases.tsv and oracle_perft.tsv, including check, mate, stalemate, castling, en-passant, promotion, and high halfmove clocks."
+    action: "Construct each position, call IsOk twice, and verify the semantic snapshot is unchanged."
+    expected: >-
+      IsOk returns true for every fixture on both calls and is observationally
+      pure. This does not choose whether IsOk also rejects particular malformed
+      or merely non-searchable positions.
+    oracle:
+      type: corpus
+      id: oracle/legal-position-positive-v1
+      provenance: "Frozen oracle corpora generated/audited as legal chess positions."
+      independence_argument: "Legality classification is fixture metadata/provenance, not derived from IsOk or TDFA move generation."
+    diagnostics: "Report corpus/case/FEN, IsOk results, before/after snapshot, and legality feature tags."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [always-false, rejects-check, rejects-terminal-position, rejects-ep, mutating-validation]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006]
+
+  - id: T-POS-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Position copy and move history ownership awaits a decision
+    status: BLOCKED
+    contracts: [C-POS-004]
+    symbols: ["Position copy construction", "Position move construction", "Position copy assignment", "Position move assignment"]
+    categories: [state-transition, boundary]
+    setup: >-
+      Use only publicly reachable legal states: start FEN at history depth 0,
+      start/e2e4 at depth 1, and the four-ply prefix from T-STA-004 at depth 4.
+      Candidate copy/move operations then make and unmake one further legal move
+      independently on source and destination.
+    action: "Do not instantiate or assert copy/move ownership behavior until D-POS-007 decides whether each operation is supported and defines history semantics."
+    expected: >-
+      BLOCKED: copyability/movability and whether reachable accumulated history
+      is deep-copied, cleared, transferred, or forbidden are unstated. No
+      impossible state or private probe is part of this candidate.
+    oracle:
+      type: reference-model
+      id: oracle/position-consistency-ownership-pending-v1
+      provenance: "D-POS-007 and the exact public legal histories in T-STA-004."
+      independence_argument: "Only public legal transitions create history; compiler-generated copy behavior is not treated as intent."
+    diagnostics: "When unblocked, report copy/move trait results, exact legal history, operation, source/destination snapshots, and independent post-mutation/unmake traces."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [shallow-history-copy, shared-history, copied-history-cleared, moved-from-corruption, double-owned-history]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-HSH-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Equal-semantic-state hash determinism awaits identity policy
+    status: BLOCKED
+    contracts: [C-HSH-001, C-FEN-001]
+    symbols: ["Position::HashCurrentPostion"]
+    categories: [positive, exhaustive, metamorphic, differential]
+    setup: >-
+      Candidate corpus: for every frozen valid FEN in byte-sorted order,
+      construct two independent Positions and a third by importing that FEN over
+      the next distinct FEN. The scoped fixture digest must be recomputed under
+      F-006 before any candidate observation.
+    action: "Do not assert equality, call stability, refresh mutation, or import-path identity until D-POS-002 and D-TT-006 select the hash contract."
+    expected: >-
+      BLOCKED: whether HashCurrentPostion is a pure query or refresh operation,
+      which semantic/history dimensions participate, and whether independently
+      constructed or replacement-imported states must have equal identity are
+      owner policy under D-POS-002 and D-TT-006. No numeric key or collision-
+      freedom expectation is proposed.
+    oracle:
+      type: metamorphic
+      id: oracle/hash-equal-state-policy-pending-v1
+      provenance: "D-POS-002 and D-TT-006; generic deterministic-function algebra does not choose TDFA's identity domain."
+      independence_argument: "No current key, table content, or common Zobrist convention is used to choose the unresolved identity dimensions."
+    diagnostics: "When unblocked, report fixture digest, case/FEN/path/call ordinal, complete semantic/history state selected by the decision, returned/stored keys in hex, and observer interleaving."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [uninitialized-seed, call-count-dependent-hash, import-path-salt, address-dependent-hash, observer-mutates-hash-input]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-006]
+
+  - id: T-HSH-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Make-unmake hash identity restoration awaits hash and state policy
+    status: BLOCKED
+    contracts: [C-HSH-001, C-STA-001]
+    symbols: ["Position::HashCurrentPostion", "Position::MakeMove", "Position::UnmakeMove"]
+    categories: [positive, state-transition, metamorphic]
+    setup: "Candidate roots are every T-STA-001 row and every nested prefix in T-STA-004, after their independently approved public-state observations."
+    action: "Do not compare a pre-move key with any post-unmake key until D-POS-002, D-POS-005, and D-TT-006 select refresh, restoration, and identity semantics."
+    expected: >-
+      BLOCKED: C-CHS-011 restores only placement/aggregate occupancy and side;
+      it makes no post-unmake rights, en-passant, counter, hash, or history
+      guarantee. D-POS-005 must first select the broader restoration boundary,
+      while D-POS-002/D-TT-006 must select refresh and identity dimensions. No
+      distinct-position inequality or literal-key expectation is proposed.
+    oracle:
+      type: metamorphic
+      id: oracle/hash-state-restoration-policy-pending-v1
+      provenance: "D-POS-002, D-POS-005, D-TT-006, and C-CHS-011's deliberately narrow restoration projection."
+      independence_argument: "Neither matching public placement nor current key equality is promoted into a broader identity contract."
+    diagnostics: "When unblocked, report root/move/history, every decision-selected before/made/restored field, both explicit and stored keys in hex, and first equality failure."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [unmake-omits-hash-component, history-dependent-recompute, stale-recomputed-key]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-HSH-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Automatic ZKey lifecycle and exact Zobrist component set await decisions
+    status: BLOCKED
+    contracts: [C-HSH-001]
+    symbols: ["Position::ZKey", "Position::HashCurrentPostion", "Zobrist::PIECES", "Zobrist::EN_PASSANT", "Zobrist::CASTLING", "Zobrist::SIDE_TO_MOVE"]
+    categories: [positive, negative, boundary, state-transition, metamorphic]
+    setup: >-
+      Planned cases compare ZKey immediately after construct/import/make/unmake;
+      repeated refresh calls; FEN pairs differing only in placement, side,
+      castling, en-passant, halfmove, fullmove, or history; and a test-owned XOR
+      fold over the exposed Zobrist tables using named loc indices.
+    action: "Do not assert storage mutation, exact key algebra, or included state dimensions until D-POS-002 and D-TT-006 are decided."
+    expected: >-
+      BLOCKED: construction/import auto-hashing, pure-query versus mutating
+      refresh, whether clocks/history enter identity, and the exact treatment of
+      no-castling/no-en-passant states are unresolved. Distinct-state inequality
+      is never a universal requirement because collisions are possible.
+    oracle:
+      type: reference-model
+      id: oracle/zobrist-component-contract-pending-v1
+      provenance: "D-POS-002, D-TT-006, and exposed but not behavior-authoritative Zobrist table declarations."
+      independence_argument: "Random table contents and common engine hashing conventions are not used to invent the missing component contract."
+    diagnostics: "When unblocked, report lifecycle point, complete semantic/history state, expected XOR terms by symbolic component, expected/actual/returned keys, and changed dimension."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [omits-side, omits-castling, stale-en-passant, includes-clock, wrong-piece-index, refresh-does-not-store, constructor-does-not-hash]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-STA-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Single-ply make applies every semantic MoveType exactly
+    status: DESIGNED
+    contracts: [C-STA-001, C-UTL-001, C-POS-002, C-BRD-002]
+    symbols: ["UTIL::UciToMove", "Moves::DecodeMove", "Position::MakeMove", "Board::PieceOn", "Board::Pieces", "Position::ColourToMove", "Position::CastlingRights", "Position::EnPasSq", "Position::EnPasBB", "Position::HalfMoves", "Position::FullMoves"]
+    categories: [positive, boundary, state-transition, differential]
+    setup: >-
+      Freeze these exact pre-FEN | UCI | MoveType | post-FEN rows:
+      (1) rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 | g1f3 | mt_Quiet | rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 1 1;
+      (2) same pre | e2e4 | mt_Quiet | rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1;
+      (3) 4k3/8/8/3p4/4P3/8/8/4K3 w - - 7 9 | e4d5 | mt_Capture | 4k3/8/8/3P4/8/8/8/4K3 b - - 0 9;
+      (4) 4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 2 | e5d6 | mt_EnPassant | 4k3/8/3P4/8/8/8/8/4K3 b - - 0 2;
+      (5) r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1 | e1g1 | mt_Castling | r3k2r/8/8/8/8/8/8/R4RK1 b kq - 1 1;
+      (6-9) 4k3/P7/8/8/8/8/7p/4K3 w - - 0 1 with a7a8q/r/b/n expects respectively mt_QueenPromotion/mt_RookPromotion/mt_BishopPromotion/mt_KnightPromotion and post first-rank field Q3k3/R3k3/B3k3/N3k3 followed by /8/8/8/8/8/7p/4K3 b - - 0 1.
+    action: >-
+      For each row construct pre, parse UCI, require DecodeMove's exact named
+      type, MakeMove once, and compare every field with a test-owned strict decode
+      of the literal post-FEN using semantic-position-snapshot-v1.
+    expected: >-
+      Exact MoveType and complete post snapshot match each row: ordinary and
+      en-passant captures remove the right piece, castling moves king and rook,
+      each promotion installs its suffix piece, double push alone establishes
+      e3, halfmove resets/increments correctly, turn flips, fullmove remains 1/9
+      after White, and rights change exactly as shown.
+    oracle:
+      type: reference-model
+      id: oracle/exact-single-ply-move-type-table-v1
+      provenance: "Nine frozen FIDE/FEN transition rows, audited independently of TDFA."
+      independence_argument: "Expected MoveType names and post-FEN strings are literals; their snapshots use only the test-owned integer/FEN model, never UciToMove, DecodeMove, Board, Magics, or UTIL output."
+    diagnostics: "Report row, pre/UCI/post literals, encoded bits, exact expected/actual MoveType, and complete expected/actual post snapshot with piece/mask/rights/ep/counter diffs."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [quiet-counter-not-incremented, double-push-ep-wrong, capture-not-removed, en-passant-removes-target, castle-rook-not-moved, promotion-map-swap, turn-not-flipped]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-007]
+
+  - id: T-STA-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Broad matching-unmake restoration awaits restoration policy
+    status: BLOCKED
+    contracts: [C-STA-001]
+    symbols: ["Position::MakeMove", "Position::UnmakeMove"]
+    categories: [positive, exhaustive, state-transition, metamorphic]
+    setup: >-
+      Every exact row from T-STA-001 and every (FEN,legal_uci token) pair in all
+      27 rows of oracle_cases.tsv at scoped data SHA-256
+      7c6bfab18aecbf89e6da7cdcc29b258edb13bf916804c9f211cb9752c7cb4e77
+      (column header through final LF; metadata/comment lines excluded). Use a
+      fresh Position per pair and retain the complete public snapshot fixture.
+    action: >-
+      Do not execute the broad restoration assertions until D-POS-005 defines
+      the exact restoration set and history discipline. D-POS-002 must also be
+      decided before adding any raw ZKey lifecycle assertion.
+    expected: >-
+      BLOCKED: exact restoration of rights, en-passant representation, counters,
+      hash storage, and history is not frozen. If D-POS-005 approves the public
+      restoration subset, the retained candidate will compare those fields over
+      two matching make/unmake cycles; raw ZKey remains excluded until both
+      D-POS-002 and D-POS-005 are decided.
+    oracle:
+      type: metamorphic
+      id: oracle/exact-public-state-involution-v1
+      provenance: "D-POS-002 and D-POS-005 plus every frozen legal root/move pair."
+      independence_argument: "The retained root fixture is captured before mutation, but no restoration expectation is frozen before the owner decisions."
+    diagnostics: "When unblocked, report case_id/FEN/UCI/token ordinal/cycle, before/made/restored public snapshots, absent-ep equality, and first differing field/index."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [unmake-piece-only, stale-castling-right, stale-ep, halfmove-not-restored, fullmove-not-restored, captured-piece-wrong, history-pop-off-by-one]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+  - id: T-STA-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Castling/right makes are exact and matching unmake restores placement and side
+    status: DESIGNED
+    contracts: [C-STA-001, C-UTL-001, C-MOV-001]
+    symbols: ["UTIL::UciToMove", "Moves::DecodeMove", "Position::MakeMove", "Position::UnmakeMove", "Position::CastlingRights"]
+    categories: [positive, boundary, state-transition, regression]
+    setup: >-
+      Freeze these exact pre | move | post rows from base
+      r3k2r/8/8/8/8/8/8/R3K2R:
+      white K: 'w KQkq - 0 1' | e1g1 | r3k2r/8/8/8/8/8/8/R4RK1 b kq - 1 1;
+      white Q: same | e1c1 | r3k2r/8/8/8/8/8/8/2KR3R b kq - 1 1;
+      black K: 'b KQkq - 0 1' | e8g8 | r4rk1/8/8/8/8/8/8/R3K2R w KQ - 1 2;
+      black Q: same | e8c8 | 2kr3r/8/8/8/8/8/8/R3K2R w KQ - 1 2;
+      rook move: white base | h1h2 | r3k2r/8/8/8/8/8/7R/R3K3 b Qkq - 1 1;
+      king move: white base | e1e2 | r3k2r/8/8/8/8/8/4K3/R6R b kq - 1 1;
+      home-rook capture: white base | a1a8 | R3k2r/8/8/8/8/8/8/4K2R b Kk - 0 1.
+      Execute two repetitions per row, constructing a fresh Position from the
+      literal pre-FEN for each repetition.
+    action: >-
+      For each fresh repetition, call UTIL::UciToMove with the row's literal UCI
+      token and current pre-Position, then require DecodeMove to return the
+      literal source/target and mt_Castling for the four castles, mt_Quiet for
+      the rook/king moves, or mt_Capture for the home-rook capture. Make that
+      exact returned Move and compare the complete semantic-position-snapshot-v1
+      with the literal post-FEN. Then matching-unmake and compare only the
+      labelled piece map, both colour occupancies, six type occupancies, and
+      active side with the literal pre-FEN. Do not observe post-unmake rights,
+      en-passant, counters, hash, or history.
+    expected: >-
+      After MakeMove, placement, test-owned named-right set, turn, en-passant,
+      counters, and rook capture exactly match each literal post-FEN. A king
+      move removes both own rights; a home-rook move removes only its wing; and
+      capturing a home rook removes that opponent wing. Matching UnmakeMove
+      restores exactly the preceding placement/type/colour occupancies and side
+      required by C-CHS-011; no excluded field is compared. Each repetition is
+      independent because it begins from a fresh construction.
+    oracle:
+      type: reference-model
+      id: oracle/castling-right-transition-table-v1
+      provenance: "Seven frozen FIDE/FEN forward-transition rows plus C-CHS-011's matching-unmake placement/side projection."
+      independence_argument: "Expected rights are literal FEN-name sets under F-007; expected placements and side come from the test-owned pre/post FEN model, never UpdateCastlingRights or a prior TDFA state."
+    diagnostics: "Report row/repetition/pre/move/post and phase; for make report the complete snapshot diff and named rights; for unmake report only labelled piece, type/colour occupancy, and side diffs; also report exact encoded MoveType."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [wrong-castle-rook-square, removes-opponent-right, leaves-one-king-right, rook-move-clears-both, rook-capture-right-omitted, black-fullmove-not-incremented, unmake-omits-rook, unmake-wrong-side]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-007]
+
+  - id: T-STA-004
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Four-ply LIFO makes visit exact prefixes and unmake restores placement and side
+    status: DESIGNED
+    contracts: [C-STA-001, C-UTL-001, C-MOV-001]
+    symbols: ["UTIL::UciToMove", "Moves::DecodeMove", "Position::MakeMove", "Position::UnmakeMove"]
+    categories: [positive, boundary, state-transition, metamorphic]
+    setup: >-
+      Exact prefixes P0..P4:
+      P0=rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1;
+      e2e4 -> P1=rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1;
+      c7c5 -> P2=rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2;
+      g1f3 -> P3=rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2;
+      d7d6 -> P4=rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3.
+      At each current source prefix, obtain and store the next Move only by
+      calling UTIL::UciToMove with the displayed literal token; require its
+      DecodeMove result to match the literal source/target and mt_Quiet. Run two
+      repetitions, constructing a fresh Position(P0) at each start. Raw ZKey
+      and explicit hash observations are excluded.
+    action: >-
+      In each fresh repetition, make m1..m4 and compare the complete semantic-
+      position-snapshot-v1 with P1..P4. Then unmake stored m4..m1 and compare
+      only the labelled piece map, both colour occupancies, six type occupancies,
+      and active side with P3..P0. Do not observe reverse-path rights, en-passant,
+      counters, hash, or hidden history.
+    expected: >-
+      Every forward observation equals its complete literal prefix, including
+      named rights, en-passant creation/clearing, counters, side, and all piece
+      occupancies. Each reverse step restores only the prefix placement/type/
+      colour occupancies and active side guaranteed by C-CHS-011. No reverse-
+      path rights, en-passant, counter, raw-key, or hidden-history restoration is
+      asserted, and the second traversal has no dependency on the first.
+    oracle:
+      type: reference-model
+      id: oracle/four-ply-prefix-stack-v1
+      provenance: "Five literal standard-FEN forward prefixes plus C-CHS-011's matching-LIFO-unmake placement/side projection."
+      independence_argument: "Each forward expectation is frozen text using the F-007 named-right model; each reverse expectation independently projects the same literal prefix to placement/type/colour/side, never prior TDFA output."
+    diagnostics: "Report fresh repetition/direction/depth/move and expected prefix; report a complete diff forward, only placement/type/colour/side diffs in reverse, and the history operation ordinal."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [fifo-history, wrong-state-stack-index, forward-ep-wrong, nested-forward-counter-drift, unmake-piece-not-restored, unmake-side-not-restored, wrong-move-object-required]
+    author: blind-design-state
+    reviewers: []
+    findings: [F-007]
+
+  - id: T-STA-005
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    title: Empty, mismatched, out-of-order, and repeated unmake await history policy
+    status: BLOCKED
+    contracts: [C-STA-002]
+    symbols: ["Position::MakeMove", "Position::UnmakeMove"]
+    categories: [negative, boundary, state-transition]
+    setup: >-
+      Exact candidates from P0..P4 in T-STA-004: UnmakeMove(m1) at P0; make m1
+      then unmake a different legal P0 move g1f3; make m1,m2 then unmake m1
+      out of LIFO order; make/unmake m1 then unmake m1 again; and MakeMove of an
+      encoded in-range but illegal move e2e5 at P0.
+    action: "Do not execute these candidates until D-POS-004 and D-POS-005 define accepted input level, failure signalling, and atomicity."
+    expected: >-
+      BLOCKED: assertion, exception, no-op, status-less precondition, or another
+      response may be intended; no state-preservation behavior is assumed before
+      owner decision. These cases use only public reachable positions and no
+      private probe or impossible injected state.
+    oracle:
+      type: standard
+      id: oracle/invalid-history-policy-pending-v1
+      provenance: "D-POS-004 and D-POS-005; the exact legal prefix table T-STA-004 identifies each mismatch."
+      independence_argument: "The oracle classifies history misuse without deriving a response from current TDFA behavior."
+    diagnostics: "When unblocked, report candidate label, exact prefix/history, supplied/stored Move bits, complete before/after snapshot, failure channel, canaries, and build mode."
+    private_access: {required: false, justification: null, approvals: []}
+    implementation: {files: [], test_names: []}
+    mutants: [unmake-empty-underflow, ignores-supplied-move, accepts-non-lifo, double-pop, illegal-make-partial-mutation]
+    author: blind-design-state
+    reviewers: []
+    findings: []
+
+coverage:
+  - contract: C-TYP-001
+    required_categories: [positive, exhaustive, metamorphic]
+    tests: [T-TYP-001]
+    gaps: []
+  - contract: C-TYP-002
+    required_categories: [positive, negative, boundary]
+    tests: [T-TYP-002, T-TYP-003]
+    gaps: ["Widths and exceptional arithmetic remain blocked by D-TYP-001."]
+  - contract: C-MOV-001
+    required_categories: [positive, negative, boundary, exhaustive]
+    tests: [T-MOV-001, T-MOV-004, T-MOV-007, T-MOV-008, T-STA-003, T-STA-004]
+    gaps: ["Null/invalid encodings remain blocked by D-MOV-001."]
+  - contract: C-MOV-002
+    required_categories: [positive, negative, exhaustive]
+    tests: [T-MOV-002, T-MOV-003, T-MOV-004, T-MOV-008]
+    gaps: ["PTypeOfProm representation remains blocked by D-MOV-001."]
+  - contract: C-MOV-003
+    required_categories: [positive, negative, boundary, state-transition]
+    tests: [T-MOV-005, T-MOV-006, T-MOV-007]
+    gaps: ["Duplicate, overflow, mutable-all, and merge policies remain blocked by D-MOV-002."]
+  - contract: C-MOV-004
+    required_categories: [positive, negative, boundary, state-transition]
+    tests: [T-MOV-006, T-MOV-007]
+    gaps: ["All move_info/merge semantics remain candidate-only until D-MOV-002."]
+  - contract: C-UTL-001
+    required_categories: [positive, negative, boundary, exhaustive, protocol]
+    tests: [T-MOV-004, T-MOV-008, T-UTL-001, T-UTL-002, T-STA-001, T-STA-003, T-STA-004]
+    gaps: ["Per-index orientation and invalid PieceType/string behavior remain blocked."]
+  - contract: C-BB-001
+    required_categories: [positive, negative, boundary, exhaustive]
+    tests: [T-BB-001, T-BRD-003]
+    gaps: ["The approved T-BB-001 slice covers only SqToBB on 0..63; ValidSq classification and every invalid Sq behavior remain blocked by D-TYP-002."]
+  - contract: C-BB-002
+    required_categories: [positive, negative, boundary, exhaustive, metamorphic]
+    tests: [T-BB-002, T-BB-003, T-BB-004, T-BB-009, T-BB-010]
+    gaps: ["Zero scans/removals and exceptional power cases remain blocked."]
+  - contract: C-BB-003
+    required_categories: [positive, boundary, exhaustive, metamorphic]
+    tests: [T-BB-005, T-BB-006, T-BB-011]
+    gaps: ["Exact cardinal orientation is deliberately blocked by C-BB-006."]
+  - contract: C-BB-004
+    required_categories: [positive, boundary, exhaustive, differential]
+    tests: [T-BB-007]
+    gaps: ["T-BB-007 is blocked because exact raw table rows choose the unresolved D-TYP-001/C-BB-006 numeric orientation; only orientation-free labelled geometry is authority-backed."]
+  - contract: C-BB-005
+    required_categories: [positive, negative, boundary, exhaustive]
+    tests: [T-BB-008]
+    gaps: ["Exact compact/sliding representation has no approved contract."]
+  - contract: C-BB-006
+    required_categories: [boundary, exhaustive, metamorphic]
+    tests: [T-UTL-002, T-BB-011]
+    gaps: ["Numeric square orientation awaits owner decision."]
+  - contract: C-LEX-001
+    required_categories: [positive, negative, boundary, exhaustive]
+    tests: [T-LEX-001, T-LEX-002, T-LEX-003, T-FEN-004]
+    gaps: ["Whitespace and non-six-field policies remain blocked by D-UTIL-001."]
+  - contract: C-BRD-001
+    required_categories: [positive, boundary, exhaustive, state-transition]
+    tests: [T-BRD-001, T-BRD-007]
+    gaps: []
+  - contract: C-BRD-002
+    required_categories: [positive, negative, boundary, exhaustive, metamorphic]
+    tests: [T-BRD-001, T-BRD-002, T-BRD-003, T-BRD-004, T-BRD-005, T-BRD-006, T-BRD-007, T-FEN-001, T-POS-002, T-STA-001]
+    gaps: ["Repeated PieceType packs, pt_All inside a variadic pack, sentinel Piece/PieceType, and invalid Sq queries remain owner-policy or blocked."]
+  - contract: C-BRD-003
+    required_categories: [positive, negative, boundary, exhaustive, state-transition]
+    tests: [T-BRD-003, T-BRD-005, T-BRD-006, T-BRD-007]
+    gaps: ["Occupied/empty/invalid primitive-operation policies remain blocked."]
+  - contract: C-FEN-001
+    required_categories: [positive, boundary, exhaustive, state-transition, differential]
+    tests: [T-MOV-004, T-LEX-002, T-FEN-001, T-FEN-003, T-POS-002, T-POS-003, T-HSH-001]
+    gaps: ["F-006 and F-007 resolved fixture-integrity and named-right translation defects without binding numeric square orientation; malformed/legality-sensitive FEN remains in blocked T-FEN-004."]
+  - contract: C-FEN-002
+    required_categories: [negative, boundary, state-transition, fuzz]
+    tests: [T-FEN-004]
+    gaps: ["Acceptance depth, failure channel, overflow, and atomicity await D-POS-001."]
+  - contract: C-POS-001
+    required_categories: [positive, boundary, state-transition]
+    tests: [T-POS-001]
+    gaps: ["Default Position/StateInfo/Reset state is wholly blocked by D-POS-003/D-POS-005."]
+  - contract: C-POS-002
+    required_categories: [positive, boundary, exhaustive, metamorphic]
+    tests: [T-FEN-001, T-POS-002, T-STA-001]
+    gaps: ["Absent en-passant Sq sentinel is intentionally not asserted."]
+  - contract: C-POS-003
+    required_categories: [positive, negative, boundary, state-transition]
+    tests: [T-POS-003]
+    gaps:
+      - "Missing category: negative IsOk behavior; its consistency threshold and reachable negative cases await D-POS-006."
+  - contract: C-POS-004
+    required_categories: [boundary, state-transition]
+    tests: [T-POS-004]
+    gaps: ["Copy/move ownership and accumulated-history behavior await D-POS-007; no impossible state is injected."]
+  - contract: C-HSH-001
+    required_categories: [positive, negative, boundary, state-transition, metamorphic]
+    tests: [T-HSH-001, T-HSH-002, T-HSH-003]
+    gaps: ["All hash equality, refresh, lifecycle, restoration, and component-set expectations are blocked by D-POS-002/D-POS-005/D-TT-006."]
+  - contract: C-STA-001
+    required_categories: [positive, boundary, state-transition, metamorphic]
+    tests: [T-HSH-002, T-STA-001, T-STA-002, T-STA-003, T-STA-004]
+    gaps: ["Forward legal FIDE/FEN transitions remain exact; matching unmake is asserted only for placement/type/colour occupancy and active side under C-CHS-011, while broader restoration remains blocked by D-POS-005."]
+  - contract: C-STA-002
+    required_categories: [negative, boundary, state-transition]
+    tests: [T-STA-005]
+    gaps: ["All invalid-move/history responses await D-POS-004/D-POS-005."]

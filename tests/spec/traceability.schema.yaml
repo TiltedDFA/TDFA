@@ -1,0 +1,70 @@
+schema_version: 2
+description: >-
+  Human-readable schema for tests/spec/traceability.yaml. The live manifest is
+  written as JSON (a strict YAML subset), so tools/validate_traceability.py can
+  enforce it using only the Python standard library on a fresh checkout.
+
+required_root_fields:
+  - schema_version
+  - snapshot
+  - purpose_map_sha256
+  - routine_policy
+  - catalogues
+  - multi_case_implementations
+  - blocked_implementation_slices
+  - function_groups
+
+hash_policy: >-
+  purpose_map_sha256 is computed after normalizing CRLF to LF so the reviewed
+  Markdown inventory survives ordinary Windows and Unix checkouts. The source
+  snapshot manifest is deliberately raw-byte pinned by generate_api_dossier.py;
+  a checkout used with that snapshot must preserve its committed source EOLs.
+
+catalogue_policy:
+  executable_statuses: [DESIGNED, EXPECTATION_FROZEN, IMPLEMENTED, REVIEWED]
+  blocked_status: BLOCKED
+  rules:
+    - Every executable record has at least one Catch2 TEST_CASE with the same id.
+    - Every implemented T-* id maps back to exactly one catalogue record.
+    - A BLOCKED record is executable only through an explicitly named narrow slice.
+    - Multiple TEST_CASEs for one record require an exact-count approval and reason.
+
+multi_case_implementation:
+  id: T-<ONE-OR-MORE-SUBSYSTEM-SEGMENTS>-NNN
+  exact_cases: integer greater than one
+  reason: why one frozen record is intentionally translated into several cases
+
+blocked_implementation_slice:
+  id: T-<ONE-OR-MORE-SUBSYSTEM-SEGMENTS>-NNN
+  title_marker: unique marker required in the Catch2 title
+  scope: exact executable subset and the assertions that remain blocked
+
+function_group:
+  symbols: >-
+    Nonempty exact labels copied from the callable/function-group column of
+    intended-purpose-v1.md. Every label must occur in exactly one group.
+  disposition: TESTED | BLOCKED
+  tested_fields:
+    tests: nonempty list of implemented T-* ids
+    scope: substantive behavior those tests prove
+    covered_via: >-
+      Required when no cited catalogue record names the callable directly.
+      It contains kind=reviewed-integration, the exact subset of group symbols
+      covered indirectly, a nonempty reason explaining the observable helper
+      pipeline, and one or more named reviewers. Direct linkage is still
+      required for every group symbol outside that subset; overloaded callables
+      require a matching template/runtime and parameter shape.
+  blocked_fields:
+    reason: unresolved authority or missing deterministic observation/seam
+    covered_tests: optional implemented tests that cover a narrower subset
+
+routine_gate: >-
+  Passes only when the frozen snapshot/catalogue identities agree, every
+  executable test record has an implementation, every implementation maps back
+  to a record, narrow slices are explicit, and every intended-purpose callable
+  is substantively TESTED or explicitly BLOCKED. It deliberately does not use
+  compiler function-entry or source-line percentages as a correctness proxy.
+  When --junit evidence is supplied, every distinct Catch title belonging to a
+  TESTED mapping (including every approved multi-case translation) must appear
+  under its exact scheduled fast::/uci::/deep:: CTest name and have at least one
+  non-skipped execution.

@@ -32,6 +32,11 @@ public:
     Piece       captured_type_;
     ZobristKey  zobrist_key_;
 };
+
+#if defined(TDFA_TESTING)
+struct PositionTestProbe;
+#endif
+
 class Position final : public Board
 {
 public:
@@ -48,7 +53,6 @@ public:
     Position(std::string_view fen) : Position()
     {
         ImportFen(fen);
-        HashCurrentPostion();
     }
     void Reset()
     {
@@ -99,6 +103,10 @@ public:
     ZobristKey HashCurrentPostion();
     
 private:
+#if defined(TDFA_TESTING)
+    friend struct PositionTestProbe;
+#endif
+
     void UpdateCastlingRights();
 private:
     StateInfo info_;

@@ -84,6 +84,9 @@ public:
 #else
     constexpr void pedantic_check(Sq s, bool add, Piece p = Piece::p_None) const
     {
+        (void)s;
+        (void)add;
+        (void)p;
         return;
     }
 #endif

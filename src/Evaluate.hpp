@@ -11,6 +11,7 @@ namespace Eval
     //constants
     constexpr Score POS_INF = std::numeric_limits<Score>::max() >> 1;
     constexpr Score NEG_INF = -POS_INF;
+    constexpr Score OUT_OF_TIME = POS_INF + 69;
     constexpr Score PAWN_VAL    = 100;
     constexpr Score KNIGHT_VAL  = 310;
     constexpr Score BISHOP_VAL  = 320;

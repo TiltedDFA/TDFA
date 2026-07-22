@@ -117,7 +117,7 @@ constexpr Colour operator!(const Colour c)
 {
     return static_cast<Colour>(c ^ Black);
 }
-enum Piece
+enum Piece : U8
 {
     p_WhiteKing = pt_King,
     p_WhiteQueen,

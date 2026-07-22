@@ -69,9 +69,40 @@ static void SortMoves(MoveList* moves, Position* pos)
 }
 Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeManager const* tm, Score alpha, Score beta)
 {
-    if(depth == 0) return Eval::Evaluate(pos);
+    if(depth == 0)
+    {
+      MoveList list;
+      if (pos->ColourToMove() == White)
+      {
+        MoveGen::GenerateLegalMoves<White>(pos, &list);
+        if (list.len() == 0)
+        {
+          if (MoveGen::InCheck<White>(pos))
+            return Eval::NEG_INF;
+          return 0;
+        }
+
+      }
+      else
+      {
+        MoveGen::GenerateLegalMoves<Black>(pos, &list);
+        if (list.len() == 0)
+        {
+          if (MoveGen::InCheck<Black>(pos))
+            return Eval::NEG_INF;
+          return 0;
+        }
+      }
+
+      return Eval::Evaluate(pos);
+    }
     //discard incomplete search
-    if (tm->OutOfTime()) return Eval::NEG_INF;
+    if (tm->OutOfTime()) [[unlikely]] return Eval::OUT_OF_TIME;
+
+    if (pos->HalfMoves() >= 100) [[unlikely]]
+    {
+      return 0;
+    }
     #if USE_TRANSPOSITION_TABLE == 1
     BoundType hash_entry_flag = BoundType::UPPER_BOUND;
 
@@ -100,13 +131,12 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
         MoveGen::GenerateLegalMoves<Black>(pos, &list);
     }
     SortMoves(&list, pos);
-    if(list.len() == 0 || pos->HalfMoves() >= 50)
+    if(list.len() == 0)
     {
         if(pos->ColourToMove() == White ? MoveGen::InCheck<White>(pos) : MoveGen::InCheck<Black>(pos))
             return Eval::NEG_INF;
-        return 0;
     }
-    
+
     for(size_t i = 0; i < list.len(); ++i)
     {
         pos->MakeMove(list[i]);
@@ -114,6 +144,8 @@ Score Search::GoSearch(TransposTable* tt, Position* pos, const U16 depth, TimeMa
         const Score eval = -GoSearch(tt, pos, depth - 1, tm, -beta, -alpha);
 
         pos->UnmakeMove(list[i]);
+
+        if (std::abs(eval) == Eval::OUT_OF_TIME) [[unlikely]] return Eval::OUT_OF_TIME;
 
         if (eval >= beta)
         {
@@ -179,6 +211,11 @@ Move Search::FindBestMove(Position* pos, TransposTable* tt, TimeManager const* t
 
                 const Score eval = -GoSearch(tt, pos, depth, tm);
 
+                if (std::abs(eval) == Eval::OUT_OF_TIME)
+                {
+                  pos->UnmakeMove(ml[i]);
+                  [[unlikely]] return last_best_move;
+                }
                 if(eval > best_eval)
                 {
                     best_eval = eval;

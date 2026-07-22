@@ -66,10 +66,10 @@ namespace Magics
     constexpr ZobristKey CASTLING_ZOB_KEYS[5] =
     {
         0,
-        (Zobrist::PIECES[true][pt_Rook][0]   ^ Zobrist::PIECES[true][pt_Rook][3]   ^ Zobrist::PIECES[true][pt_King][4]   ^ Zobrist::PIECES[true][pt_King][2]  ),
-        (Zobrist::PIECES[true][pt_Rook][5]   ^ Zobrist::PIECES[true][pt_Rook][7]   ^ Zobrist::PIECES[true][pt_King][4]   ^ Zobrist::PIECES[true][pt_King][6]  ),
-        (Zobrist::PIECES[false][pt_Rook][56] ^ Zobrist::PIECES[false][pt_Rook][59] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][58]),
-        (Zobrist::PIECES[false][pt_Rook][61] ^ Zobrist::PIECES[false][pt_Rook][63] ^ Zobrist::PIECES[false][pt_King][60] ^ Zobrist::PIECES[false][pt_King][62])
+        (Zobrist::PIECES[White][pt_Rook][0]   ^ Zobrist::PIECES[White][pt_Rook][3]   ^ Zobrist::PIECES[White][pt_King][4]   ^ Zobrist::PIECES[White][pt_King][2]  ),
+        (Zobrist::PIECES[White][pt_Rook][5]   ^ Zobrist::PIECES[White][pt_Rook][7]   ^ Zobrist::PIECES[White][pt_King][4]   ^ Zobrist::PIECES[White][pt_King][6]  ),
+        (Zobrist::PIECES[Black][pt_Rook][56] ^ Zobrist::PIECES[Black][pt_Rook][59] ^ Zobrist::PIECES[Black][pt_King][60] ^ Zobrist::PIECES[Black][pt_King][58]),
+        (Zobrist::PIECES[Black][pt_Rook][61] ^ Zobrist::PIECES[Black][pt_Rook][63] ^ Zobrist::PIECES[Black][pt_King][60] ^ Zobrist::PIECES[Black][pt_King][62])
     };
     constexpr BitBoard GetLS1B(BitBoard bb) noexcept {return bb & -bb;}
 

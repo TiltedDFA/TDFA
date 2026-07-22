@@ -1,0 +1,474 @@
+schema_version: 1
+snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+contract_set: application-standard
+authoring_stage: blind-contract-authoring
+
+information_firewall:
+  permitted_inputs:
+    - tests/spec/**
+    - tests/data/**
+    - "UCI April 2006: https://backscattering.de/chess/uci/"
+    - "FIDE Laws of Chess 2023: https://handbook.fide.com/chapter/E012023"
+  implementation_inspected: false
+  product_executed: false
+  external_material_fetched: true
+  external_authorities:
+    - id: uci-april-2006
+      url: https://backscattering.de/chess/uci/
+      accessed: 2026-07-21
+    - id: fide-laws-2023
+      url: https://handbook.fide.com/chapter/E012023
+      accessed: 2026-07-21
+
+scope: >-
+  Narrow application behavior fixed directly by the UCI protocol, FIDE move
+  notation, or ordinary isolated-process safety. These cards do not select an
+  engine identity, option inventory, search feature, search result, timing
+  promise, malformed-input policy, diagnostic policy, or resource ceiling.
+
+approval_policy: >-
+  A card remains TENTATIVE until it has a second independent review. The blind
+  author is not an approver; approved_at is set only when that review promotes
+  the card to APPROVED.
+
+cards:
+  - id: C-APP-001
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 3
+    status: APPROVED
+    kind: application
+    signatures:
+      - "handshaken child process while idle"
+      - "quit"
+      - "ordinary process exit"
+    purpose: >-
+      Terminate a handshaken idle UCI command session cleanly when it receives
+      the canonical quit command, without extending that promise to pre-UCI
+      input, stdin EOF, or an active search.
+    authority:
+      type: UCI
+      reference: https://backscattering.de/chess/uci/#quit
+    preconditions:
+      - "The exact target is one fresh isolated child process with ordinary OS resources available."
+      - "The child has completed one canonical uci handshake and is in UCI mode."
+      - "The child is idle: no go command or search is active."
+      - "The child receives the exact lowercase token quit followed by LF as one complete line, with no other token. Other framing requires C-APP-014."
+      - "The harness drains stdout and stderr independently and can hard-clean only the recorded child process group after classifying a failure."
+    result:
+      - "The target process handles quit and reaches ordinary process termination without a crash, abort, or harness hard kill."
+      - "Termination closes the target process's inherited pipe endpoints; no member of its recorded process group remains alive."
+      - "A finite harness watchdog may classify failure, but its numeric duration is not a protocol latency promise."
+    mutates:
+      - "The target command session changes from running to terminated."
+    preserves:
+      - "Processes, pipes, and files outside the recorded target process group."
+    failure:
+      - "Quit before the uci handshake, stdin EOF, quit while searching, malformed or differently cased commands, exact exit-code value, final output text, and millisecond promptness are outside this card."
+      - "Resource exhaustion and harness resource ceilings are outside this card."
+    ordering: "The complete quit command is received before ordinary target-process termination."
+    determinism: "For the stated idle session, the required termination class is deterministic; its timing and numeric exit code are unspecified."
+    oracle:
+      type: standard
+      id: oracle/uci-idle-quit-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-c, blind-app-contract-review-d]
+      approved_at: "2026-07-22"
+
+  - id: C-APP-002
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: application
+    signatures:
+      - "uci"
+      - "id name <value>"
+      - "id author <value>"
+      - "option name <id> type <type> ..."
+      - "uciok"
+    purpose: >-
+      Enter UCI mode through the protocol-defined identification and option
+      content classes, terminated by uciok, without fixing product identity or
+      option policy.
+    authority:
+      type: UCI
+      reference: https://backscattering.de/chess/uci/#uci
+    preconditions:
+      - "A fresh child receives the exact lowercase token uci followed by LF as its first complete command line. Other framing requires C-APP-014."
+      - "No assertion is made about command casing other than this canonical input."
+    result:
+      - "After receiving uci, the engine emits a nonempty id name value and a nonempty id author value."
+      - "It may emit zero or more option lines; each emitted line obeys the UCI option grammar and named option-type grammar."
+      - "Identification and every advertised option precede one terminating uciok response."
+      - "The first uciok acknowledges that the required identification and all option advertisements for that handshake are complete; no second uciok answers the same request."
+      - "Exact identity strings, option presence, option order, option names, defaults, bounds, and values are not selected by this card."
+    mutates:
+      - "The target command session enters UCI mode."
+      - "Stdout gains the required handshake lines and may gain other protocol-valid lines allowed by C-APP-015; this card imposes no optional-info timing policy."
+    preserves:
+      - "No chess position, option value, or search result is selected by this card."
+    failure:
+      - "Repeated uci, noncanonical casing, malformed uci, exact engine identity, exact options, registration/copy-protection support, and initialization timing are outside this card."
+      - "A watchdog is a harness liveness classifier, not a handshake timing contract."
+    ordering: >-
+      The request precedes all handshake responses; both identification classes
+      and all option advertisements precede the single uciok. Ordering among
+      identity lines, and among option lines, is otherwise unspecified.
+    determinism: >-
+      Required response classes and causal ordering are deterministic for a
+      fixed process configuration; identity values and the option set are not
+      frozen by this card.
+    oracle:
+      type: standard
+      id: oracle/uci-handshake-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-a, blind-app-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-APP-003
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: application
+    signatures:
+      - "isready"
+      - "readyok"
+    purpose: >-
+      Provide the UCI readiness barrier both while idle and while calculating,
+      without turning readiness into a search-control or timing policy.
+    authority:
+      type: UCI
+      reference: https://backscattering.de/chess/uci/#isready
+    preconditions:
+      - "The command session has completed a canonical uci handshake."
+      - "Each canonical request is the exact lowercase token isready followed by LF as one complete line. Other framing requires C-APP-014."
+      - "For the calculating case only, a search is already active under a separately approved and supported go contract; this card does not approve any go token."
+    result:
+      - "Every isready request receives exactly one readyok after that request and after the engine has processed all earlier input up to that request; an asynchronous search need not complete."
+      - "Repeated requests are not coalesced, and a stale or unsolicited readyok cannot answer a later request."
+      - "While idle, readyok is produced without changing the chess position or starting a search."
+      - "While calculating, processing isready neither waits for nor causes search completion and does not stop that search; a finite search may still finish independently under its approved go control."
+      - "The protocol word immediately is a causal requirement not to await search completion; this card fixes no millisecond threshold."
+    mutates:
+      - "Stdout gains one readyok response per isready request."
+    preserves:
+      - "The current chess position and option values."
+      - "The isready command itself neither stops nor changes an active search; independent completion under its go control remains outside this card."
+    failure:
+      - "Support for any go token, search completion, stop handling, bestmove selection, score/depth, worker architecture, and wall-clock promptness are outside this card."
+    ordering: "Requests and responses form a FIFO one-to-one relation; no readyok precedes the request it answers."
+    determinism: "The one-response relation and non-stopping behavior are deterministic; response duration is unspecified."
+    oracle:
+      type: standard
+      id: oracle/uci-readiness-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-a, blind-app-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-APP-010
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 3
+    status: APPROVED
+    kind: application
+    signatures:
+      - "UCI move token emitted by the engine"
+      - "<from><to>[promotion]"
+      - "0000"
+    purpose: >-
+      Fix only the syntax and semantic field projection of an emitted UCI move
+      token, without requiring a search, choosing a move, or deciding when the
+      no-move token is emitted.
+    authority:
+      type: UCI
+      reference: "https://backscattering.de/chess/uci/#move-format and https://handbook.fide.com/chapter/E012023"
+    preconditions:
+      - "Another approved contract has caused the engine to emit a field whose UCI grammar requires a move token."
+      - "For a non-0000 token, the test independently knows the denoted legal move and whether it is a promotion; this card does not establish the current position."
+      - "The active variant uses orthodox UCI move encoding: UCI_Chess960 is not enabled. Chess960 castling encoding is outside this card."
+    result:
+      - "A non-null move is lowercase long algebraic notation: source file a..h, source rank 1..8, target file a..h, target rank 1..8, followed exactly when promoting by one lowercase suffix q, r, b, or n."
+      - "Castling is written as the king's source and target squares in the same four-character form."
+      - "The four source/target characters and optional suffix denote the independently known move fields exactly."
+      - "0000 is the only UCI no-move spelling covered here. This card does not select a circumstance in which it must be emitted."
+    mutates:
+      - none
+    preserves:
+      - "The current position, search state, and all application state; this card classifies output syntax only."
+    failure:
+      - "Whether a move token is emitted, which legal move is selected, legal-set membership without an independently established position, ponder support, terminal/draw policy, and duplicate/missing bestmove behavior are outside this card."
+      - "Uppercase, malformed, illegal, null internal encodings, Chess960 castling tokens, and engine-specific move notations are outside the valid emitted domain rather than alternate accepted results."
+    ordering: "Move-field ordering is source, target, then optional promotion suffix."
+    determinism: "Rendering of a stipulated semantic move tuple is deterministic."
+    oracle:
+      type: standard
+      id: oracle/uci-emitted-move-syntax-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-c, blind-app-contract-review-d]
+      approved_at: "2026-07-22"
+
+  - id: C-APP-014
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: application
+    signatures:
+      - "UCI stdin tokenization"
+      - "LF, CRLF, and CR command framing"
+      - "blank input"
+      - "unknown command or token"
+    purpose: >-
+      Accept the UCI standard's ordinary ASCII spacing and cross-platform line
+      framing and ignore ordinary blank or unknown input while keeping the
+      command session responsive.
+    authority:
+      type: UCI
+      reference: https://backscattering.de/chess/uci/#description-of-the-universal-chess-interface-uci
+    preconditions:
+      - "Commands use canonical lowercase recognized tokens and ordinary bounded ASCII input."
+      - "A uci variant is the first command of a fresh child. Blank, whitespace-only, standalone-unknown, and isready variants are sent only after a completed canonical handshake while the session is idle."
+      - "When present, token separation and surrounding padding consist of finite nonempty runs of SP (0x20) and HT (0x09)."
+      - "A complete input line ends in LF (0x0a), CRLF (0x0d 0x0a), or lone CR (0x0d); CRLF is one terminator."
+      - "Unknown-input cases are a blank line, a whitespace-only line, one standalone ordinary unknown token, or the frozen unambiguous trailing-token form uci SP extra."
+      - "Mixed-token placements that the UCI text calls undefined, including debug joho on, are outside this card."
+    result:
+      - "Leading, trailing, and inter-token SP/HT padding does not change the behavior of a recognized canonical command."
+      - "LF, CRLF, and lone CR frame the same command semantics."
+      - "A blank or whitespace-only line has no command effect."
+      - "An ordinary standalone unknown command or token is ignored. For mixed input the engine tries to parse the remainder only where the UCI grammar remains defined; this card selects no result for undefined lines."
+      - "Ignored input neither terminates nor wedges the session; a following canonical isready still receives its C-APP-003 readyok."
+      - "For the frozen catalogue variants, padded uci, uci followed by extra, and padded isready behave as their canonical commands."
+    mutates:
+      - "A recognized padded command may mutate only as its canonical contract permits."
+    preserves:
+      - "Blank, whitespace-only, and standalone unknown input preserve session mode, chess position, option values, and idle search state; they have no protocol command effect."
+    failure:
+      - "Malformed recognized commands, undefined mixed-token placements, malformed FEN or numerics, illegal histories, embedded NUL, invalid encodings, unbounded tokens, allocation failure, casing policy, and adversarial resource behavior are outside this card."
+      - "Chess-position preservation is part of the semantic no-op, but the frozen catalogue still needs its separate distinguishable fixture before that state assertion is observable."
+    ordering: "Bytes before one accepted line terminator form one line; recognized tokens retain their left-to-right order after padding, and unknown-token removal is asserted only for the frozen unambiguous trailing-token case."
+    determinism: "Tokenization, framing, ignore behavior, and subsequent responsiveness are deterministic for the stated bounded inputs."
+    oracle:
+      type: standard
+      id: oracle/uci-standard-input-variants-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-a, blind-app-contract-review-b]
+      approved_at: "2026-07-21"
+
+  - id: C-APP-015
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+    version: 2
+    status: APPROVED
+    kind: application
+    signatures:
+      - "stdout"
+      - "UCI engine-to-GUI lines"
+    purpose: >-
+      Reserve stdout for complete UCI engine-to-GUI lines during required UCI
+      transcripts, enforcing only causal restrictions stated by the standard
+      and choosing no stderr, extension, or optional-info timing policy.
+    authority:
+      type: UCI
+      reference: https://backscattering.de/chess/uci/#engine-to-gui
+    preconditions:
+      - "Stdout and stderr are captured independently; no cross-channel ordering is inferred."
+      - "The session receives only commands covered by approved UCI cards, with debug off and no engine-specific extension command."
+      - "The process configuration does not enable an engine-specific extension that emits unsolicited stdout during the observed transcript."
+      - "Any search-phase observation additionally requires a separately approved supported go contract; this card does not create one."
+    result:
+      - "The engine emits no unsolicited startup banner on stdout before a command that requires a UCI response."
+      - "Every complete captured stdout line is a UCI engine-to-GUI command with valid grammar: id, option, uciok, readyok, info, bestmove, or standard registration/copyprotection."
+      - "Commands with explicit UCI prerequisites obey them: identification and option advertisements follow uci, options follow the required identification, uciok follows that handshake material, readyok answers isready, bestmove terminates a go search, and registration/copyprotection use their specified phases."
+      - "The UCI text does not confine a grammar-valid info line to an active-search interval; this card imposes no additional timing or phase policy on optional info lines while debug is off."
+      - "Raw banners, timer/debug prose outside info string, binary garbage, and a partial stdout line at ordinary exit are not protocol-clean output."
+      - "This card makes no assertion about stderr routing, stderr text, or cross-stream order."
+    mutates:
+      - "Stdout gains only complete protocol-valid lines allowed by the causal transcript."
+    preserves:
+      - "This card classifies output only and selects no chess, option, search, or diagnostic state."
+    failure:
+      - "Exact identity and option contents, stderr, extensions, malformed-command diagnostics, optional info presence/timing/content, search support/results/timing, and output/resource ceilings are outside this card."
+    ordering: "Each stdout command obeys only its UCI-defined causal prerequisites; no additional ordering for optional info and no global ordering with stderr are specified."
+    determinism: "Accepted line classes and phase constraints are deterministic; optional standard lines and their values are not frozen."
+    oracle:
+      type: standard
+      id: oracle/uci-protocol-clean-stdout-v1
+    open_decisions: []
+    review:
+      author: blind-contract-author
+      approvers: [blind-app-contract-review-a, blind-app-contract-review-b]
+      approved_at: "2026-07-21"
+
+catalogue_audit:
+  source:
+    path: tests/spec/catalogue/search-tt-uci.yaml
+    sha256: ab86eebccde12f2bdd028d008b959e20de827d597f3d8cc14e12471376bf1ed9
+    snapshot: 6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592
+  interpretation: >-
+    A mapped T-APP record remains BLOCKED until every cited card and every
+    non-card dependency required by that record is approved. A mapping describes
+    semantic coverage, not approval or permission to implement a still-mixed
+    record.
+  card_to_catalogue_ids:
+    C-APP-001: [T-APP-001, T-APP-002, T-APP-003, T-APP-007, T-APP-017]
+    C-APP-002: [T-APP-001, T-APP-002, T-APP-009, T-APP-017, T-APP-019]
+    C-APP-003: [T-APP-002, T-APP-004, T-APP-016, T-APP-017, T-APP-019]
+    C-APP-010: [T-APP-005, T-APP-006, T-APP-011, T-APP-012, T-APP-016, T-APP-020]
+    C-APP-014: [T-APP-017, T-APP-018]
+    C-APP-015: [T-APP-019]
+  mapping_caution: >-
+    These are the exact test ids named by the search catalogue's coverage map
+    for the corresponding C-APP ids. Because this YAML deliberately narrows
+    C-APP-001 and C-APP-010, several references below cover only a slice and do
+    not make the whole catalogue record implementable.
+  expectation_frozen_without_semantic_split:
+    - tests: [T-APP-001]
+      cards: [C-APP-001, C-APP-002]
+      scope: >-
+        Canonical handshake classes and ordering plus idle cleanup. Exact engine
+        identity and option inventory remain unasserted; protocol-clean stdout is
+        independently covered by T-APP-019/C-APP-015.
+    - tests: [T-APP-002]
+      cards: [C-APP-001, C-APP-002, C-APP-003]
+      scope: "Repeated idle isready/readyok request-response matching and idle cleanup."
+    - tests: [T-APP-017]
+      cards: [C-APP-001, C-APP-002, C-APP-003, C-APP-014]
+      scope: >-
+        All eight uci-standard-input-variants-v1 rows, continued responsiveness,
+        and idle cleanup; malformed recognized commands are not part of the row set.
+  blocked_records_requiring_split_or_narrowing:
+    - tests: [T-APP-003]
+      covered_by: []
+      disposition: TRANSCRIPT_CORRECTION_AND_SPLIT_REQUIRED
+      reason: >-
+        The current quit family sends quit as the first post-boot command, while
+        UCI specifies uci as the first command and only demonstrates quit after
+        uciok. Replace that family with handshake, idle quit LF, and exit before
+        applying C-APP-001; pre-UCI quit needs separate authority or an owner
+        decision. Both stdin-EOF families and every search-active exit behavior
+        remain blocked by D-UCI-005.
+    - tests: [T-APP-005]
+      covered_by: [C-APP-010]
+      disposition: NARROW_SYNTAX_ONLY
+      reason: >-
+        Emitted move-token syntax is fixed, but supported finite go controls,
+        exact position observation, legal result membership, result count,
+        fallback, timing, and draw policy remain blocked.
+    - tests: [T-APP-004]
+      covered_by: [C-APP-003]
+      disposition: NARROW_BARRIER_ONLY
+      reason: >-
+        The following isready has standard readiness semantics, but handling the
+        preceding position command and proving command-session state require the
+        unresolved position/FEN contracts. The readiness card alone cannot
+        unblock this record.
+    - tests: [T-APP-007]
+      covered_by: []
+      disposition: NO_COVERED_SEMANTIC_SLICE
+      reason: >-
+        The catalogue's C-APP-001 reference concerns EOF lifecycle, which this
+        narrowed idle-quit card explicitly excludes. Malformed-input safety,
+        instrumentation, resource ceilings, and post-EOF behavior remain blocked;
+        the record never sends the canonical idle quit covered here.
+    - tests: [T-APP-009]
+      covered_by: [C-APP-002]
+      disposition: NARROW_OPTION_GRAMMAR_ONLY
+      reason: >-
+        C-APP-002 classifies the grammar of any advertised option line but does
+        not require Hash to exist or select its bounds, units, rounding,
+        configuration effect, invalid-input recovery, or allocation behavior.
+        The current record therefore has no independently implementable Hash
+        behavior until C-APP-004 and its owner decisions are approved.
+    - tests: [T-APP-006]
+      covered_by: [C-APP-010]
+      disposition: NARROW_TOKEN_ONLY
+      reason: >-
+        The spelling 0000 is fixed; requiring a search and selecting terminal
+        emission behavior still requires a supported finite go contract and
+        must not be implemented from this card alone.
+    - tests: [T-APP-013]
+      covered_by: [C-APP-015]
+      disposition: SPLIT_REQUIRED
+      reason: >-
+        Protocol-clean stdout may be separated. Stderr placement, exact
+        diagnostics, timer output, and retained extension policy remain blocked.
+    - tests: [T-APP-016]
+      covered_by: [C-APP-003, C-APP-010]
+      disposition: SPLIT_REQUIRED
+      reason: >-
+        The active-search isready requirement is standard, but the record's go
+        infinite setup, proof that a search is active, stop handling, bestmove,
+        cleanup, and any promptness expectation remain blocked. Implement the
+        readiness slice only after a separately supported active-search setup exists.
+    - tests: [T-APP-011]
+      covered_by: [C-APP-003, C-APP-010]
+      disposition: NO_STANDALONE_IMPLEMENTABLE_SLICE
+      reason: >-
+        Readyok and move spelling are fixed if reached, but stop promptness,
+        active-search setup, result count/selection, worker cleanup, and the
+        terminating bestmove event remain blocked.
+    - tests: [T-APP-012]
+      covered_by: [C-APP-010]
+      disposition: NO_STANDALONE_IMPLEMENTABLE_SLICE
+      reason: >-
+        This record contains only search-active quit and EOF, so C-APP-001's
+        handshaken idle-quit contract does not apply. Move spelling alone does
+        not decide whether bestmove is emitted, cleanup promptness, or final
+        output.
+    - tests: [T-APP-018]
+      covered_by: [C-APP-003, C-APP-014]
+      disposition: NARROW_LIVENESS_ONLY
+      reason: >-
+        Unknown-command ignore and following readiness are fixed. Observable
+        chess-position preservation still lacks the frozen distinguishable
+        fixture and approved finite observation required by the catalogue.
+    - tests: [T-APP-019]
+      covered_by: [C-APP-002, C-APP-003, C-APP-015]
+      disposition: SPLIT_REQUIRED
+      reason: >-
+        Canonical handshake and readiness stdout sub-transcripts may be
+        implemented after card approval, but the record's classifier must be
+        narrowed: UCI does not explicitly forbid a grammar-valid info line
+        outside active search, and it explicitly permits a startup registration
+        error. Therefore "before uciok only id/option/uciok" is not an
+        authority-backed rejection rule. The finite-go transcript also remains
+        blocked by go support and search-result policy.
+    - tests: [T-APP-020]
+      covered_by: [C-APP-010]
+      disposition: NARROW_SYNTAX_ONLY
+      reason: >-
+        Any emitted move has standard spelling, but automatic-versus-claimable
+        draw adjudication, whether 0000 or a legal move is selected, go support,
+        and history-sensitive position establishment remain blocked.
+  deliberate_exclusions:
+    - topic: "quit before the protocol's first uci command"
+      tests: [T-APP-003]
+    - topic: "stdin EOF and search-active quit"
+      tests: [T-APP-003, T-APP-007, T-APP-012]
+    - topic: "malformed recognized commands, recovery, and position atomicity"
+      tests: [T-APP-004, T-APP-007, T-APP-008, T-APP-018]
+    - topic: "exact identity, exact option inventory, and Hash bounds/effect"
+      tests: [T-APP-001, T-APP-009]
+    - topic: "ucinewgame reset scope"
+      tests: [T-APP-010]
+    - topic: "go feature support, search timing, stop promptness, and search-active lifecycle"
+      tests: [T-APP-005, T-APP-006, T-APP-011, T-APP-012, T-APP-016, T-APP-019, T-APP-020]
+    - topic: "bestmove selection, draw adjudication, and completed-result policy"
+      tests: [T-APP-005, T-APP-006, T-APP-011, T-APP-020]
+    - topic: "stderr routing and exact diagnostics"
+      tests: [T-APP-013]
+    - topic: "additional timing or phase restrictions on grammar-valid info lines"
+      tests: [T-APP-019]
+    - topic: "bench, print, and all engine-specific extensions"
+      tests: [T-APP-014]
+    - topic: "internal utility conversion rather than emitted application syntax"
+      tests: [T-APP-015]
+    - topic: "numeric watchdogs, output/memory caps, instrumentation, and resource ceilings as product promises"
+      tests: [T-APP-003, T-APP-007, T-APP-011, T-APP-012, T-APP-016, T-APP-017, T-APP-019]

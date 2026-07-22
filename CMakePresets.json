@@ -1,0 +1,136 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 26,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "test-debug",
+      "displayName": "TDFA tests (GCC Debug)",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build/test-debug",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/mingw32-make.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "TDFA_TEST_TOOLCHAIN": "ON"
+      }
+    },
+    {
+      "name": "test-release",
+      "displayName": "TDFA tests (GCC optimized)",
+      "inherits": "test-debug",
+      "binaryDir": "${sourceDir}/build/test-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "coverage-gcc",
+      "displayName": "TDFA tests (GCC coverage)",
+      "inherits": "test-debug",
+      "binaryDir": "${sourceDir}/build/coverage-gcc",
+      "cacheVariables": {
+        "TDFA_ENABLE_COVERAGE": "ON",
+        "TDFA_GCOVR_EXECUTABLE": "C:/msys64/ucrt64/bin/gcovr.exe",
+        "TDFA_GCOV_EXECUTABLE": "C:/msys64/ucrt64/bin/gcov.exe"
+      }
+    },
+    {
+      "name": "sanitize-clang",
+      "displayName": "TDFA tests (Clang ASan/UBSan)",
+      "inherits": "test-debug",
+      "binaryDir": "${sourceDir}/build/sanitize-clang-msvc18",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "C:/Users/Student/Documents/clang+llvm-18.1.8-x86_64-pc-windows-msvc/bin/clang++.exe",
+        "TDFA_ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "fuzz-clang",
+      "displayName": "TDFA fuzz targets (Clang libFuzzer)",
+      "inherits": "sanitize-clang",
+      "binaryDir": "${sourceDir}/build/fuzz-clang-msvc18",
+      "cacheVariables": {
+        "TDFA_ENABLE_FUZZING": "ON",
+        "TDFA_ENABLE_SANITIZERS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "test-debug",
+      "configurePreset": "test-debug"
+    },
+    {
+      "name": "test-release",
+      "configurePreset": "test-release"
+    },
+    {
+      "name": "coverage-gcc",
+      "configurePreset": "coverage-gcc"
+    },
+    {
+      "name": "sanitize-clang",
+      "configurePreset": "sanitize-clang"
+    },
+    {
+      "name": "fuzz-clang",
+      "configurePreset": "fuzz-clang"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-fast",
+      "displayName": "Fast TDFA verification",
+      "configurePreset": "test-debug",
+      "filter": {
+        "include": {
+          "label": "^fast$"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "test-deep",
+      "displayName": "Fast and deep TDFA verification",
+      "configurePreset": "test-release",
+      "filter": {
+        "include": {
+          "label": "^(fast|deep)$"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "test-adversarial",
+      "displayName": "Sanitized TDFA verification",
+      "configurePreset": "sanitize-clang",
+      "filter": {
+        "include": {
+          "label": "^(fast|adversarial)$"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    }
+  ]
+}

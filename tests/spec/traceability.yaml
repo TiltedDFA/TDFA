@@ -1,0 +1,394 @@
+{
+  "schema_version": 2,
+  "snapshot": "6ea2c5c04bc83b7be7633936c53851154b7203669505af50a6095531a38be592",
+  "purpose_map_sha256": "126f0edba94adf8db8a9a2a2471c24724cc35e43f096df1618f572db4ad19a51",
+  "routine_policy": {
+    "gate": "Every intended-purpose callable is either TESTED by one or more substantive behavioral contracts or BLOCKED with an explicit semantic/testability reason.",
+    "not_a_gate": "Compiler/gcov function-entry coverage and production line coverage are audit evidence, not routine correctness criteria."
+  },
+  "catalogues": [
+    "tests/spec/catalogue/movegen-rules.yaml",
+    "tests/spec/catalogue/primitives-position.yaml",
+    "tests/spec/catalogue/runtime-math.yaml",
+    "tests/spec/catalogue/search-tt-uci.yaml"
+  ],
+  "multi_case_implementations": [
+    {
+      "id": "T-ORACLE-002",
+      "exact_cases": 2,
+      "reason": "The TDFA differential execution and the oracle-only frozen-row self-check are deliberately separate Catch2 cases under one approved record."
+    }
+  ],
+  "blocked_implementation_slices": [
+    {
+      "id": "T-APP-003",
+      "title_marker": "handshaken-idle-quit-split",
+      "scope": "Only canonical quit after a completed idle handshake is executable; stdin-EOF lifecycle semantics remain blocked."
+    },
+    {
+      "id": "T-APP-018",
+      "title_marker": "liveness-only-split",
+      "scope": "Only ignored-token liveness/readiness is executable; no chess-position preservation is claimed."
+    },
+    {
+      "id": "T-APP-019",
+      "title_marker": "handshake-readiness-split",
+      "scope": "Only handshake/readiness transcripts are checked for protocol-clean stdout; search-phase stdout remains blocked."
+    }
+  ],
+  "function_groups": [
+    {
+      "symbols": ["Board::Board", "Board::ResetBoard"],
+      "disposition": "TESTED",
+      "tests": ["T-BRD-001"],
+      "scope": "Construction and reset are exhaustively observed as mutually consistent empty placement views."
+    },
+    {
+      "symbols": ["Board::Pieces(PieceType)", "Board::Pieces(Colour)", "Board::Pieces(Colour, Colour)", "Board::Pieces(PieceType, PieceTypes...)", "Board::Pieces(Colour, PieceTypes...)", "Board::PieceOn"],
+      "disposition": "TESTED",
+      "tests": ["T-BRD-003", "T-BRD-004", "T-POS-002"],
+      "scope": "Every valid square, piece, colour, type, aggregate, and mixed-board query is checked against independent set algebra.",
+      "covered_via": {"kind": "reviewed-integration", "symbols": ["Board::Pieces(Colour)"], "reason": "The single-colour overload is explicitly exercised as both colour masks in T-BRD-003/T-BRD-004, while the frozen catalogue names that one overload by its shared unqualified family name.", "reviewers": ["/root/traceability_review"]}
+    },
+    {
+      "symbols": ["Board::MakePiece"],
+      "disposition": "TESTED",
+      "tests": ["T-BRD-002"],
+      "scope": "All valid colour and concrete piece-type combinations round-trip through independent piece decoding."
+    },
+    {
+      "symbols": ["Board::pedantic_check"],
+      "disposition": "BLOCKED",
+      "reason": "It is a debug-only invalid-operation diagnostic whose checked conditions and failure channel remain owner policy."
+    },
+    {
+      "symbols": ["Board::AddPiece", "Board::RemovePiece", "Board::PopPiece", "Board::MovePiece"],
+      "disposition": "TESTED",
+      "tests": ["T-BRD-003", "T-BRD-005", "T-BRD-007"],
+      "scope": "Valid primitive transitions exhaust squares/pieces and mixed traces while checking every placement and occupancy view."
+    },
+    {
+      "symbols": ["RemoveWhiteSpace"],
+      "disposition": "BLOCKED",
+      "reason": "Canonical Position imports execute the helper's identity path, but no approved direct contract covers empty, all-space, leading-space, or trailing-space trimming semantics.",
+      "covered_tests": ["T-FEN-001", "T-FEN-003"]
+    },
+    {
+      "symbols": ["SplitFen"],
+      "disposition": "TESTED",
+      "tests": ["T-LEX-002"],
+      "scope": "Every canonical six-field corpus FEN is split into exact independently frozen fields."
+    },
+    {
+      "symbols": ["IsDigit"],
+      "disposition": "TESTED",
+      "tests": ["T-LEX-001"],
+      "scope": "All byte values are classified against the exact ASCII decimal alphabet."
+    },
+    {
+      "symbols": ["Debug::PrintBB(BitBoard, bool)", "Debug::PrintBB(BitBoard, int, bool)", "Debug::PrintBoardState", "Debug::PrintInduvidualPieces", "Debug::PieceTypeToStr", "Debug::PrintEncodedMoveStr", "Debug::PrintEncodedMoveBin", "Debug::PrintUsThem", "Debug::PrintUsThemBlank", "Debug::PrintEncodedMovesMoveInfo", "Debug::PrintU8BB", "Debug::PrintBoardGraphically"],
+      "disposition": "BLOCKED",
+      "reason": "These are human diagnostics; exact content, formatting, stream, and enabled-build behavior have not been retained as engine-application contracts."
+    },
+    {
+      "symbols": ["Debug::Fun(BitBoard)"],
+      "disposition": "BLOCKED",
+      "reason": "This is an undeclared, uncalled placeholder definition with no observable effect; there is no callable interface or approved semantic outcome to test."
+    },
+    {
+      "symbols": ["Eval::CountMaterial<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-RTM-EVAL-001"],
+      "scope": "Approved colour-isolation and additivity relations are checked on frozen material fixtures without copying evaluator arithmetic."
+    },
+    {
+      "symbols": ["Eval::Evaluate"],
+      "disposition": "BLOCKED",
+      "reason": "Determinism and complete public FEN-semantic nonmutation are covered, but no approved score relation distinguishes a meaningful evaluator from an always-constant result.",
+      "covered_tests": ["T-RTM-EVAL-002"]
+    },
+    {
+      "symbols": ["Eval::UpdateData", "Eval::Mobility<Colour>", "Eval::PawnProgress<Colour>"],
+      "disposition": "BLOCKED",
+      "reason": "Phase visibility, mobility definition, pawn-progress arithmetic, weights, and malformed-position domains remain unresolved owner policy."
+    },
+    {
+      "symbols": ["Magics::SqToBB<Sq>", "Magics::SqToBB(Sq)"],
+      "disposition": "TESTED",
+      "tests": ["T-BB-001"],
+      "scope": "Compile-time and runtime valid-square conversions exhaust all 64 one-hot outputs and their union."
+    },
+    {
+      "symbols": ["Magics::FileOf", "Magics::RankOf", "Magics::BBFileOf", "Magics::BBRankOf", "Magics::Shift<MD>"],
+      "disposition": "TESTED",
+      "tests": ["T-BB-005", "T-BB-006"],
+      "scope": "All valid squares and supported directions satisfy exhaustive opaque partition, edge, inverse, composition, and distributive grid properties."
+    },
+    {
+      "symbols": ["Magics::EncodeKing"],
+      "disposition": "TESTED",
+      "tests": ["T-RULE-003", "T-STA-003", "T-STATE-002"],
+      "scope": "Its externally meaningful recognition role is covered by all four exact castling transitions, an exact ordinary king transition, and make/unmake of every generated legal move across the frozen state corpus; its numeric key representation is deliberately not contractual.",
+      "covered_via": {"kind": "reviewed-integration", "symbols": ["Magics::EncodeKing"], "reason": "EncodeKing is an intentionally opaque key helper called by MakeMove; T-STA-003 contrasts ordinary king movement with all four castles, while T-STATE-002 exercises it across every generated legal transition in the approved fixtures.", "reviewers": ["/root/traceability_review"]}
+    },
+    {
+      "symbols": ["Magics::GetLS1B", "Magics::FindLS1B", "Magics::FindMS1B", "Magics::PopCnt", "Magics::pow", "Magics::PopLS1B", "Magics::PopMS1B", "Magics::PopNRetLS1B"],
+      "disposition": "TESTED",
+      "tests": ["T-BB-002", "T-BB-003", "T-BB-009"],
+      "scope": "Nonzero scans/removals, population counts, and approved exponent cases use exhaustive slices, boundaries, singletons, pairs, and fixed random corpora."
+    },
+    {
+      "symbols": ["Magics::ValidSq"],
+      "disposition": "BLOCKED",
+      "reason": "The valid 0..63 consumer domain is covered, but classification of negative/out-of-range values is still blocked by the square-domain owner decision."
+    },
+    {
+      "symbols": ["Magics::TypeOf", "Magics::ColourOf"],
+      "disposition": "TESTED",
+      "tests": ["T-BRD-002"],
+      "scope": "Every valid nonempty piece identity decodes to its independently enumerated colour and concrete type."
+    },
+    {
+      "symbols": ["Magics::CollapsedFilesIndex", "Magics::CollapsedRanksIndex(BitBoard)", "Magics::CollapsedRanksIndex(BitBoard, U8)", "Magics::PrecomputeMask", "Magics::compute_base_2_to_3", "Magics::GetBaseThreeUsThem"],
+      "disposition": "TESTED",
+      "tests": ["T-GEO-003"],
+      "scope": "The complete lookup pipeline is tested through exhaustive labelled sliding-line results for zero, friendly, and opposing blocker states; internal numeric encodings remain deliberately opaque.",
+      "covered_via": {"kind": "reviewed-integration", "symbols": ["Magics::CollapsedFilesIndex", "Magics::CollapsedRanksIndex(BitBoard)", "Magics::CollapsedRanksIndex(BitBoard, U8)", "Magics::PrecomputeMask", "Magics::compute_base_2_to_3", "Magics::GetBaseThreeUsThem"], "reason": "These helpers collectively implement an opaque lookup representation; exhaustive end-to-end line results test their firm contribution without promoting internal indices to contracts.", "reviewers": ["/root/traceability_review"]}
+    },
+    {
+      "symbols": ["Magics::KnightAttackingMask", "Magics::KingAttackingMask"],
+      "disposition": "TESTED",
+      "tests": ["T-GEO-001", "T-GEO-002"],
+      "scope": "Geometry-only masks are exhaustively compared with an independent labelled-board model for every origin."
+    },
+    {
+      "symbols": ["Moves::EncodeMove", "Moves::DecodeMove", "Moves::StartSq", "Moves::TargetSq"],
+      "disposition": "TESTED",
+      "tests": ["T-MOV-001"],
+      "scope": "The complete valid origin, target, and move-type product is decoded, domain-checked, and round-tripped."
+    },
+    {
+      "symbols": ["Moves::IsPromotionMove"],
+      "disposition": "TESTED",
+      "tests": ["T-MOV-002", "T-MOV-004"],
+      "scope": "Every valid semantic move kind is exhaustively classified and all four standard promotion choices are exercised through frozen UCI rows."
+    },
+    {
+      "symbols": ["Moves::PTypeOfProm"],
+      "disposition": "BLOCKED",
+      "reason": "Promotion parsing/rendering exercises downstream behavior, but no approved direct assertion proves the exact promoted PieceType returned for all promotion inputs.",
+      "covered_tests": ["T-MOV-004"]
+    },
+    {
+      "symbols": ["MoveGen::GenerateMovesFromBB"],
+      "disposition": "TESTED",
+      "tests": ["T-GEO-004"],
+      "scope": "Empty, singleton, and partitioned complete destination domains validate exact origin/type propagation and set-union behavior within observed capacity."
+    },
+    {
+      "symbols": ["MoveGen::GetMovesForSliding<AttackDirection>"],
+      "disposition": "BLOCKED",
+      "reason": "Every sliding destination line and ternary blocker state is checked, but the returned move_info attack-information field is not asserted by T-GEO-003.",
+      "covered_tests": ["T-GEO-003"]
+    },
+    {
+      "symbols": ["MoveGen::WhitePawnMoves", "MoveGen::BlackPawnMoves"],
+      "disposition": "TESTED",
+      "tests": ["T-GEN-002", "T-RULE-001", "T-RULE-002", "T-RULE-006"],
+      "scope": "Both colours' ordinary, double, capture, en-passant, promotion, edge, blocked, and king-safety cases are checked as logical move sets."
+    },
+    {
+      "symbols": ["MoveGen::BishopMoves<Colour>", "MoveGen::RookMoves<Colour>", "MoveGen::QueenMoves<Colour>", "MoveGen::KnightMoves<Colour>", "MoveGen::KingMoves<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-GEO-001", "T-GEO-002", "T-GEN-001", "T-GEN-003"],
+      "scope": "Piece-specific generators for both colours are compared with independent mailbox geometry and a component-union metamorphism on frozen searchable positions."
+    },
+    {
+      "symbols": ["MoveGen::PawnAttacks<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-ATK-001"],
+      "scope": "Both colours and every valid pawn rank/file are exhaustively checked, including approved mirror equality."
+    },
+    {
+      "symbols": ["MoveGen::KnightAttacks<Colour>", "MoveGen::BishopAttacks<Colour>", "MoveGen::RookAttacks<Colour>", "MoveGen::QueenAttacks<Colour>", "MoveGen::KingAttacks<Colour>", "MoveGen::InCheck<Colour>", "MoveGen::GenerateAllAttacks<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-ATK-002", "T-ATK-003", "T-LEGAL-005", "T-ORACLE-002"],
+      "scope": "Component and aggregate attack semantics, blockers, check, corpus positions, and colour/rank metamorphism are checked against independent chess models."
+    },
+    {
+      "symbols": ["MoveGen::Castling<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-RULE-003", "T-RULE-004"],
+      "scope": "Both wings and colours are tested for exact castle moves and for every standard denial category."
+    },
+    {
+      "symbols": ["MoveGen::GeneratePseudoLegalMoves<Colour>"],
+      "disposition": "TESTED",
+      "tests": ["T-GEN-003", "T-LEGAL-001", "T-LEGAL-002", "T-LEGAL-003"],
+      "scope": "The composite set equals independently invoked rule components and is distinguished from legal output by pins and check-evasion fixtures."
+    },
+    {
+      "symbols": ["MoveGen::GenerateLegalMoves<Colour>"],
+      "disposition": "BLOCKED",
+      "reason": "Legal-set semantics, colour metamorphism, and complete public FEN-state preservation are strongly covered, but cached identity/private-history restoration remains unresolved and unobservable.",
+      "covered_tests": ["T-LEGAL-001", "T-LEGAL-002", "T-LEGAL-003", "T-LEGAL-004", "T-LEGAL-005", "T-STATE-001", "T-STATE-002", "T-ORACLE-002", "T-ORACLE-003"]
+    },
+    {
+      "symbols": ["MoveList::MoveList", "MoveList::add", "MoveList::operator[]", "MoveList::merge", "MoveList::all", "MoveList::len", "MoveList::contains"],
+      "disposition": "BLOCKED",
+      "reason": "Fresh fitting populated-prefix observation is used safely, but direct append, duplicate, overflow, merge, mutable-storage, and invalid-index semantics await the MoveList owner decision.",
+      "covered_tests": ["T-GEO-004", "T-GEN-001", "T-GEN-003"]
+    },
+    {
+      "symbols": ["StateInfo::StateInfo", "Position::Position()", "Position::Reset"],
+      "disposition": "BLOCKED",
+      "reason": "Broad initialized/reset roles are known, but exact baseline clocks, special-state sentinels, hash lifecycle, history, and searchable-empty semantics remain unresolved."
+    },
+    {
+      "symbols": ["Position::Position(std::string_view)", "Position::ImportFen"],
+      "disposition": "BLOCKED",
+      "reason": "Every frozen valid FEN imports to exact public semantics and repeated replacement is equivalent, but coherent cached identity/history establishment remains unobserved.",
+      "covered_tests": ["T-FEN-001", "T-FEN-003"]
+    },
+    {
+      "symbols": ["Position::MakeMove", "Position::UnmakeMove"],
+      "disposition": "BLOCKED",
+      "reason": "All named move types, multi-ply LIFO traces, generated legal moves, and public FEN transitions/restoration are covered, but complete cached identity and private reversible-history restoration remain unobservable.",
+      "covered_tests": ["T-STA-001", "T-STA-003", "T-STA-004", "T-STATE-001", "T-STATE-002"]
+    },
+    {
+      "symbols": ["Position::EmptySqs", "Position::EnPasBB", "Position::EnPasSq", "Position::CastlingRights", "Position::ColourToMove", "Position::HalfMoves", "Position::FullMoves"],
+      "disposition": "TESTED",
+      "tests": ["T-FEN-001", "T-POS-002", "T-STA-001", "T-STA-003", "T-STA-004"],
+      "scope": "Valid-import and legal-transition observers are compared with exact FEN semantics and independent placement algebra."
+    },
+    {
+      "symbols": ["Position::ZKey", "Position::HashCurrentPostion"],
+      "disposition": "BLOCKED",
+      "reason": "Hash component set, refresh mutation, cache/history lifecycle, collision guarantees, and draw-context responsibilities remain unresolved."
+    },
+    {
+      "symbols": ["Position::IsOk"],
+      "disposition": "BLOCKED",
+      "reason": "Every independently legal/searchable frozen corpus position is accepted without mutation, but no approved negative consistency domain distinguishes the checker from an always-true implementation.",
+      "covered_tests": ["T-POS-003"]
+    },
+    {
+      "symbols": ["Position::UpdateCastlingRights"],
+      "disposition": "BLOCKED",
+      "reason": "The private callable is declared but has no definition or call site in the frozen source; castling-right transition logic is currently inlined elsewhere, so no executable test can exercise this function."
+    },
+    {
+      "symbols": ["Search::GoSearch", "Search::FindBestMove"],
+      "disposition": "BLOCKED",
+      "reason": "Depth-zero, terminal scores, mate distance, timeout representation/polling, TT effects, tie-breaking, no-move output, and deterministic control remain unapproved or unobservable."
+    },
+    {
+      "symbols": ["PerftHandler::GetNodes"],
+      "disposition": "TESTED",
+      "tests": ["T-RTM-PERFT-001", "T-RTM-PERFT-002"],
+      "scope": "The latest bulk node total is compared with frozen depth-1/2/3 counts and with zero after the approved post-nonzero reset sequence."
+    },
+    {
+      "symbols": ["PerftHandler::ResetData", "PerftHandler::RunBulkPerft<output_perft_paths>", "PerftHandler::BulkPerft"],
+      "disposition": "BLOCKED",
+      "reason": "The <false> bulk count/replacement/restoration path and ResetData node clearing are covered, but <true> root-split retention and clearing of stale optional path data have no approved non-format observer.",
+      "covered_tests": ["T-RTM-PERFT-001", "T-RTM-PERFT-002"]
+    },
+    {
+      "symbols": ["PerftHandler::PerftHandler"],
+      "disposition": "BLOCKED",
+      "reason": "The bulk cards construct a fresh handler but deliberately do not observe GetNodes or path state before RunBulkPerft resets it, so fresh-session baseline semantics remain untested."
+    },
+    {
+      "symbols": ["PerftHandler::RunPerft<output_perft_paths>", "PerftHandler::Perft"],
+      "disposition": "BLOCKED",
+      "reason": "The approved runtime cards exercise only RunBulkPerft/BulkPerft; no frozen ordinary-perft execution or ordinary-versus-bulk equivalence record currently exists."
+    },
+    {
+      "symbols": ["PerftHandler::PrintData"],
+      "disposition": "BLOCKED",
+      "reason": "This is a human diagnostic and its exact fields, ordering, formatting, stream, and empty-session behavior are owner policy."
+    },
+    {
+      "symbols": ["TestSearch", "TestPerft<output_perft_paths>", "TestBulkPerft<output_perft_paths>", "RunBenchmark<output_perft_paths>", "RunBulkBenchmark<output_perft_paths>", "legacy Split", "RunPerftSuite<output_perft_paths>"],
+      "disposition": "BLOCKED",
+      "reason": "Legacy developer drivers have no retained application contract for workloads, resources, timing, output, parsing/recovery, or failure propagation."
+    },
+    {
+      "symbols": ["Timer<T>::Timer()", "Timer<T>::Timer(U64*)", "Timer<T>::~Timer", "TimeManager::GetTimeAllowance", "TimeManager::SetOptions", "TimeManager::StartTiming", "TimeManager::OutOfTime"],
+      "disposition": "BLOCKED",
+      "reason": "Duration units/output and time-allocation arithmetic, overflow, lifecycle, monotonic clock, equality boundary, and injectable deterministic ticks remain unresolved."
+    },
+    {
+      "symbols": ["TransposTable::TransposTable", "TransposTable::~TransposTable", "TransposTable::GetNumElems"],
+      "disposition": "BLOCKED",
+      "reason": "The frozen zero-capacity lifetime probe is executable only under Linux Clang ASan and is skipped by the current Windows Routine/Audit profiles; it therefore cannot support a routine TESTED claim here.",
+      "covered_tests": ["T-RTM-TT-001"]
+    },
+    {
+      "symbols": ["TransposTable::Resize", "TransposTable::Store", "TransposTable::Probe", "TransposTable::Clear"],
+      "disposition": "BLOCKED",
+      "reason": "Sizing units/rounding, allocation limits/failure, association and miss semantics, replacement, invalidation, pointer lifetime, ownership, concurrency, and draw-context safety remain unresolved."
+    },
+    {
+      "symbols": ["move_info::move_info", "move_info::add_move"],
+      "disposition": "BLOCKED",
+      "reason": "Precomputed populated prefixes are consumed safely and exhaustively, but direct empty construction, append, duplicate, and capacity semantics of move_info are not separately approved or observed.",
+      "covered_tests": ["T-GEO-003", "T-GEO-004"]
+    },
+    {
+      "symbols": ["operator!(Colour)"],
+      "disposition": "TESTED",
+      "tests": ["T-TYP-001"],
+      "scope": "Both valid colours exhaust the two-element opposite-colour involution."
+    },
+    {
+      "symbols": ["FloatDiv"],
+      "disposition": "TESTED",
+      "tests": ["T-TYP-002"],
+      "scope": "Approved ordinary exact-representable quotients cover positive, negative, integral, and floating operands."
+    },
+    {
+      "symbols": ["Uci::Uci"],
+      "disposition": "BLOCKED",
+      "reason": "Fresh processes prove a usable idle handshake session, but initialization of position, search, timing, TT state, defaults, and allocation behavior is not observed.",
+      "covered_tests": ["T-APP-001", "T-APP-002"]
+    },
+    {
+      "symbols": ["Uci::Loop"],
+      "disposition": "BLOCKED",
+      "reason": "Handshake/readiness/ignored-input/quit dispatch is covered, but the full loop also owns unresolved EOF, malformed recovery, search concurrency, and unsupported handler lifecycle behavior.",
+      "covered_tests": ["T-APP-001", "T-APP-002", "T-APP-003", "T-APP-017", "T-APP-018", "T-APP-019"]
+    },
+    {
+      "symbols": ["Uci::HandleUci"],
+      "disposition": "TESTED",
+      "tests": ["T-APP-001", "T-APP-017", "T-APP-019"],
+      "scope": "Canonical and approved whitespace/framing variants require a protocol-clean identification response with one terminal uciok.",
+      "covered_via": {"kind": "reviewed-integration", "symbols": ["Uci::HandleUci"], "reason": "The handler is internal; the approved application command/response transcript is its complete firm semantic outcome.", "reviewers": ["/root/traceability_review"]}
+    },
+    {
+      "symbols": ["Uci::HandleIsReady"],
+      "disposition": "BLOCKED",
+      "reason": "Repeated and padded idle requests prove ordered readyok/protocol framing, but the intended logical-position preservation has no distinguishable state observation.",
+      "covered_tests": ["T-APP-002", "T-APP-017", "T-APP-019"]
+    },
+    {
+      "symbols": ["Uci::HandleGo", "Uci::HandlePosition", "Uci::HandleStop", "Uci::HandleNewGame", "Uci::HandleSetOption", "Uci::HandleBench", "Uci::HandlePrint"],
+      "disposition": "BLOCKED",
+      "reason": "Finite search controls, state-observation fixture, stop concurrency, reset scope, option bounds/allocation, and diagnostic extension syntax/output remain unresolved or lack deterministic seams."
+    },
+    {
+      "symbols": ["UTIL::Square", "UTIL::PromotionChar", "UTIL::MoveToStr", "UTIL::UciToMove"],
+      "disposition": "TESTED",
+      "tests": ["T-MOV-004", "T-UTL-001", "T-STA-001", "T-STA-003", "T-STA-004"],
+      "scope": "All square labels, promotion suffixes, frozen valid move strings, and position-aware legal histories are checked against canonical UCI notation."
+    },
+    {
+      "symbols": ["Zobrist::_::ZobRand64", "Zobrist::_::InitPieces", "Zobrist::_::InitEnPassant", "Zobrist::_::InitCastling", "Zobrist::_::InitTmp"],
+      "disposition": "BLOCKED",
+      "reason": "The exact generator sequence/table layout is deliberately noncontractual, while lifecycle-level hash consistency remains blocked by the unresolved Position/TT hash component and history policies."
+    }
+  ]
+}

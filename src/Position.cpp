@@ -119,6 +119,7 @@ void Position::ImportFen(std::string_view fen)
     {
         std::from_chars(fen_sections.at(5).data(), fen_sections.at(5).data() + fen_sections.size(), full_moves_);
     }
+    HashCurrentPostion();
 }
 void Position::MakeMove(const Move m)
 {
@@ -261,9 +262,6 @@ void Position::UnmakeMove(const Move m)
     PieceType p_type = Magics::TypeOf(PieceOn(target_sq));
     U8 is_castling_move = 0;
 
-    const BitBoard start_bb  = Magics::SqToBB(start_sq);
-    const BitBoard target_bb = Magics::SqToBB(target_sq);
-
     if(Moves::IsPromotionMove(m))
     {
         p_type = pt_Pawn;
@@ -314,7 +312,7 @@ ZobristKey Position::HashCurrentPostion()
 {
     // assert(info_.zobrist_key_ == 0);
     info_.zobrist_key_ = 0;
-    info_.zobrist_key_ ^= Zobrist::SIDE_TO_MOVE;
+    info_.zobrist_key_ ^= (turn_ == White) * Zobrist::SIDE_TO_MOVE;
 
     for(Colour c = White; c <= Black; c = Colour(c + 1))
     {
