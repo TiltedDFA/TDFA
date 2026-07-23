@@ -8,8 +8,17 @@ ArgList SplitArgs(std::string* inp)
 
     if(inp->empty()) return {""};
 
-//    std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
+    // std::ranges::transform(std::as_const(*inp), inp->begin(), [](unsigned char c){return std::tolower(c);});
 
+    for(std::size_t i{0}, l{}; i < inp->size(); ++i)
+    {
+      if ((*inp)[i] == '\\') {++i; continue;}
+      if (std::isalnum((*inp)[i]))
+      {
+        (*inp)[l++] = std::tolower((*inp)[i]);
+      }
+    }
+    inp->shrink_to_fit();
     std::size_t i{0};
     while(i < inp->size())
     {

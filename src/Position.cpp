@@ -139,6 +139,7 @@ void Position::MakeMove(const Move m)
     const BitBoard them_pieces = Pieces(!turn_) | (p_type == pt_Pawn ?  EnPasBB() : 0);
 
     ++info_.half_moves_;
+    full_moves_ += static_cast<U16>(turn_ == Black);
 
     if(Moves::IsPromotionMove(m)) p_type = pt_Pawn;
 
@@ -306,6 +307,7 @@ void Position::UnmakeMove(const Move m)
     //restore previous state
     info_ = previous_state_info.back();
     previous_state_info.pop_back();
+    full_moves_ -= static_cast<U16>(turn_ == Black);
     assert(IsOk());
 }
 ZobristKey Position::HashCurrentPostion()
