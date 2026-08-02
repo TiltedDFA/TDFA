@@ -173,7 +173,7 @@ def main() -> int:
 
     configure = run([
         "cmake", "-S", str(temp_root), "-B", str(build_dir), "-G", "MinGW Makefiles",
-        "-DBUILD_TESTING=ON", "-DCMAKE_BUILD_TYPE=Debug", "-DTDFA_TEST_TOOLCHAIN=ON",
+        "-DBUILD_TESTING=ON", "-DCMAKE_BUILD_TYPE=Debug",
         "-DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe",
         "-DCMAKE_MAKE_PROGRAM=C:/msys64/ucrt64/bin/mingw32-make.exe",
         f"-DFETCHCONTENT_SOURCE_DIR_CATCH2={catch_source.as_posix()}",

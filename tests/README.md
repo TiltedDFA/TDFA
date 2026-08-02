@@ -99,6 +99,51 @@ The default verification command is the routine semantic gate:
 tools\verify.cmd Routine
 ```
 
+### Legacy CLion with MSYS2 UCRT64
+
+Legacy non-preset CLion profiles work, but the UCRT64 `bin` directory must be
+visible to the whole IDE process so CMake compiler probes, Ninja builds, and
+test executables load the same MSYS2 runtime DLLs. Add
+`C:\msys64\ucrt64\bin` at the front of the profile/toolchain `PATH`, or launch
+CLion from a PowerShell session that carries it:
+
+```powershell
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+& "C:\Program Files\JetBrains\CLion 2023.1.5\bin\clion64.exe"
+```
+
+Adjust the CLion install path if needed. After updating the environment, use
+**Tools | CMake | Reset Cache and Reload Project** once for every enabled
+legacy profile created before the compiler-cache fix. Keep compiler selection
+in the CLion toolchain; Catch2 and its downloaded source do not need deleting.
+Build `tdfa_tests` for IDE test discovery, select `verify-fast` for the focused
+human-facing dashboard, or run `tools\verify.cmd Routine` in CLion's terminal
+for the complete Routine gate. The `ctest-fast` and `ctest-deep` targets retain
+CTest's literal output for focused IDE debugging.
+
+## Human-facing verification report
+
+Routine, Audit, Fast, Deep, Coverage, and Adversarial runs finish with a terminal
+dashboard built from their CTest JUnit evidence. The dashboard distinguishes
+behavioural failures from blocked prerequisites and infrastructure failures,
+groups repeated root causes, and keeps long transcripts in the immutable run
+directory instead of repeating them inline.
+
+The presentation layer never replaces or changes the raw evidence. Every
+Routine/Audit run retains its JUnit, CTest logs, machine-readable summary, and a
+normalized `diagnostics.json` index under
+`build/verification/runs/<run-id>/`. Set the standard `NO_COLOR` environment
+variable for colourless output. A deterministic ASCII rendering can also be
+produced directly for snapshots or basic CI terminals:
+
+```powershell
+python -X utf8 -B tools/render_test_report.py `
+    --junit debug-fast=build/verification/runs/<run-id>/debug-fast.xml `
+    --summary build/verification/runs/<run-id>/summary.json `
+    --artifact-root build/verification/runs/<run-id> `
+    --mode Routine --plain --width 100
+```
+
 It first checks the frozen source/dossier and validates
 `spec/traceability.yaml`, then runs the checking-build fast suite and the
 optimized Fast+Deep suite. Traceability requires every callable listed in

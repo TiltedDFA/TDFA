@@ -11,13 +11,15 @@
       "displayName": "TDFA tests (GCC Debug)",
       "generator": "MinGW Makefiles",
       "binaryDir": "${sourceDir}/build/test-debug",
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+      },
       "cacheVariables": {
         "BUILD_TESTING": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
         "CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/mingw32-make.exe",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "TDFA_TEST_TOOLCHAIN": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {

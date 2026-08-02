@@ -15,7 +15,12 @@ param(
     [string]$ClangSanitizerRuntime = $(
         if ($env:TDFA_CLANG_SANITIZER_RUNTIME) { $env:TDFA_CLANG_SANITIZER_RUNTIME }
         else { "C:\Users\Student\Documents\clang+llvm-18.1.8-x86_64-pc-windows-msvc\lib\clang\18\lib\windows" }
-    )
+    ),
+
+    [string]$ExistingBuildDirectory,
+
+    [ValidateNotNullOrEmpty()]
+    [string]$CTestExecutable = "ctest"
 )
 
 Set-StrictMode -Version Latest
@@ -26,9 +31,13 @@ $VerificationDirectory = Join-Path $ProjectRoot "build/verification"
 $RunDirectory = $null
 $DebugJunitPath = $null
 $ReleaseJunitPath = $null
-$CoverageDirectory = Join-Path $ProjectRoot "build/coverage-gcc/coverage"
+$DebugTestBuildDirectory = Join-Path $ProjectRoot "build/test-debug"
+$ReleaseTestBuildDirectory = Join-Path $ProjectRoot "build/test-release"
+$CoverageBuildDirectory = Join-Path $ProjectRoot "build/coverage-gcc"
+$CoverageDirectory = Join-Path $CoverageBuildDirectory "coverage"
 $CoverageSummaryPath = Join-Path $CoverageDirectory "summary.json"
 $CoverageTestResultPath = Join-Path $CoverageDirectory "test-result.txt"
+$CoverageJunitPath = Join-Path $CoverageDirectory "tests.xml"
 $SanitizerBuildDirectory = Join-Path $ProjectRoot "build/sanitize-clang-msvc18"
 $FuzzBuildDirectory = Join-Path $ProjectRoot "build/fuzz-clang-msvc18"
 $MutationDirectory = Join-Path $ProjectRoot "build/mutation"
@@ -57,7 +66,7 @@ function Resolve-Python3 {
         }
         $ProbeArguments = @($Candidate.prefix) + @(
             "-c",
-            "import sys; raise SystemExit(0 if sys.version_info.major == 3 else 1)"
+            "import sys; raise SystemExit(0 if sys.version_info >= (3, 7) else 1)"
         )
         $ProbeExitCode = 1
         try {
@@ -71,7 +80,7 @@ function Resolve-Python3 {
             return $Candidate
         }
     }
-    throw "Python 3 is required, but py -3, python3, and python were unavailable."
+    throw "Python 3.7 or newer is required, but no compatible py -3, python3, or python was available."
 }
 
 $Python3 = Resolve-Python3
@@ -334,6 +343,139 @@ function Invoke-ConfigurePreset {
     Invoke-Checked "cmake" $ConfigureArguments
 }
 
+function Get-CTestBuildDirectory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ConfigurePreset
+    )
+
+    switch ($ConfigurePreset) {
+        "test-debug" {
+            return $DebugTestBuildDirectory
+        }
+        "test-release" {
+            return $ReleaseTestBuildDirectory
+        }
+        "sanitize-clang" {
+            return $SanitizerBuildDirectory
+        }
+        default {
+            throw "No CTest build directory is registered for configure preset: $ConfigurePreset"
+        }
+    }
+}
+
+function Get-CTestLogEvidencePaths {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$JunitPath
+    )
+
+    $JunitDirectory = Split-Path -Parent $JunitPath
+    $JunitStem = [IO.Path]::GetFileNameWithoutExtension($JunitPath)
+    return [pscustomobject]@{
+        last_test = Join-Path $JunitDirectory "$JunitStem.LastTest.log"
+        failed_tests = Join-Path $JunitDirectory "$JunitStem.LastTestsFailed.log"
+    }
+}
+
+function Clear-CTestTemporaryLogs {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BuildDirectory
+    )
+
+    $TemporaryDirectory = Join-Path $BuildDirectory "Testing/Temporary"
+    foreach ($FileName in @("LastTest.log", "LastTestsFailed.log")) {
+        $Path = Join-Path $TemporaryDirectory $FileName
+        if (Test-Path -LiteralPath $Path -PathType Leaf) {
+            Remove-Item -Force -LiteralPath $Path
+        }
+    }
+}
+
+function Copy-CTestRunLogs {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BuildDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string]$JunitPath
+    )
+
+    $TemporaryDirectory = Join-Path $BuildDirectory "Testing/Temporary"
+    $Destinations = Get-CTestLogEvidencePaths $JunitPath
+    foreach ($Log in @(
+        [pscustomobject]@{
+            source = Join-Path $TemporaryDirectory "LastTest.log"
+            destination = $Destinations.last_test
+        },
+        [pscustomobject]@{
+            source = Join-Path $TemporaryDirectory "LastTestsFailed.log"
+            destination = $Destinations.failed_tests
+        }
+    )) {
+        if (Test-Path -LiteralPath $Log.source -PathType Leaf) {
+            Copy-Item -Force -LiteralPath $Log.source -Destination $Log.destination
+        }
+    }
+}
+
+function Invoke-CTestWithEvidence {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BuildDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$CTestArguments,
+
+        [string]$JunitPath
+    )
+
+    $EffectiveArguments = @($CTestArguments)
+    if ($JunitPath) {
+        if (Test-Path -LiteralPath $JunitPath) {
+            Remove-Item -Force -LiteralPath $JunitPath
+        }
+        $LogEvidencePaths = Get-CTestLogEvidencePaths $JunitPath
+        foreach ($LogPath in @(
+            $LogEvidencePaths.last_test,
+            $LogEvidencePaths.failed_tests
+        )) {
+            if (Test-Path -LiteralPath $LogPath -PathType Leaf) {
+                Remove-Item -Force -LiteralPath $LogPath
+            }
+        }
+        Clear-CTestTemporaryLogs $BuildDirectory
+        # JUnit and LastTest.log retain the forensic output. Keep the ordinary
+        # terminal quiet so the dashboard can provide the human hierarchy.
+        $EffectiveArguments += @("--quiet", "--output-junit", $JunitPath)
+    }
+
+    $CTestFailure = $null
+    try {
+        Invoke-Checked $CTestExecutable $EffectiveArguments
+    }
+    catch {
+        $CTestFailure = $_
+    }
+
+    if ($JunitPath) {
+        try {
+            Copy-CTestRunLogs $BuildDirectory $JunitPath
+        }
+        catch {
+            if ($null -eq $CTestFailure) {
+                throw
+            }
+            Write-Warning "Could not retain CTest logs: $($_.Exception.Message)"
+        }
+    }
+    if ($null -ne $CTestFailure) {
+        throw $CTestFailure
+    }
+}
+
 function Invoke-ConfigureBuildTest {
     param(
         [Parameter(Mandatory = $true)]
@@ -345,19 +487,216 @@ function Invoke-ConfigureBuildTest {
         [string]$JunitPath
     )
 
-    if ($JunitPath) {
-        if (Test-Path -LiteralPath $JunitPath) {
-            Remove-Item -Force -LiteralPath $JunitPath
-        }
-    }
-
+    $CTestBuildDirectory = Get-CTestBuildDirectory $ConfigurePreset
     Invoke-ConfigurePreset $ConfigurePreset
     Invoke-Checked "cmake" @("--build", "--preset", $ConfigurePreset, "--parallel", $Jobs)
-    $CTestArguments = @("--preset", $TestPreset)
-    if ($JunitPath) {
-        $CTestArguments += @("--output-junit", $JunitPath)
+    Invoke-CTestWithEvidence `
+        -BuildDirectory $CTestBuildDirectory `
+        -CTestArguments @("--preset", $TestPreset) `
+        -JunitPath $JunitPath
+}
+
+function Invoke-ExistingBuildTest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BuildDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string]$LabelRegex,
+
+        [Parameter(Mandatory = $true)]
+        [string]$JunitPath
+    )
+
+    if (-not (Test-Path -LiteralPath $BuildDirectory -PathType Container)) {
+        throw "Existing CMake build directory does not exist: $BuildDirectory"
     }
-    Invoke-Checked "ctest" $CTestArguments
+    $ResolvedBuildDirectory = (Resolve-Path -LiteralPath $BuildDirectory).Path
+    $CachePath = Join-Path $ResolvedBuildDirectory "CMakeCache.txt"
+    if (-not (Test-Path -LiteralPath $CachePath -PathType Leaf)) {
+        throw "Existing CMake build directory has no CMakeCache.txt: $ResolvedBuildDirectory"
+    }
+
+    Invoke-CTestWithEvidence `
+        -BuildDirectory $ResolvedBuildDirectory `
+        -CTestArguments @(
+            "--test-dir", $ResolvedBuildDirectory,
+            "--no-tests=error",
+            "--label-regex", $LabelRegex
+        ) `
+        -JunitPath $JunitPath
+}
+
+function Write-TestDashboardFallbackPaths {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ArtifactRoot,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]]$JunitEntries,
+
+        [string]$SummaryPath,
+
+        [AllowEmptyCollection()]
+        [string[]]$FailureDetails = @()
+    )
+
+    foreach ($FailureDetail in $FailureDetails) {
+        Write-Host "Gate failure: $FailureDetail"
+    }
+    Write-Host "Evidence: $ArtifactRoot"
+    if ($SummaryPath) {
+        Write-Host "Summary: $SummaryPath"
+    }
+    foreach ($JunitEntry in $JunitEntries) {
+        $Separator = $JunitEntry.IndexOf("=")
+        if ($Separator -gt 0) {
+            $Lane = $JunitEntry.Substring(0, $Separator)
+            $Path = $JunitEntry.Substring($Separator + 1)
+            Write-Host "JUnit [$Lane]: $Path"
+        }
+        else {
+            Write-Host "JUnit: $JunitEntry"
+        }
+    }
+}
+
+function Invoke-TestDashboard {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Mode,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ArtifactRoot,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
+        [string[]]$JunitEntries,
+
+        [string]$SummaryPath,
+
+        [string]$DiagnosticsPath,
+
+        [string]$RerunBuildDirectory,
+
+        [ValidateSet("PASS", "FAIL", "BLOCKED", "RUNNING", "SKIPPED")]
+        [string]$Status,
+
+        [AllowEmptyCollection()]
+        [string[]]$FailureDetails = @()
+    )
+
+    $Renderer = Join-Path $PSScriptRoot "render_test_report.py"
+    if (-not (Test-Path -LiteralPath $Renderer -PathType Leaf)) {
+        Write-Warning "Test dashboard renderer is missing: $Renderer"
+        Write-TestDashboardFallbackPaths $ArtifactRoot $JunitEntries $SummaryPath $FailureDetails
+        return
+    }
+
+    $RendererArguments = @(
+        "-X", "utf8", "-B",
+        $Renderer,
+        "--mode", $Mode,
+        "--project-root", $ProjectRoot,
+        "--artifact-root", $ArtifactRoot
+    )
+    foreach ($JunitEntry in $JunitEntries) {
+        $RendererArguments += @("--junit", $JunitEntry)
+    }
+    if ($SummaryPath) {
+        $RendererArguments += @("--summary", $SummaryPath)
+    }
+    if ($DiagnosticsPath) {
+        $RendererArguments += @("--diagnostics-json", $DiagnosticsPath)
+    }
+    if ($RerunBuildDirectory) {
+        $RendererArguments += @("--rerun-build-directory", $RerunBuildDirectory)
+    }
+    if ($Status) {
+        $RendererArguments += @("--status", $Status)
+    }
+    foreach ($FailureDetail in $FailureDetails) {
+        $RendererArguments += @("--failure-detail", $FailureDetail)
+    }
+
+    try {
+        Invoke-Python $RendererArguments
+    }
+    catch {
+        # Presentation must never mask or alter the verification result.
+        Write-Warning "Could not render the test dashboard: $($_.Exception.Message)"
+        Write-TestDashboardFallbackPaths $ArtifactRoot $JunitEntries $SummaryPath $FailureDetails
+    }
+}
+
+function Invoke-FocusedTestVerification {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Mode,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ConfigurePreset,
+
+        [Parameter(Mandatory = $true)]
+        [string]$TestPreset,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Lane,
+
+        [string]$BuildDirectory,
+
+        [string]$LabelRegex
+    )
+
+    New-Item -ItemType Directory -Force -Path $VerificationDirectory | Out-Null
+    $RunId = [DateTimeOffset]::UtcNow.ToString("yyyyMMdd'T'HHmmssfffffff'Z'") + "-$PID"
+    $FocusedRunDirectory = Join-Path $VerificationDirectory (Join-Path "runs" $RunId)
+    New-Item -ItemType Directory -Force -Path $FocusedRunDirectory | Out-Null
+    $JunitPath = Join-Path $FocusedRunDirectory "$Lane.xml"
+    $DiagnosticsPath = Join-Path $FocusedRunDirectory "diagnostics.json"
+    $RerunBuildDirectory = $null
+    if ($BuildDirectory -and
+            (Test-Path -LiteralPath $BuildDirectory -PathType Container)) {
+        $RerunBuildDirectory = (Resolve-Path -LiteralPath $BuildDirectory).Path
+    }
+
+    $Failure = $null
+    try {
+        if ($BuildDirectory) {
+            if (-not $LabelRegex) {
+                throw "An existing build directory requires a CTest label regex"
+            }
+            Invoke-ExistingBuildTest $BuildDirectory $LabelRegex $JunitPath
+        }
+        else {
+            Invoke-ConfigureBuildTest $ConfigurePreset $TestPreset $JunitPath
+        }
+    }
+    catch {
+        $Failure = $_
+    }
+
+    $DashboardStatus = if ($null -eq $Failure) { "PASS" } else { "FAIL" }
+    $FailureDetails = if ($null -ne $Failure -and
+            -not (Test-Path -LiteralPath $JunitPath -PathType Leaf)) {
+        @($Failure.Exception.Message)
+    }
+    else {
+        @()
+    }
+    Invoke-TestDashboard `
+        -Mode $Mode `
+        -ArtifactRoot $FocusedRunDirectory `
+        -JunitEntries @("$Lane=$JunitPath") `
+        -DiagnosticsPath $DiagnosticsPath `
+        -RerunBuildDirectory $RerunBuildDirectory `
+        -Status $DashboardStatus `
+        -FailureDetails $FailureDetails
+
+    if ($null -ne $Failure) {
+        throw $Failure
+    }
 }
 
 function Invoke-StaticTraceability {
@@ -370,6 +709,7 @@ function Invoke-StaticTraceability {
     }
     Invoke-Python @("tools/generate_api_dossier.py", "--check")
     Invoke-Python @("tools/validate_traceability.py")
+    Invoke-Python @("-B", "-m", "unittest", "discover", "-s", "tools/tests", "-q")
 }
 
 function Invoke-ExecutionTraceability {
@@ -385,12 +725,43 @@ function Invoke-CoverageAudit {
         throw "gcovr is required for Coverage. Install the UCRT64 gcovr package and retry."
     }
     Invoke-ConfigurePreset "coverage-gcc"
-    Invoke-Checked "cmake" @(
-        "--build", "--preset", "coverage-gcc", "--target", "coverage",
-        "--parallel", $Jobs
-    )
+    Clear-CTestTemporaryLogs $CoverageBuildDirectory
+    $Failure = $null
+    try {
+        Invoke-Checked "cmake" @(
+            "--build", "--preset", "coverage-gcc", "--target", "coverage",
+            "--parallel", $Jobs
+        )
+    }
+    catch {
+        $Failure = $_
+    }
+    try {
+        Copy-CTestRunLogs $CoverageBuildDirectory $CoverageJunitPath
+    }
+    catch {
+        if ($null -eq $Failure) {
+            $Failure = $_
+        }
+        else {
+            Write-Warning "Could not retain coverage CTest logs: $($_.Exception.Message)"
+        }
+    }
     if ($RunDirectory -and (Test-Path -LiteralPath $CoverageDirectory -PathType Container)) {
-        Copy-Item -LiteralPath $CoverageDirectory -Destination $RunDirectory -Recurse -Force
+        try {
+            Copy-Item -LiteralPath $CoverageDirectory -Destination $RunDirectory -Recurse -Force
+        }
+        catch {
+            if ($null -eq $Failure) {
+                $Failure = $_
+            }
+            else {
+                Write-Warning "Could not retain coverage evidence: $($_.Exception.Message)"
+            }
+        }
+    }
+    if ($null -ne $Failure) {
+        throw $Failure
     }
 }
 
@@ -421,35 +792,56 @@ function Assert-LineCoverage95 {
 }
 
 function Invoke-FocusedCoverageAudit {
-    Invoke-CoverageAudit
-    $Failures = [System.Collections.Generic.List[string]]::new()
-    foreach ($Check in @(
-        [pscustomobject]@{ name = "instrumented suite"; action = { Assert-CoverageInstrumentedSuite } },
-        [pscustomobject]@{ name = "95% line threshold"; action = { Assert-LineCoverage95 } }
-    )) {
-        try {
-            & $Check.action
+    # A configure failure happens before the coverage target cleans its output.
+    # Remove only the focused coverage evidence root so stale JUnit cannot be
+    # presented as belonging to this invocation.
+    if (Test-Path -LiteralPath $CoverageDirectory -PathType Container) {
+        Remove-Item -LiteralPath $CoverageDirectory -Recurse -Force
+    }
+
+    $Failure = $null
+    try {
+        Invoke-CoverageAudit
+        $Failures = [System.Collections.Generic.List[string]]::new()
+        foreach ($Check in @(
+            [pscustomobject]@{ name = "instrumented suite"; action = { Assert-CoverageInstrumentedSuite } },
+            [pscustomobject]@{ name = "95% line threshold"; action = { Assert-LineCoverage95 } }
+        )) {
+            try {
+                & $Check.action
+            }
+            catch {
+                $Message = "$($Check.name): $($_.Exception.Message)"
+                Write-Warning $Message
+                $Failures.Add($Message)
+            }
         }
-        catch {
-            $Message = "$($Check.name): $($_.Exception.Message)"
-            Write-Warning $Message
-            $Failures.Add($Message)
+        if ($Failures.Count -ne 0) {
+            throw ($Failures -join "; ")
         }
     }
-    if ($Failures.Count -ne 0) {
-        throw ($Failures -join "; ")
+    catch {
+        $Failure = $_
+    }
+
+    $DashboardStatus = if ($null -eq $Failure) { "PASS" } else { "FAIL" }
+    $FailureDetails = if ($null -eq $Failure) { @() } else { @($Failure.Exception.Message) }
+    Invoke-TestDashboard `
+        -Mode "Coverage" `
+        -ArtifactRoot $CoverageDirectory `
+        -JunitEntries @("coverage=$CoverageJunitPath") `
+        -SummaryPath $CoverageSummaryPath `
+        -DiagnosticsPath (Join-Path $CoverageDirectory "diagnostics.json") `
+        -Status $DashboardStatus `
+        -FailureDetails $FailureDetails
+
+    if ($null -ne $Failure) {
+        throw $Failure
     }
 }
 
 function Invoke-SanitizerAudit {
     $SanitizerJunit = if ($RunDirectory) { Join-Path $RunDirectory "sanitizer.xml" } else { $null }
-    $LastTestLog = Join-Path $SanitizerBuildDirectory "Testing/Temporary/LastTest.log"
-    $LastFailedLog = Join-Path $SanitizerBuildDirectory "Testing/Temporary/LastTestsFailed.log"
-    foreach ($StaleArtifact in @($SanitizerJunit, $LastTestLog, $LastFailedLog)) {
-        if ($StaleArtifact -and (Test-Path -LiteralPath $StaleArtifact -PathType Leaf)) {
-            Remove-Item -Force -LiteralPath $StaleArtifact
-        }
-    }
 
     $Failure = $null
     try {
@@ -457,15 +849,6 @@ function Invoke-SanitizerAudit {
     }
     catch {
         $Failure = $_
-    }
-    if ($RunDirectory) {
-        $Destination = Join-Path $RunDirectory "sanitizer"
-        New-Item -ItemType Directory -Force -Path $Destination | Out-Null
-        foreach ($Source in @($LastTestLog, $LastFailedLog)) {
-            if (Test-Path -LiteralPath $Source -PathType Leaf) {
-                Copy-Item -LiteralPath $Source -Destination $Destination -Force
-            }
-        }
     }
     if ($null -ne $Failure) {
         throw $Failure
@@ -491,14 +874,24 @@ function Invoke-FuzzAudit {
         $Failure = $_
     }
     if ($RunDirectory) {
-        $Destination = Join-Path $RunDirectory "fuzz"
-        New-Item -ItemType Directory -Force -Path $Destination | Out-Null
-        if (Test-Path -LiteralPath $ResultPath -PathType Leaf) {
-            Copy-Item -LiteralPath $ResultPath -Destination $Destination -Force
+        try {
+            $Destination = Join-Path $RunDirectory "fuzz"
+            New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+            if (Test-Path -LiteralPath $ResultPath -PathType Leaf) {
+                Copy-Item -LiteralPath $ResultPath -Destination $Destination -Force
+            }
+            if ((Test-Path -LiteralPath $ResultPath -PathType Leaf) -and
+                    (Test-Path -LiteralPath $ArtifactSource -PathType Container)) {
+                Copy-Item -LiteralPath $ArtifactSource -Destination $Destination -Recurse -Force
+            }
         }
-        if ((Test-Path -LiteralPath $ResultPath -PathType Leaf) -and
-                (Test-Path -LiteralPath $ArtifactSource -PathType Container)) {
-            Copy-Item -LiteralPath $ArtifactSource -Destination $Destination -Recurse -Force
+        catch {
+            if ($null -eq $Failure) {
+                $Failure = $_
+            }
+            else {
+                Write-Warning "Could not retain fuzz evidence: $($_.Exception.Message)"
+            }
         }
     }
     if ($null -ne $Failure) {
@@ -523,9 +916,19 @@ function Invoke-MutationAudit {
         $Failure = $_
     }
     if ($RunDirectory -and (Test-Path -LiteralPath $ReportPath -PathType Leaf)) {
-        $Destination = Join-Path $RunDirectory "mutation"
-        New-Item -ItemType Directory -Force -Path $Destination | Out-Null
-        Copy-Item -LiteralPath $ReportPath -Destination $Destination -Force
+        try {
+            $Destination = Join-Path $RunDirectory "mutation"
+            New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+            Copy-Item -LiteralPath $ReportPath -Destination $Destination -Force
+        }
+        catch {
+            if ($null -eq $Failure) {
+                $Failure = $_
+            }
+            else {
+                Write-Warning "Could not retain mutation evidence: $($_.Exception.Message)"
+            }
+        }
     }
     if ($null -ne $Failure) {
         throw $Failure
@@ -535,8 +938,14 @@ function Invoke-MutationAudit {
 function Get-CoverageEvidence {
     $EvidenceDirectory = Get-ActiveCoverageDirectory
     $SummaryPath = Join-Path $EvidenceDirectory "summary.json"
+    $JunitPath = Join-Path $EvidenceDirectory "tests.xml"
+    $CTestLogPaths = Get-CTestLogEvidencePaths $JunitPath
     $Evidence = [ordered]@{
         test_result = Get-FileEvidence (Join-Path $EvidenceDirectory "test-result.txt")
+        junit = Get-FileEvidence $JunitPath
+        ctest_log = Get-FileEvidence (Join-Path $EvidenceDirectory "ctest.log")
+        last_test_log = Get-FileEvidence $CTestLogPaths.last_test
+        failed_tests = Get-FileEvidence $CTestLogPaths.failed_tests
         summary_json = Get-FileEvidence $SummaryPath
         lcov = Get-FileEvidence (Join-Path $EvidenceDirectory "coverage.info")
         text = Get-FileEvidence (Join-Path $EvidenceDirectory "coverage.txt")
@@ -583,7 +992,8 @@ function Get-CoverageEvidence {
 }
 
 function Get-AuditArtifactEvidence {
-    $SanitizerDirectory = Join-Path $RunDirectory "sanitizer"
+    $SanitizerJunitPath = Join-Path $RunDirectory "sanitizer.xml"
+    $SanitizerCTestLogPaths = Get-CTestLogEvidencePaths $SanitizerJunitPath
     $FuzzDirectory = Join-Path $RunDirectory "fuzz"
     $MutationRunDirectory = Join-Path $RunDirectory "mutation"
     $RetainedFuzzArtifacts = Get-DirectoryEvidence (Join-Path $FuzzDirectory "fuzz-artifacts")
@@ -597,9 +1007,9 @@ function Get-AuditArtifactEvidence {
     }
     return [pscustomobject][ordered]@{
         sanitizer = [ordered]@{
-            junit = Get-FileEvidence (Join-Path $RunDirectory "sanitizer.xml")
-            last_test_log = Get-FileEvidence (Join-Path $SanitizerDirectory "LastTest.log")
-            failed_tests = Get-FileEvidence (Join-Path $SanitizerDirectory "LastTestsFailed.log")
+            junit = Get-FileEvidence $SanitizerJunitPath
+            last_test_log = Get-FileEvidence $SanitizerCTestLogPaths.last_test
+            failed_tests = Get-FileEvidence $SanitizerCTestLogPaths.failed_tests
         }
         fuzz = [ordered]@{
             results = Get-FileEvidence (Join-Path $FuzzDirectory "fuzz-results.txt")
@@ -691,8 +1101,10 @@ function Write-VerificationReport {
             $ExpectedSourceSnapshot -eq $ActualSourceSnapshot
         )
     }
+    $DebugCTestLogPaths = Get-CTestLogEvidencePaths $DebugJunitPath
+    $ReleaseCTestLogPaths = Get-CTestLogEvidencePaths $ReleaseJunitPath
     $Report = [ordered]@{
-        schema_version = 4
+        schema_version = 5
         mode = $Mode
         run_id = Split-Path -Leaf $RunDirectory
         run_directory = $RunDirectory
@@ -710,6 +1122,17 @@ function Write-VerificationReport {
             debug_fast = Get-FileEvidence $DebugJunitPath
             release_deep = Get-FileEvidence $ReleaseJunitPath
         }
+        ctest_logs = [ordered]@{
+            debug_fast = [ordered]@{
+                last_test_log = Get-FileEvidence $DebugCTestLogPaths.last_test
+                failed_tests = Get-FileEvidence $DebugCTestLogPaths.failed_tests
+            }
+            release_deep = [ordered]@{
+                last_test_log = Get-FileEvidence $ReleaseCTestLogPaths.last_test
+                failed_tests = Get-FileEvidence $ReleaseCTestLogPaths.failed_tests
+            }
+        }
+        diagnostics = Get-FileEvidence (Join-Path $RunDirectory "diagnostics.json")
         stages = $Results
     }
     if ($IncludeCoverage) {
@@ -846,15 +1269,32 @@ function Invoke-VerificationPipeline {
     $PipelineStatus = if ($Failed.Count -eq 0) { "PASS" } else { "FAIL" }
     Write-VerificationReport $Mode $Results $ReportPath $LatestReportPath $IncludeCoverage $PipelineStatus
 
-    Write-Host "`n$Mode summary:"
-    $Results | Format-Table -AutoSize name, status, detail
-    Write-Host "Immutable run summary: $ReportPath"
-    Write-Host "Latest-run summary: $LatestReportPath"
+    $JunitEntries = [System.Collections.Generic.List[string]]::new()
+    $JunitEntries.Add("debug-fast=$DebugJunitPath")
+    $JunitEntries.Add("release-deep=$ReleaseJunitPath")
+    if ($IncludeCoverage) {
+        $CoverageEvidenceDirectory = Get-ActiveCoverageDirectory
+        $JunitEntries.Add("coverage=$(Join-Path $CoverageEvidenceDirectory 'tests.xml')")
+        $JunitEntries.Add("sanitizer=$(Join-Path $RunDirectory 'sanitizer.xml')")
+    }
+    $DiagnosticsPath = Join-Path $RunDirectory "diagnostics.json"
+    Invoke-TestDashboard `
+        -Mode $Mode `
+        -ArtifactRoot $RunDirectory `
+        -JunitEntries $JunitEntries.ToArray() `
+        -SummaryPath $ReportPath `
+        -DiagnosticsPath $DiagnosticsPath `
+        -Status $PipelineStatus
+
+    # Seal the renderer's normalized diagnostic index into the same evidence
+    # object after the dashboard has emitted it.
+    Write-VerificationReport $Mode $Results $ReportPath $LatestReportPath $IncludeCoverage $PipelineStatus
     if ($Failed.Count -ne 0) {
         throw "$Mode completed with $($Failed.Count) failed stage(s); all stages were attempted."
     }
 }
 
+$ExitCode = 0
 Push-Location $ProjectRoot
 try {
     switch ($Tier) {
@@ -865,16 +1305,34 @@ try {
             Invoke-VerificationPipeline "Audit"
         }
         "Fast" {
-            Invoke-ConfigureBuildTest "test-debug" "test-fast"
+            Invoke-FocusedTestVerification `
+                -Mode "Fast" `
+                -ConfigurePreset "test-debug" `
+                -TestPreset "test-fast" `
+                -Lane $(if ($ExistingBuildDirectory) { "fast" } else { "debug-fast" }) `
+                -BuildDirectory $ExistingBuildDirectory `
+                -LabelRegex "^fast$"
         }
         "Deep" {
-            Invoke-ConfigureBuildTest "test-release" "test-deep"
+            Invoke-FocusedTestVerification `
+                -Mode "Deep" `
+                -ConfigurePreset "test-release" `
+                -TestPreset "test-deep" `
+                -Lane $(if ($ExistingBuildDirectory) { "deep" } else { "release-deep" }) `
+                -BuildDirectory $ExistingBuildDirectory `
+                -LabelRegex "^(fast|deep)$"
         }
         "Coverage" {
             Invoke-FocusedCoverageAudit
         }
         "Adversarial" {
-            Invoke-ConfigureBuildTest "sanitize-clang" "test-adversarial"
+            Invoke-FocusedTestVerification `
+                -Mode "Adversarial" `
+                -ConfigurePreset "sanitize-clang" `
+                -TestPreset "test-adversarial" `
+                -Lane "sanitizer" `
+                -BuildDirectory $ExistingBuildDirectory `
+                -LabelRegex "^(fast|adversarial)$"
         }
         "Fuzz" {
             Invoke-FuzzAudit
@@ -884,6 +1342,11 @@ try {
         }
     }
 }
+catch {
+    $ExitCode = 1
+    Write-Host "`nVerification failed: $($_.Exception.Message)" -ForegroundColor Red
+}
 finally {
     Pop-Location
 }
+exit $ExitCode

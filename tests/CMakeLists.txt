@@ -96,36 +96,57 @@ catch_discover_tests(tdfa_tests
         PROPERTIES LABELS "audit" TIMEOUT 60 RUN_SERIAL TRUE
         DISCOVERY_MODE PRE_TEST)
 
-add_custom_target(verify-fast
-        COMMAND "${CMAKE_CTEST_COMMAND}"
-                --test-dir "${CMAKE_BINARY_DIR}"
-                --output-on-failure
-                --no-tests=error
-                --label-regex "^fast$"
-        DEPENDS tdfa_tests
-        USES_TERMINAL)
+find_program(TDFA_POWERSHELL_EXECUTABLE
+        NAMES powershell.exe pwsh.exe powershell pwsh)
 
-add_custom_target(verify-deep
-        COMMAND "${CMAKE_CTEST_COMMAND}"
-                --test-dir "${CMAKE_BINARY_DIR}"
-                --output-on-failure
-                --no-tests=error
-                --label-regex "^(fast|deep)$"
-        DEPENDS tdfa_tests
-        USES_TERMINAL)
-
-if(TDFA_ENABLE_SANITIZERS)
-    add_custom_target(verify-adversarial
+function(tdfa_add_verification_targets NAME TIER LABEL_REGEX)
+    # Retain the literal CTest view for focused IDE debugging.
+    add_custom_target("ctest-${NAME}"
             COMMAND "${CMAKE_CTEST_COMMAND}"
                     --test-dir "${CMAKE_BINARY_DIR}"
                     --output-on-failure
                     --no-tests=error
-                    --label-regex "^(fast|adversarial)$"
+                    --label-regex "${LABEL_REGEX}"
             DEPENDS tdfa_tests
+            VERBATIM
             USES_TERMINAL)
+
+    if(TDFA_POWERSHELL_EXECUTABLE AND
+            NOT CMAKE_VERSION VERSION_LESS "3.21")
+        # The reporter consumes this already-built tree. It never re-enters the
+        # active CLion/Ninja build, so dependencies are built exactly once.
+        add_custom_target("verify-${NAME}"
+                COMMAND "${TDFA_POWERSHELL_EXECUTABLE}"
+                        -NoProfile
+                        -ExecutionPolicy Bypass
+                        -File "${PROJECT_SOURCE_DIR}/tools/verify.ps1"
+                        -Tier "${TIER}"
+                        -ExistingBuildDirectory "${CMAKE_BINARY_DIR}"
+                        -CTestExecutable "${CMAKE_CTEST_COMMAND}"
+                DEPENDS tdfa_tests
+                WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+                VERBATIM
+                USES_TERMINAL)
+    else()
+        # Older CTest or non-PowerShell environments retain the raw target.
+        add_custom_target("verify-${NAME}" DEPENDS "ctest-${NAME}")
+    endif()
+endfunction()
+
+tdfa_add_verification_targets(fast Fast "^fast$")
+tdfa_add_verification_targets(deep Deep "^(fast|deep)$")
+
+if(TDFA_ENABLE_SANITIZERS)
+    tdfa_add_verification_targets(
+            adversarial Adversarial "^(fast|adversarial)$")
 endif()
 
 if(TDFA_ENABLE_COVERAGE)
+    if(CMAKE_VERSION VERSION_LESS "3.21")
+        message(FATAL_ERROR
+                "TDFA coverage evidence requires CMake/CTest 3.21 or newer")
+    endif()
+
     find_program(TDFA_GCOVR_EXECUTABLE NAMES gcovr gcovr.exe)
     find_program(TDFA_GCOV_EXECUTABLE NAMES gcov gcov.exe)
 
@@ -150,6 +171,8 @@ if(TDFA_ENABLE_COVERAGE)
                     "-DCTEST=${CMAKE_CTEST_COMMAND}"
                     "-DBUILD_DIR=${CMAKE_BINARY_DIR}"
                     "-DRESULT_FILE=${TDFA_COVERAGE_TEST_RESULT}"
+                    "-DJUNIT_FILE=${TDFA_COVERAGE_OUTPUT_DIR}/tests.xml"
+                    "-DOUTPUT_LOG=${TDFA_COVERAGE_OUTPUT_DIR}/ctest.log"
                     -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCoverageTests.cmake"
             COMMAND "${TDFA_GCOVR_EXECUTABLE}"
                     --root "${PROJECT_SOURCE_DIR}"

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 if(POLICY CMP0091)
     cmake_policy(SET CMP0091 NEW)
 endif()
+
+# Compiler selection belongs to the caller (for example, a CLion toolchain,
+# CMake preset, or toolchain file). Replacing CMAKE_CXX_COMPILER after project()
+# invalidates CMake's configured compiler state and breaks nested projects.
 project(TDFA VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "" FORCE)
@@ -11,13 +15,6 @@ set(CMAKE_CX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "" FORCE)
 
 set(CACHE CMAKE_VERBOSE_MAKEFILE TRUE CACHE BOOL "" FORCE)
-if(UNIX AND NOT TDFA_TEST_TOOLCHAIN)
-    set(CMAKE_CXX_COMPILER "g++-13" CACHE STRING "" FORCE)
-endif()
-
-if(WIN32 AND NOT TDFA_TEST_TOOLCHAIN)
-    set(CMAKE_CXX_COMPILER "g++" CACHE STRING "" FORCE)
-endif()
 
 set(TDFA_ENGINE_SOURCES
         src/Debug.cpp
