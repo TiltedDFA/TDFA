@@ -688,7 +688,7 @@ def check_documents(output_dir: Path, documents: dict[str, bytes]) -> bool:
             print(f"missing fixture: {path}", file=sys.stderr)
             matched = False
             continue
-        if actual != expected:
+        if actual.replace(b"\r\n", b"\n") != expected.replace(b"\r\n", b"\n"):
             print(f"stale fixture: {path}", file=sys.stderr)
             matched = False
     return matched

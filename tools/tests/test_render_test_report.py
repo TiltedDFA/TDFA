@@ -109,54 +109,39 @@ class JunitParsingTests(unittest.TestCase):
 
 
 class ClassificationTests(unittest.TestCase):
-    def test_fixture_checksum_failure_requires_matching_eol_evidence(self) -> None:
-        raw_hash = "1" * 64
-        lf_hash = "2" * 64
-        fixture = reporter.FixtureIssue(
-            path="tests/data/oracle_cases.tsv",
-            cr_count=46,
-            lf_count=46,
-            raw_sha256=raw_hash,
-            lf_sha256=lf_hash,
-        )
-        unrelated = reporter.TestCase(
+    def test_fixture_checksum_failures_group_as_integrity_issue(self) -> None:
+        scoped_mismatch = reporter.TestCase(
             lane="debug-fast",
-            name="fast::T-FIX-001 unrelated checksum mismatch",
+            name="fast::T-FIX-001 scoped checksum mismatch",
             status="fail",
             duration=0.01,
             output=(
                 "fixture scoped bytes do not match data_sha256\n"
                 "path=tests/data/oracle_perft.tsv\n"
-                f"raw={'3' * 64} normalized={'4' * 64}"
+                f"expected={'3' * 64} actual={'4' * 64}"
             ),
         )
-        path_match = reporter.TestCase(
-            lane="debug-fast",
-            name="fast::T-FIX-002 matching fixture path",
-            status="fail",
-            duration=0.01,
-            output=(
-                "fixture scoped bytes do not match data_sha256\n"
-                "path=tests/data/oracle_cases.tsv"
-            ),
-        )
-        hash_match = reporter.TestCase(
+        whole_file_mismatch = reporter.TestCase(
             lane="release-deep",
-            name="deep::T-FIX-003 matching fixture hashes",
+            name="deep::T-FIX-002 whole-file checksum mismatch",
             status="fail",
             duration=0.01,
-            output=(
-                "sha256_hex(whole_file) == file_hash\n"
-                f"raw={raw_hash} normalized={lf_hash}"
-            ),
+            output="sha256_hex(whole_file) == file_hash",
+        )
+        primary_loader_mismatch = reporter.TestCase(
+            lane="debug-fast",
+            name="fast::T-FIX-003 primary-loader checksum mismatch",
+            status="fail",
+            duration=0.01,
+            output="TSV scoped data does not match data_sha256",
         )
 
-        issues = reporter.group_issues([unrelated, path_match, hash_match], [fixture])
-        by_code = {issue.code: issue for issue in issues}
-        self.assertEqual(by_code["FIXTURE_INTEGRITY"].severity, "fail")
-        self.assertEqual(by_code["FIXTURE_INTEGRITY"].cases, [unrelated])
-        self.assertEqual(by_code["FIXTURE_EOL"].severity, "blocked")
-        self.assertEqual(by_code["FIXTURE_EOL"].cases, [path_match, hash_match])
+        cases = [scoped_mismatch, whole_file_mismatch, primary_loader_mismatch]
+        issues = reporter.group_issues(cases)
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0].code, "FIXTURE_INTEGRITY")
+        self.assertEqual(issues[0].severity, "fail")
+        self.assertEqual(issues[0].cases, cases)
 
     def test_ctest_native_outcomes_classify_and_count_by_lane(self) -> None:
         crash_tokens = (
@@ -189,7 +174,7 @@ class ClassificationTests(unittest.TestCase):
             for index, token in enumerate(infra_tokens, start=1)
         )
 
-        issues = reporter.group_issues(cases, [])
+        issues = reporter.group_issues(cases)
         self.assertEqual(
             sum(issue.code == "PROCESS_CRASH" for issue in issues),
             len(crash_tokens),
@@ -227,30 +212,6 @@ class ClassificationTests(unittest.TestCase):
         self.assertIn("6 fail", lane)
         self.assertIn("2 infra", lane)
 
-    def test_fixture_cascades_collapse_into_one_blocked_issue(self) -> None:
-        cases = [
-            reporter.TestCase(
-                lane="debug-fast",
-                name=f"fast::T-FIX-{index:03d} fixture consumer",
-                status="fail",
-                duration=0.01,
-                output="due to unexpected exception with message:\n  TSV contains CR",
-            )
-            for index in range(26)
-        ]
-        fixture = reporter.FixtureIssue(
-            path="tests/data/oracle_cases.tsv",
-            cr_count=46,
-            lf_count=46,
-            raw_sha256="a" * 64,
-            lf_sha256="b" * 64,
-        )
-        issues = reporter.group_issues(cases, [fixture])
-        self.assertEqual(len(issues), 1)
-        self.assertEqual(issues[0].code, "FIXTURE_EOL")
-        self.assertEqual(issues[0].severity, "blocked")
-        self.assertEqual(len(issues[0].cases), 26)
-
     def test_promotion_rows_and_bitboard_values_are_preserved(self) -> None:
         promotion = reporter.TestCase(
             lane="debug-fast",
@@ -276,7 +237,7 @@ class ClassificationTests(unittest.TestCase):
                 "a nonzero bit query/removal disagrees with the ordered-set model"
             ),
         )
-        issues = reporter.group_issues([promotion, bitboard], [])
+        issues = reporter.group_issues([promotion, bitboard])
         theme = reporter.Theme(colour=False, unicode=False)
         promotion_issue = next(
             issue for issue in issues if issue.key == "PROMOTION_MAPPING"
@@ -348,7 +309,7 @@ cleanup-outcome=ok
 """,
         )
 
-        issues = reporter.group_issues([debug, optimized], [])
+        issues = reporter.group_issues([debug, optimized])
         self.assertEqual(len(issues), 1)
         rows = reporter.uci_lines(
             issues[0], reporter.Theme(colour=False, unicode=False)
@@ -373,12 +334,11 @@ cleanup-outcome=ok
                 "cleanup-outcome=owned\x1b[31m\x9b31m\n"
             ),
         )
-        issues = reporter.group_issues([case], [])
+        issues = reporter.group_issues([case])
         report = reporter.render_dashboard(
             mode="Routine",
             cases=[case],
             issues=issues,
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -437,20 +397,17 @@ class RenderingTests(unittest.TestCase):
         self.assertEqual(document["status"], "FAIL")
         self.assertEqual(document["external_failures"], [reason])
 
-    def test_fail_on_test_failure_uses_raw_failure_before_blocking(self) -> None:
+    def test_fail_on_test_failure_returns_nonzero_for_ordinary_failure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            fixture = root / "tests" / "data" / "fixture.tsv"
-            fixture.parent.mkdir(parents=True)
-            fixture.write_bytes(b"name\tvalue\r\nprobe\t1\r\n")
             junit = root / "debug-fast.xml"
             junit.write_text(
                 junit_document(
                     testcase(
-                        "fast::T-FIX-001 fixture consumer",
+                        "fast::T-FAIL-001 ordinary failure",
                         status="fail",
                         marker='<failure message="Failed"/>',
-                        output="TSV contains CR",
+                        output="sample.cpp:42: FAILED:\n  assertion failed",
                     ),
                     tests=1,
                     failures=1,
@@ -476,24 +433,17 @@ class RenderingTests(unittest.TestCase):
                 )
 
         self.assertEqual(exit_code, 1)
-        self.assertIn("ROUTINE | BLOCKED", stdout.getvalue())
-        self.assertIn("1 blocked", stdout.getvalue())
+        self.assertIn("ROUTINE | FAIL", stdout.getvalue())
+        self.assertIn("1 fail", stdout.getvalue())
 
     def test_pass_override_cannot_weaken_derived_status(self) -> None:
         blocked_case = reporter.TestCase(
             lane="debug-fast",
             name="fast::T-FIX-001 fixture consumer",
-            status="fail",
+            status="blocked",
             duration=0.01,
-            output="TSV contains CR",
         )
-        blocked_issue = reporter.Issue(
-            key="FIXTURE_EOL",
-            code="FIXTURE_EOL",
-            severity="blocked",
-            title="Canonical fixture line endings",
-            cases=[blocked_case],
-        )
+        blocked_issue = reporter.group_issues([blocked_case])[0]
         skipped_case = reporter.TestCase(
             lane="debug-fast",
             name="fast::T-SKIP-001 unavailable capability",
@@ -518,7 +468,6 @@ class RenderingTests(unittest.TestCase):
                     mode="Override",
                     cases=cases,
                     issues=issues,
-                    fixtures=[],
                     summary=summary,
                     artifact_root=None,
                     warnings=[],
@@ -539,12 +488,11 @@ class RenderingTests(unittest.TestCase):
             duration=0.01,
             output="sample.cpp:42: FAILED:\n  assertion failed",
         )
-        untrusted_issues = reporter.group_issues([untrusted], [])
+        untrusted_issues = reporter.group_issues([untrusted])
         untrusted_report = reporter.render_dashboard(
             mode="Routine",
             cases=[untrusted],
             issues=untrusted_issues,
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -566,12 +514,11 @@ class RenderingTests(unittest.TestCase):
             duration=0.01,
             output="sample.cpp:42: FAILED:\n  assertion failed",
         )
-        trusted_issues = reporter.group_issues([trusted], [])
+        trusted_issues = reporter.group_issues([trusted])
         trusted_report = reporter.render_dashboard(
             mode="Routine",
             cases=[trusted],
             issues=trusted_issues,
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -602,7 +549,6 @@ class RenderingTests(unittest.TestCase):
                     mode="Routine",
                     cases=[skipped],
                     issues=[],
-                    fixtures=[],
                     summary={"pipeline_status": pipeline_status, "stages": []},
                     artifact_root=None,
                     warnings=[],
@@ -662,7 +608,6 @@ class RenderingTests(unittest.TestCase):
             mode="Focused",
             cases=[case],
             issues=[],
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -722,7 +667,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=cases,
             issues=[],
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -770,23 +714,14 @@ class RenderingTests(unittest.TestCase):
         case = reporter.TestCase(
             lane="debug-fast",
             name="fast::T-FIX-001 fixture consumer",
-            status="fail",
+            status="blocked",
             duration=0.01,
-            output="due to unexpected exception with message:\n  TSV contains CR",
         )
-        fixture = reporter.FixtureIssue(
-            path="tests/data/oracle_cases.tsv",
-            cr_count=46,
-            lf_count=46,
-            raw_sha256="a" * 64,
-            lf_sha256="b" * 64,
-        )
-        issues = reporter.group_issues([case], [fixture])
+        issues = reporter.group_issues([case])
         report = reporter.render_dashboard(
             mode="Routine",
             cases=[case],
             issues=issues,
-            fixtures=[fixture],
             summary={"pipeline_status": "FAIL", "stages": []},
             artifact_root=None,
             warnings=[],
@@ -860,7 +795,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=evidence.cases,
             issues=[],
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=evidence.warnings,
@@ -894,7 +828,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=[],
             issues=[],
-            fixtures=[],
             summary=summary,
             artifact_root=None,
             warnings=[],
@@ -940,7 +873,6 @@ class RenderingTests(unittest.TestCase):
                     mode="Routine",
                     cases=[case],
                     issues=[issue],
-                    fixtures=[],
                     summary=summary,
                     artifact_root=artifact,
                     warnings=[warning],
@@ -963,12 +895,11 @@ class RenderingTests(unittest.TestCase):
             duration=0.25,
             output="coverage_probe.cpp:42: FAILED:\n  observed a mismatch",
         )
-        issues = reporter.group_issues([case], [])
+        issues = reporter.group_issues([case])
         report = reporter.render_dashboard(
             mode="Coverage",
             cases=[case],
             issues=issues,
-            fixtures=[],
             summary=None,
             artifact_root="build/coverage-gcc/coverage",
             warnings=[],
@@ -989,7 +920,7 @@ class RenderingTests(unittest.TestCase):
             duration=0.25,
             output="clion_probe.cpp:42: FAILED:\n  observed a mismatch",
         )
-        issues = reporter.group_issues([case], [])
+        issues = reporter.group_issues([case])
         build_directory = r"D:\coding\TDFA with spaces\cmake-build-debug"
         command = reporter.rerun_command(case, build_directory)
         self.assertEqual(
@@ -1001,7 +932,6 @@ class RenderingTests(unittest.TestCase):
             mode="Fast",
             cases=[case],
             issues=issues,
-            fixtures=[],
             summary=None,
             artifact_root="build/verification/runs/example",
             warnings=[],
@@ -1033,7 +963,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=[case],
             issues=[issue],
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -1055,7 +984,6 @@ class RenderingTests(unittest.TestCase):
             mode="Coverage",
             cases=[],
             issues=[],
-            fixtures=[],
             summary={
                 "pipeline_status": "PASS",
                 "stages": [{"name": "line-coverage-95", "status": "PASS"}],
@@ -1074,7 +1002,6 @@ class RenderingTests(unittest.TestCase):
             mode="Coverage",
             cases=[],
             issues=[],
-            fixtures=[],
             summary={
                 "line_percent": 96.25,
                 "line_covered": 385,
@@ -1109,7 +1036,6 @@ class RenderingTests(unittest.TestCase):
             mode=f"Control{controls}",
             cases=[case],
             issues=[issue],
-            fixtures=[],
             summary=None,
             artifact_root=f"artifact-{controls}",
             warnings=[f"warning-{controls}"],
@@ -1135,7 +1061,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=[case],
             issues=[],
-            fixtures=[],
             summary=None,
             artifact_root="build/verification/demo",
             warnings=[],
@@ -1152,13 +1077,12 @@ class RenderingTests(unittest.TestCase):
 
     def test_diagnostic_json_separates_failure_blocked_and_infra(self) -> None:
         failed = reporter.TestCase("fast", "T-FAIL", "fail", 0.1, "FAILED")
-        blocked = reporter.TestCase("fast", "T-BLOCK", "fail", 0.1, "TSV contains CR")
+        blocked = reporter.TestCase("fast", "T-BLOCK", "blocked", 0.1)
         infra = reporter.TestCase("fast", "T-INFRA", "infra", 0.0, "missing")
-        fixture = reporter.FixtureIssue("fixture.tsv", 1, 1, "a", "b")
         cases = [failed, blocked, infra]
-        issues = reporter.group_issues(cases, [fixture])
+        issues = reporter.group_issues(cases)
         document = reporter.diagnostics_document(
-            mode="Routine", cases=cases, issues=issues, fixtures=[fixture]
+            mode="Routine", cases=cases, issues=issues
         )
         self.assertEqual(
             document["counts"],
@@ -1187,7 +1111,6 @@ class RenderingTests(unittest.TestCase):
                     mode="Routine",
                     cases=[case],
                     issues=[],
-                    fixtures=[],
                     summary=None,
                     artifact_root=None,
                     warnings=[],
@@ -1222,7 +1145,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=[case],
             issues=[issue],
-            fixtures=[],
             summary=None,
             artifact_root=None,
             warnings=[],
@@ -1260,7 +1182,7 @@ class RenderingTests(unittest.TestCase):
             duration=61.25,
             output="sample.cpp:42: FAILED:\n  expected 1 but observed 2",
         )
-        issues = reporter.group_issues([case], [])
+        issues = reporter.group_issues([case])
         summary = {
             "pipeline_status": "FAIL",
             "stages": [
@@ -1277,7 +1199,6 @@ class RenderingTests(unittest.TestCase):
             mode="Routine",
             cases=[case],
             issues=issues,
-            fixtures=[],
             summary=summary,
             artifact_root="D:/" + "very-long-run-directory/" * 8,
             warnings=[],

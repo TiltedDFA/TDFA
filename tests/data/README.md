@@ -17,9 +17,11 @@ already repeated position from a prospective threefold claim enabled by one move
 are the conventional public perft suite, limited to depth 3 so regeneration stays
 quick.
 
-The checksum is SHA-256 over the exact UTF-8 bytes beginning with the column-name
-line and ending with its final LF. Metadata and comment lines are excluded. Legal
-move lists are ASCII-lexicographically sorted.
+The checksum is SHA-256 over the canonical UTF-8 content beginning with the
+column-name line and ending with its final newline. Metadata and comment lines
+are excluded. LF and CRLF checkouts represent the same corpus; fixture loaders
+canonicalize CRLF to LF before validating the digest. Legal move lists are
+ASCII-lexicographically sorted.
 
 ## Regeneration
 

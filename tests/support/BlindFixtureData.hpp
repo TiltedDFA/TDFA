@@ -36,6 +36,19 @@ inline std::string read_fixture_bytes(const std::string_view repository_relative
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
+inline std::string canonical_lf(const std::string_view bytes) {
+    std::string canonical;
+    canonical.reserve(bytes.size());
+    for (std::size_t index = 0; index < bytes.size(); ++index) {
+        if (bytes[index] == '\r' && index + 1 < bytes.size() &&
+            bytes[index + 1] == '\n') {
+            continue;
+        }
+        canonical.push_back(bytes[index]);
+    }
+    return canonical;
+}
+
 inline std::uint32_t sha_rotr(const std::uint32_t value, const unsigned shift) {
     return (value >> shift) | (value << (32U - shift));
 }
@@ -115,7 +128,7 @@ struct TsvFixture {
 
 inline TsvFixture load_tsv_fixture(const std::string_view path) {
     TsvFixture fixture;
-    fixture.bytes = read_fixture_bytes(path);
+    fixture.bytes = canonical_lf(read_fixture_bytes(path));
     if (fixture.bytes.empty() || fixture.bytes.back() != '\n') {
         throw std::runtime_error("TSV fixture must end in LF");
     }
@@ -125,7 +138,6 @@ inline TsvFixture load_tsv_fixture(const std::string_view path) {
         const std::size_t newline = fixture.bytes.find('\n', cursor);
         if (newline == std::string::npos) throw std::runtime_error("TSV line missing LF");
         const std::string_view line{fixture.bytes.data() + cursor, newline - cursor};
-        if (line.find('\r') != std::string_view::npos) throw std::runtime_error("TSV contains CR");
         if (!line.empty() && line.front() == '#') {
             const std::size_t equals = line.find('=');
             if (equals == std::string_view::npos || equals <= 2) throw std::runtime_error("malformed TSV metadata");

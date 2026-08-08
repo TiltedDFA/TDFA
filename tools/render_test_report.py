@@ -9,7 +9,6 @@ layer over that evidence.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -22,7 +21,7 @@ import textwrap
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -55,15 +54,6 @@ class TestCase:
     @property
     def short_name(self) -> str:
         return self.name.split("::", 1)[-1]
-
-
-@dataclass
-class FixtureIssue:
-    path: str
-    cr_count: int
-    lf_count: int
-    raw_sha256: str
-    lf_sha256: str
 
 
 @dataclass
@@ -287,32 +277,6 @@ def load_summary(path: Path | None) -> tuple[dict[str, Any] | None, list[str]]:
     return value, []
 
 
-def discover_fixture_issues(project_root: Path) -> list[FixtureIssue]:
-    fixture_root = project_root / "tests" / "data"
-    issues: list[FixtureIssue] = []
-    if not fixture_root.is_dir():
-        return issues
-    for path in sorted(fixture_root.glob("*.tsv")):
-        try:
-            payload = path.read_bytes()
-        except OSError:
-            continue
-        cr_count = payload.count(b"\r")
-        if cr_count == 0:
-            continue
-        normalized = payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-        issues.append(
-            FixtureIssue(
-                path=path.relative_to(project_root).as_posix(),
-                cr_count=cr_count,
-                lf_count=payload.count(b"\n"),
-                raw_sha256=hashlib.sha256(payload).hexdigest(),
-                lf_sha256=hashlib.sha256(normalized).hexdigest(),
-            )
-        )
-    return issues
-
-
 def _generic_title(case: TestCase) -> str:
     title = case.short_name
     if title.startswith(case.test_id):
@@ -320,44 +284,20 @@ def _generic_title(case: TestCase) -> str:
     return title or case.test_id
 
 
-def _fixture_eol_is_evidenced(
-    output: str, fixture_issues: Sequence[FixtureIssue]
-) -> bool:
-    if "TSV contains CR" in output:
-        return True
-
-    normalized_output = output.replace("\\", "/")
-    for fixture in fixture_issues:
-        if fixture.path in normalized_output:
-            return True
-        if (
-            fixture.raw_sha256 in normalized_output
-            and fixture.lf_sha256 in normalized_output
-        ):
-            return True
-    return False
-
-
-def classify_failure(case: TestCase, fixture_issues: Sequence[FixtureIssue]) -> Issue:
+def classify_failure(case: TestCase) -> Issue:
     output = case.output
     ctest_outcome = case.failure_message.strip().upper().replace(" ", "_")
     fixture_patterns = (
-        "TSV contains CR",
         "fixture scoped bytes do not match data_sha256",
+        "TSV scoped data does not match data_sha256",
         "sha256_hex(whole_file) == file_hash",
     )
     if any(pattern in output for pattern in fixture_patterns):
-        eol_evidenced = _fixture_eol_is_evidenced(output, fixture_issues)
-        code = "FIXTURE_EOL" if eol_evidenced else "FIXTURE_INTEGRITY"
         return Issue(
-            key=code,
-            code=code,
-            severity="blocked" if eol_evidenced else "fail",
-            title=(
-                "Canonical fixture line endings"
-                if eol_evidenced
-                else "Canonical fixture integrity"
-            ),
+            key="FIXTURE_INTEGRITY",
+            code="FIXTURE_INTEGRITY",
+            severity="fail",
+            title="Canonical fixture integrity",
         )
 
     if "PieceType=" in output and re.search(r"expected=\S+\s+actual=\S+", output):
@@ -458,9 +398,7 @@ def classify_failure(case: TestCase, fixture_issues: Sequence[FixtureIssue]) -> 
     )
 
 
-def group_issues(
-    cases: Sequence[TestCase], fixture_issues: Sequence[FixtureIssue]
-) -> list[Issue]:
+def group_issues(cases: Sequence[TestCase]) -> list[Issue]:
     grouped: OrderedDict[str, Issue] = OrderedDict()
     for case in cases:
         if case.status == "blocked":
@@ -478,7 +416,7 @@ def group_issues(
                 title=_generic_title(case),
             )
         elif case.status == "fail":
-            classified = classify_failure(case, fixture_issues)
+            classified = classify_failure(case)
         else:
             continue
         issue = grouped.get(classified.key)
@@ -914,41 +852,13 @@ def uci_lines(issue: Issue, theme: Theme) -> list[str]:
     return lines
 
 
-def fixture_lines(
-    issue: Issue, fixtures: Sequence[FixtureIssue], theme: Theme
-) -> list[str]:
-    if issue.code == "FIXTURE_INTEGRITY":
-        return [
-            _affected_line(issue, theme),
-            "",
-            "The canonical fixture integrity guard itself failed.",
-            "No line-ending cause was proven from the retained evidence.",
-            "Inspect the raw JUnit and CTest log before treating dependent results as valid.",
-        ]
-
-    lines = [
+def fixture_lines(issue: Issue, theme: Theme) -> list[str]:
+    return [
         _affected_line(issue, theme),
         "",
-        "These checks did not reach their behavioural assertions.",
-        "",
+        "The canonical fixture integrity guard itself failed.",
+        "Inspect the raw JUnit and CTest log before treating dependent results as valid.",
     ]
-    if fixtures:
-        lines.append(f"{'Fixture':<42}{'Detected':<24}")
-        for fixture in fixtures:
-            line_count = fixture.lf_count or fixture.cr_count
-            detected = f"CRLF on {fixture.cr_count}/{line_count} lines"
-            lines.append(f"{escape_inline(fixture.path):<42}{detected:<24}")
-        lines.extend(
-            [
-                "",
-                "Expected   LF-only canonical fixture bytes",
-                "Cause      Likely checkout line-ending conversion",
-                "Observed   Checkout bytes at report finalization",
-            ]
-        )
-    else:
-        lines.append("A canonical fixture failed its format or checksum guard.")
-    return lines
 
 
 def generic_lines(issue: Issue, theme: Theme, project_root: Path) -> list[str]:
@@ -987,12 +897,11 @@ def generic_lines(issue: Issue, theme: Theme, project_root: Path) -> list[str]:
 
 def issue_lines(
     issue: Issue,
-    fixtures: Sequence[FixtureIssue],
     theme: Theme,
     project_root: Path,
 ) -> list[str]:
-    if issue.code in {"FIXTURE_EOL", "FIXTURE_INTEGRITY"}:
-        return fixture_lines(issue, fixtures, theme)
+    if issue.code == "FIXTURE_INTEGRITY":
+        return fixture_lines(issue, theme)
     if issue.key == "PROMOTION_MAPPING":
         return promotion_lines(issue, theme, project_root)
     if issue.key == "BIT_SCAN_MODEL":
@@ -1287,7 +1196,6 @@ def render_dashboard(
     mode: str,
     cases: Sequence[TestCase],
     issues: Sequence[Issue],
-    fixtures: Sequence[FixtureIssue],
     summary: dict[str, Any] | None,
     artifact_root: str | None,
     warnings: Sequence[str],
@@ -1434,7 +1342,7 @@ def render_dashboard(
             output.extend(
                 box(
                     title,
-                    issue_lines(issue, fixtures, theme, project_root),
+                    issue_lines(issue, theme, project_root),
                     width,
                     theme,
                     tone,
@@ -1508,7 +1416,6 @@ def diagnostics_document(
     mode: str,
     cases: Sequence[TestCase],
     issues: Sequence[Issue],
-    fixtures: Sequence[FixtureIssue],
     warnings: Sequence[str] = (),
     summary: dict[str, Any] | None = None,
     status_override: str | None = None,
@@ -1535,8 +1442,8 @@ def diagnostics_document(
             "infrastructure": counts["infra"],
             "skipped": counts["skip"],
         },
-        "fixture_observation": "checkout bytes at report finalization",
-        "fixtures": [asdict(fixture) for fixture in fixtures],
+        "fixture_observation": "not collected",
+        "fixtures": [],
         "warnings": warnings,
         "external_failures": list(OrderedDict.fromkeys(external_failures)),
         "issues": [
@@ -1705,8 +1612,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     summary, summary_warnings = load_summary(args.summary)
     parsed.warnings.extend(summary_warnings)
-    fixtures = discover_fixture_issues(project_root)
-    issues = group_issues(parsed.cases, fixtures)
+    issues = group_issues(parsed.cases)
 
     width = args.width or shutil.get_terminal_size((108, 24)).columns
     plain = bool(args.plain)
@@ -1718,7 +1624,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         mode=args.mode,
         cases=parsed.cases,
         issues=issues,
-        fixtures=fixtures,
         summary=summary,
         artifact_root=args.artifact_root,
         warnings=parsed.warnings,
@@ -1739,7 +1644,6 @@ def main(argv: Sequence[str] | None = None) -> int:
                 mode=args.mode,
                 cases=parsed.cases,
                 issues=issues,
-                fixtures=fixtures,
                 summary=summary,
                 artifact_root=args.artifact_root,
                 warnings=parsed.warnings,
@@ -1760,7 +1664,6 @@ def main(argv: Sequence[str] | None = None) -> int:
                 mode=args.mode,
                 cases=parsed.cases,
                 issues=issues,
-                fixtures=fixtures,
                 warnings=parsed.warnings,
                 summary=summary,
                 status_override=args.status,

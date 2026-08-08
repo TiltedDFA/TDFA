@@ -97,7 +97,7 @@ void require_perft_oracle_source()
     constexpr std::string_view data_hash =
         "8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789";
 
-    const std::string whole_file = read_fixture_bytes(path);
+    const std::string whole_file = canonical_lf(read_fixture_bytes(path));
     REQUIRE(sha256_hex(whole_file) == file_hash);
     const auto fixture = load_tsv_fixture(path);
     REQUIRE(fixture.metadata.at("data_sha256") == data_hash);

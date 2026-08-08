@@ -16,13 +16,13 @@ namespace UTIL
     {
         switch (p)
         {
-        case pt_prom_bishop:
+        case pt_Bishop:
             return 'b';
-        case pt_prom_knight:
+        case pt_Knight:
             return 'n';
-        case pt_prom_queen:
+        case pt_Queen:
             return 'q';
-        case pt_prom_rook:
+        case pt_Rook:
             return 'r';
         default:
             return 'z';

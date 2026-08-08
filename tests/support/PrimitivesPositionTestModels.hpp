@@ -63,7 +63,7 @@ struct TsvTable
 
 inline TsvTable load_tsv(const std::string& path)
 {
-    const std::string bytes = blind::read_fixture_bytes(path);
+    const std::string bytes = blind::canonical_lf(blind::read_fixture_bytes(path));
     if (bytes.empty() || bytes.back() != '\n')
         throw std::runtime_error("TSV fixture must end in LF: " + path);
 
@@ -85,8 +85,6 @@ inline TsvTable load_tsv(const std::string& path)
     std::string line;
     while (std::getline(input, line))
     {
-        if (!line.empty() && line.back() == '\r')
-            line.pop_back();
         if (line.starts_with('#'))
         {
             const auto equal = line.find('=');

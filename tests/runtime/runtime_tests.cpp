@@ -592,7 +592,8 @@ void require_evaluate_fixture_source()
   constexpr std::string_view selected_hash =
       "b4ee87db66f0fa8934d4489a4fb5b67b608df0fd14cd1fc7f84bbb8265ad7448";
 
-  const std::string whole_file = tdfa_test::blind::read_fixture_bytes(path);
+  const std::string whole_file = tdfa_test::blind::canonical_lf(
+      tdfa_test::blind::read_fixture_bytes(path));
   REQUIRE(tdfa_test::blind::sha256_hex(whole_file) == file_hash);
   const auto fixture = tdfa_test::blind::load_tsv_fixture(path);
   REQUIRE(fixture.metadata.at("data_sha256") == data_hash);
@@ -662,7 +663,8 @@ void require_perft_fixture_source()
   constexpr std::string_view data_hash =
       "8f7643f4c8168c93b0590634e17ea11db52ddfe167e7c04d04710cb986f40789";
 
-  const std::string whole_file = tdfa_test::blind::read_fixture_bytes(path);
+  const std::string whole_file = tdfa_test::blind::canonical_lf(
+      tdfa_test::blind::read_fixture_bytes(path));
   REQUIRE(tdfa_test::blind::sha256_hex(whole_file) == file_hash);
   const auto fixture = tdfa_test::blind::load_tsv_fixture(path);
   REQUIRE(fixture.metadata.at("data_sha256") == data_hash);

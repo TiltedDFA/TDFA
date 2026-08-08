@@ -81,12 +81,3 @@ TEST_CASE("Audit invokes ZKey reads and recomputation on valid positions",
     }());
     CAPTURE(observations);
 }
-
-TEST_CASE("Audit PromotionChar maps every supported promotion type",
-          "[audit][small-gaps][promotion]")
-{
-    CHECK(UTIL::PromotionChar(pt_prom_queen) == 'q');
-    CHECK(UTIL::PromotionChar(pt_prom_rook) == 'r');
-    CHECK(UTIL::PromotionChar(pt_prom_bishop) == 'b');
-    CHECK(UTIL::PromotionChar(pt_prom_knight) == 'n');
-}

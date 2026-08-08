@@ -50,7 +50,7 @@ namespace Moves
     constexpr PieceType PTypeOfProm(const Move move)
     {
         assert(IsPromotionMove(move));
-        return PieceType((move >> PIECE_TYPE_SHIFT) - (int(mt_QueenPromotion) - int(pt_Queen)));
+        return PieceType(((move >> PIECE_TYPE_SHIFT) - int(mt_QueenPromotion)) + int(pt_Queen));
     }
 }
 

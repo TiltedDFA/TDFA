@@ -90,11 +90,7 @@ enum PieceType
     pt_end_it,
     pt_Pawn = pt_end_it,
     pt_All,
-    pt_None,
-    pt_prom_queen = 8,
-    pt_prom_bishop,
-    pt_prom_knight,
-    pt_prom_rook,
+    pt_None
 };
 enum MoveType
 {
